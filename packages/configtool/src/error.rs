@@ -25,3 +25,8 @@ pub fn config_error_to_napi(err: SzConfigError) -> napi::Error {
     let message = format!("[{error_type}] {err}");
     napi::Error::new(napi::Status::GenericFailure, message)
 }
+
+/// Maps a serde_json serialization error to a napi::Error with [JsonParse] prefix.
+pub fn json_serialize_error(e: serde_json::Error) -> napi::Error {
+    napi::Error::new(napi::Status::GenericFailure, format!("[JsonParse] {e}"))
+}

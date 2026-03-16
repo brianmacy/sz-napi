@@ -1,0 +1,14 @@
+{
+  "name": "configtool-usage",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@senzing/configtool": "file:../../packages/configtool"
+  },
+  "devDependencies": {
+    "tsx": "^4"
+  }
+}

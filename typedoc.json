@@ -1,0 +1,12 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "packages/sdk/sdk.d.ts",
+    "packages/configtool/index.d.ts"
+  ],
+  "out": "docs/api",
+  "name": "sz-napi",
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true
+}

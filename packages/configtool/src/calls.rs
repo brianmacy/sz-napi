@@ -2,18 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::calls;
 
-use crate::error::config_error_to_napi;
-
-// ============================================================================
-// Helper for JSON serialization errors
-// ============================================================================
-
-fn json_serialize_error(e: serde_json::Error) -> napi::Error {
-    napi::Error::new(
-        napi::Status::GenericFailure,
-        format!("[JsonParse] {e}"),
-    )
-}
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 // ============================================================================
 // Standardize Calls
@@ -86,8 +75,7 @@ pub fn get_standardize_call(config_json: String, sfcall_id: i64) -> Result<Strin
 
 #[napi(js_name = "listStandardizeCalls")]
 pub fn list_standardize_calls(config_json: String) -> Result<String> {
-    let values =
-        calls::list_standardize_calls(&config_json).map_err(config_error_to_napi)?;
+    let values = calls::list_standardize_calls(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -240,8 +228,7 @@ pub fn get_expression_call(config_json: String, efcall_id: i64) -> Result<String
 
 #[napi(js_name = "listExpressionCalls")]
 pub fn list_expression_calls(config_json: String) -> Result<String> {
-    let values =
-        calls::list_expression_calls(&config_json).map_err(config_error_to_napi)?;
+    let values = calls::list_expression_calls(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -372,8 +359,7 @@ pub fn get_comparison_call(config_json: String, cfcall_id: i64) -> Result<String
 
 #[napi(js_name = "listComparisonCalls")]
 pub fn list_comparison_calls(config_json: String) -> Result<String> {
-    let values =
-        calls::list_comparison_calls(&config_json).map_err(config_error_to_napi)?;
+    let values = calls::list_comparison_calls(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -497,15 +483,13 @@ pub fn delete_distinct_call(config_json: String, dfcall_id: i64) -> Result<Strin
 
 #[napi(js_name = "getDistinctCall")]
 pub fn get_distinct_call(config_json: String, dfcall_id: i64) -> Result<String> {
-    let value =
-        calls::get_distinct_call(&config_json, dfcall_id).map_err(config_error_to_napi)?;
+    let value = calls::get_distinct_call(&config_json, dfcall_id).map_err(config_error_to_napi)?;
     serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi(js_name = "listDistinctCalls")]
 pub fn list_distinct_calls(config_json: String) -> Result<String> {
-    let values =
-        calls::list_distinct_calls(&config_json).map_err(config_error_to_napi)?;
+    let values = calls::list_distinct_calls(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 

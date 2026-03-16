@@ -35,9 +35,7 @@ impl SzDiagnosticWrapper {
     /// Returns a JSON string with feature details including type, value, and usage statistics.
     #[napi]
     pub fn get_feature(&self, feature_id: i64) -> napi::Result<String> {
-        self.inner
-            .get_feature(feature_id)
-            .map_err(sz_error_to_napi)
+        self.inner.get_feature(feature_id).map_err(sz_error_to_napi)
     }
 
     /// Gets repository statistics and information as a JSON string.

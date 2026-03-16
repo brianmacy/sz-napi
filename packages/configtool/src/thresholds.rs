@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::thresholds;
 
-use crate::error::config_error_to_napi;
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 #[napi(object)]
 pub struct AddComparisonThresholdOptions {
@@ -109,12 +109,7 @@ pub fn set_comparison_threshold(
 pub fn list_comparison_thresholds(config_json: String) -> Result<String> {
     let values =
         thresholds::list_comparison_thresholds(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]
@@ -164,26 +159,15 @@ pub fn set_generic_threshold(
 
 #[napi]
 pub fn list_generic_thresholds(config_json: String) -> Result<String> {
-    let values =
-        thresholds::list_generic_thresholds(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    let values = thresholds::list_generic_thresholds(&config_json).map_err(config_error_to_napi)?;
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]
 pub fn get_threshold(config_json: String, threshold_id: i64) -> Result<String> {
     let value =
         thresholds::get_threshold(&config_json, threshold_id).map_err(config_error_to_napi)?;
-    serde_json::to_string(&value).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi]

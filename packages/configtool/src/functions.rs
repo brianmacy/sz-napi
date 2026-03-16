@@ -2,18 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::functions;
 
-use crate::error::config_error_to_napi;
-
-// ============================================================================
-// Helper for JSON serialization errors
-// ============================================================================
-
-fn json_serialize_error(e: serde_json::Error) -> napi::Error {
-    napi::Error::new(
-        napi::Status::GenericFailure,
-        format!("[JsonParse] {e}"),
-    )
-}
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 // ============================================================================
 // Standardize Functions
@@ -65,8 +54,8 @@ pub fn get_standardize_function(config_json: String, sfunc_code: String) -> Resu
 
 #[napi(js_name = "listStandardizeFunctions")]
 pub fn list_standardize_functions(config_json: String) -> Result<String> {
-    let values = functions::list_standardize_functions(&config_json)
-        .map_err(config_error_to_napi)?;
+    let values =
+        functions::list_standardize_functions(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -136,8 +125,8 @@ pub fn get_expression_function(config_json: String, efunc_code: String) -> Resul
 
 #[napi(js_name = "listExpressionFunctions")]
 pub fn list_expression_functions(config_json: String) -> Result<String> {
-    let values = functions::list_expression_functions(&config_json)
-        .map_err(config_error_to_napi)?;
+    let values =
+        functions::list_expression_functions(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -210,8 +199,8 @@ pub fn get_comparison_function(config_json: String, cfunc_code: String) -> Resul
 
 #[napi(js_name = "listComparisonFunctions")]
 pub fn list_comparison_functions(config_json: String) -> Result<String> {
-    let values = functions::list_comparison_functions(&config_json)
-        .map_err(config_error_to_napi)?;
+    let values =
+        functions::list_comparison_functions(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -299,8 +288,7 @@ pub fn get_distinct_function(config_json: String, dfunc_code: String) -> Result<
 
 #[napi(js_name = "listDistinctFunctions")]
 pub fn list_distinct_functions(config_json: String) -> Result<String> {
-    let values = functions::list_distinct_functions(&config_json)
-        .map_err(config_error_to_napi)?;
+    let values = functions::list_distinct_functions(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -321,7 +309,7 @@ pub fn set_distinct_function(
 }
 
 // ============================================================================
-// Matching Functions (placeholder - not yet implemented upstream)
+// Matching Functions
 // ============================================================================
 
 #[napi(js_name = "addMatchingFunction")]
@@ -351,8 +339,7 @@ pub fn get_matching_function(config_json: String, rtype_code: String) -> Result<
 
 #[napi(js_name = "listMatchingFunctions")]
 pub fn list_matching_functions(config_json: String) -> Result<String> {
-    let values = functions::list_matching_functions(&config_json)
-        .map_err(config_error_to_napi)?;
+    let values = functions::list_matching_functions(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -362,12 +349,9 @@ pub fn set_matching_function(
     rtype_code: String,
     matching_func: Option<String>,
 ) -> Result<String> {
-    let (modified, _) = functions::set_matching_function(
-        &config_json,
-        &rtype_code,
-        matching_func.as_deref(),
-    )
-    .map_err(config_error_to_napi)?;
+    let (modified, _) =
+        functions::set_matching_function(&config_json, &rtype_code, matching_func.as_deref())
+            .map_err(config_error_to_napi)?;
     Ok(modified)
 }
 
@@ -379,7 +363,7 @@ pub fn remove_matching_function(config_json: String, rtype_code: String) -> Resu
 }
 
 // ============================================================================
-// Scoring Functions (placeholder - not yet implemented upstream)
+// Scoring Functions
 // ============================================================================
 
 #[napi(js_name = "addScoringFunction")]
@@ -402,15 +386,14 @@ pub fn delete_scoring_function(config_json: String, rtype_code: String) -> Resul
 
 #[napi(js_name = "getScoringFunction")]
 pub fn get_scoring_function(config_json: String, rtype_code: String) -> Result<String> {
-    let value = functions::get_scoring_function(&config_json, &rtype_code)
-        .map_err(config_error_to_napi)?;
+    let value =
+        functions::get_scoring_function(&config_json, &rtype_code).map_err(config_error_to_napi)?;
     serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi(js_name = "listScoringFunctions")]
 pub fn list_scoring_functions(config_json: String) -> Result<String> {
-    let values = functions::list_scoring_functions(&config_json)
-        .map_err(config_error_to_napi)?;
+    let values = functions::list_scoring_functions(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -420,12 +403,9 @@ pub fn set_scoring_function(
     rtype_code: String,
     scoring_func: Option<String>,
 ) -> Result<String> {
-    let (modified, _) = functions::set_scoring_function(
-        &config_json,
-        &rtype_code,
-        scoring_func.as_deref(),
-    )
-    .map_err(config_error_to_napi)?;
+    let (modified, _) =
+        functions::set_scoring_function(&config_json, &rtype_code, scoring_func.as_deref())
+            .map_err(config_error_to_napi)?;
     Ok(modified)
 }
 
@@ -437,7 +417,7 @@ pub fn remove_scoring_function(config_json: String, rtype_code: String) -> Resul
 }
 
 // ============================================================================
-// Candidate Functions (placeholder - not yet implemented upstream)
+// Candidate Functions
 // ============================================================================
 
 #[napi(js_name = "addCandidateFunction")]
@@ -468,8 +448,7 @@ pub fn get_candidate_function(config_json: String, rtype_code: String) -> Result
 
 #[napi(js_name = "listCandidateFunctions")]
 pub fn list_candidate_functions(config_json: String) -> Result<String> {
-    let values = functions::list_candidate_functions(&config_json)
-        .map_err(config_error_to_napi)?;
+    let values = functions::list_candidate_functions(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -479,12 +458,9 @@ pub fn set_candidate_function(
     rtype_code: String,
     candidate_func: Option<String>,
 ) -> Result<String> {
-    let (modified, _) = functions::set_candidate_function(
-        &config_json,
-        &rtype_code,
-        candidate_func.as_deref(),
-    )
-    .map_err(config_error_to_napi)?;
+    let (modified, _) =
+        functions::set_candidate_function(&config_json, &rtype_code, candidate_func.as_deref())
+            .map_err(config_error_to_napi)?;
     Ok(modified)
 }
 
@@ -496,7 +472,7 @@ pub fn remove_candidate_function(config_json: String, rtype_code: String) -> Res
 }
 
 // ============================================================================
-// Validation Functions (placeholder - not yet implemented upstream)
+// Validation Functions
 // ============================================================================
 
 #[napi(js_name = "addValidationFunction")]
@@ -527,8 +503,8 @@ pub fn get_validation_function(config_json: String, attr_code: String) -> Result
 
 #[napi(js_name = "listValidationFunctions")]
 pub fn list_validation_functions(config_json: String) -> Result<String> {
-    let values = functions::list_validation_functions(&config_json)
-        .map_err(config_error_to_napi)?;
+    let values =
+        functions::list_validation_functions(&config_json).map_err(config_error_to_napi)?;
     serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
@@ -538,12 +514,9 @@ pub fn set_validation_function(
     attr_code: String,
     validation_func: Option<String>,
 ) -> Result<String> {
-    let (modified, _) = functions::set_validation_function(
-        &config_json,
-        &attr_code,
-        validation_func.as_deref(),
-    )
-    .map_err(config_error_to_napi)?;
+    let (modified, _) =
+        functions::set_validation_function(&config_json, &attr_code, validation_func.as_deref())
+            .map_err(config_error_to_napi)?;
     Ok(modified)
 }
 

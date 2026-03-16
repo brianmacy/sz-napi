@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::elements;
 
-use crate::error::config_error_to_napi;
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 #[napi(object)]
 pub struct AddElementOptions {
@@ -49,23 +49,13 @@ pub fn delete_element(config_json: String, code: String) -> Result<String> {
 #[napi]
 pub fn get_element(config_json: String, code: String) -> Result<String> {
     let value = elements::get_element(&config_json, &code).map_err(config_error_to_napi)?;
-    serde_json::to_string(&value).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi]
 pub fn list_elements(config_json: String) -> Result<String> {
     let values = elements::list_elements(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]
@@ -118,11 +108,6 @@ pub fn set_feature_element_derived(
     element_code: String,
     derived: String,
 ) -> Result<String> {
-    elements::set_feature_element_derived(
-        &config_json,
-        &feature_code,
-        &element_code,
-        &derived,
-    )
-    .map_err(config_error_to_napi)
+    elements::set_feature_element_derived(&config_json, &feature_code, &element_code, &derived)
+        .map_err(config_error_to_napi)
 }

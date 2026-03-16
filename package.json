@@ -4,8 +4,13 @@
     "packages/sdk",
     "packages/configtool"
   ],
+  "scripts": {
+    "test": "vitest run --workspace",
+    "docs": "typedoc"
+  },
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4",
+    "typedoc": "^0.27",
     "vitest": "^3"
   }
 }

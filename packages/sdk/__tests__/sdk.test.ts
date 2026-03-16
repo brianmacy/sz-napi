@@ -14,25 +14,44 @@ const {
   SzNotFoundError,
 } = sdk;
 
-const SENZING_BASE = '/opt/homebrew/opt/senzing/runtime/er';
-const TEST_DB_PATH = '/tmp/sz-napi-test.db';
-const SCHEMA_SQL_PATH = path.join(SENZING_BASE, 'resources/schema/szcore-schema-sqlite-create.sql');
+function getTestConfig() {
+  if (process.env.SENZING_SETTINGS) {
+    const parsed = JSON.parse(process.env.SENZING_SETTINGS);
+    const connMatch = parsed.SQL.CONNECTION.match(/sqlite3:\/\/[^@]+@(.+)/);
+    return {
+      settings: process.env.SENZING_SETTINGS,
+      dbPath: connMatch?.[1] ?? '/tmp/sz-napi-test.db',
+      schemaPath: path.join(parsed.PIPELINE.RESOURCEPATH, 'schema/szcore-schema-sqlite-create.sql'),
+      externalInit: true,
+    };
+  }
 
-const settings = JSON.stringify({
-  PIPELINE: {
-    CONFIGPATH: path.join(SENZING_BASE, 'resources/templates'),
-    RESOURCEPATH: path.join(SENZING_BASE, 'resources'),
-    SUPPORTPATH: '/opt/homebrew/opt/senzing/runtime/data',
-  },
-  SQL: { CONNECTION: `sqlite3://na:na@${TEST_DB_PATH}` },
-});
+  const senzingBase = '/opt/homebrew/opt/senzing/runtime/er';
+  const dbPath = '/tmp/sz-napi-test.db';
+  return {
+    settings: JSON.stringify({
+      PIPELINE: {
+        CONFIGPATH: path.join(senzingBase, 'resources/templates'),
+        RESOURCEPATH: path.join(senzingBase, 'resources'),
+        SUPPORTPATH: '/opt/homebrew/opt/senzing/runtime/data',
+      },
+      SQL: { CONNECTION: `sqlite3://na:na@${dbPath}` },
+    }),
+    dbPath,
+    schemaPath: path.join(senzingBase, 'resources/schema/szcore-schema-sqlite-create.sql'),
+    externalInit: false,
+  };
+}
+
+const testConfig = getTestConfig();
+const settings = testConfig.settings;
 
 /** Initialize SQLite database with Senzing schema */
 function initTestDatabase() {
-  if (fs.existsSync(TEST_DB_PATH)) {
-    fs.unlinkSync(TEST_DB_PATH);
+  if (fs.existsSync(testConfig.dbPath)) {
+    fs.unlinkSync(testConfig.dbPath);
   }
-  execSync(`sqlite3 ${TEST_DB_PATH} < ${SCHEMA_SQL_PATH}`);
+  execSync(`sqlite3 ${testConfig.dbPath} < ${testConfig.schemaPath}`);
 }
 
 let env: InstanceType<typeof SzEnvironment>;
@@ -48,8 +67,10 @@ let entityIdW001: number;
 
 describe('Senzing SDK Integration Tests', () => {
   beforeAll(() => {
-    // Initialize SQLite database with Senzing schema
-    initTestDatabase();
+    // Initialize SQLite database with Senzing schema (skip if externally managed)
+    if (!testConfig.externalInit) {
+      initTestDatabase();
+    }
 
     // Create environment (process-global singleton)
     env = new SzEnvironment('sz-napi-test', settings);
@@ -77,8 +98,8 @@ describe('Senzing SDK Integration Tests', () => {
     if (env && !env.isDestroyed()) {
       env.destroy();
     }
-    if (fs.existsSync(TEST_DB_PATH)) {
-      fs.unlinkSync(TEST_DB_PATH);
+    if (!testConfig.externalInit && fs.existsSync(testConfig.dbPath)) {
+      fs.unlinkSync(testConfig.dbPath);
     }
   });
 

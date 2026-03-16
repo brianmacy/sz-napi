@@ -1,3 +1,6 @@
+// NAPI-RS exports are FFI-only; Rust's dead_code analysis cannot see them.
+#![allow(dead_code)]
+
 mod attributes;
 mod behavior_overrides;
 mod calls;

@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::rules;
 
-use crate::error::config_error_to_napi;
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 #[napi(object)]
 pub struct SetRuleOptions {
@@ -17,12 +17,8 @@ pub struct SetRuleOptions {
 
 #[napi]
 pub fn add_rule(config_json: String, id: i64, rule_config: String) -> Result<String> {
-    let value: serde_json::Value = serde_json::from_str(&rule_config).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })?;
+    let value: serde_json::Value =
+        serde_json::from_str(&rule_config).map_err(json_serialize_error)?;
     let (config, _id) = rules::add_rule(&config_json, id, &value).map_err(config_error_to_napi)?;
     Ok(config)
 }
@@ -35,23 +31,13 @@ pub fn delete_rule(config_json: String, rule_code: String) -> Result<String> {
 #[napi]
 pub fn get_rule(config_json: String, code_or_id: String) -> Result<String> {
     let value = rules::get_rule(&config_json, &code_or_id).map_err(config_error_to_napi)?;
-    serde_json::to_string(&value).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi]
 pub fn list_rules(config_json: String) -> Result<String> {
     let values = rules::list_rules(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]

@@ -15,10 +15,7 @@ pub fn get_compatibility_version(config_json: String) -> Result<String> {
 }
 
 #[napi]
-pub fn update_compatibility_version(
-    config_json: String,
-    new_version: String,
-) -> Result<String> {
+pub fn update_compatibility_version(config_json: String, new_version: String) -> Result<String> {
     versioning::update_compatibility_version(&config_json, &new_version)
         .map_err(config_error_to_napi)
 }

@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::features;
 
-use crate::error::config_error_to_napi;
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 #[napi(object)]
 pub struct AddFeatureOptions {
@@ -62,12 +62,8 @@ pub struct AddFeatureDistinctCallElementOptions {
 
 #[napi]
 pub fn add_feature(config_json: String, options: AddFeatureOptions) -> Result<String> {
-    let element_list: serde_json::Value = serde_json::from_str(&options.element_list).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })?;
+    let element_list: serde_json::Value =
+        serde_json::from_str(&options.element_list).map_err(json_serialize_error)?;
     let params = features::AddFeatureParams {
         feature: &options.feature,
         element_list: &element_list,
@@ -96,23 +92,13 @@ pub fn delete_feature(config_json: String, feature_code_or_id: String) -> Result
 pub fn get_feature(config_json: String, feature_code_or_id: String) -> Result<String> {
     let value =
         features::get_feature(&config_json, &feature_code_or_id).map_err(config_error_to_napi)?;
-    serde_json::to_string(&value).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi]
 pub fn list_features(config_json: String) -> Result<String> {
     let values = features::list_features(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]
@@ -169,24 +155,13 @@ pub fn get_feature_comparison(
     };
     let value =
         features::get_feature_comparison(&config_json, params).map_err(config_error_to_napi)?;
-    serde_json::to_string(&value).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi]
 pub fn list_feature_comparisons(config_json: String) -> Result<String> {
-    let values =
-        features::list_feature_comparisons(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    let values = features::list_feature_comparisons(&config_json).map_err(config_error_to_napi)?;
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]
@@ -226,32 +201,20 @@ pub fn add_feature_distinct_call_element(
         element_code: options.element_code.as_deref(),
         exec_order: options.exec_order,
     };
-    features::add_feature_distinct_call_element(&config_json, params)
-        .map_err(config_error_to_napi)
+    features::add_feature_distinct_call_element(&config_json, params).map_err(config_error_to_napi)
 }
 
 #[napi]
 pub fn list_feature_classes(config_json: String) -> Result<String> {
-    let values =
-        features::list_feature_classes(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    let values = features::list_feature_classes(&config_json).map_err(config_error_to_napi)?;
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]
 pub fn get_feature_class(config_json: String, fclass_id_or_code: String) -> Result<String> {
     let value = features::get_feature_class(&config_json, &fclass_id_or_code)
         .map_err(config_error_to_napi)?;
-    serde_json::to_string(&value).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi]

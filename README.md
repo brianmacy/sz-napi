@@ -2,8 +2,7 @@
 
 Node.js/TypeScript SDK for Senzing v4 entity resolution, built with NAPI-RS.
 
-[![npm: @senzing/sdk](https://img.shields.io/npm/v/@senzing/sdk?label=%40senzing%2Fsdk)](https://www.npmjs.com/package/@senzing/sdk)
-[![npm: @senzing/configtool](https://img.shields.io/npm/v/@senzing/configtool?label=%40senzing%2Fconfigtool)](https://www.npmjs.com/package/@senzing/configtool)
+[![CI](https://github.com/brianmacy/sz-napi/actions/workflows/ci.yml/badge.svg)](https://github.com/brianmacy/sz-napi/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 ## Overview
@@ -26,12 +25,14 @@ Node.js 18 or later.
 The `@senzing/sdk` package requires the Senzing runtime to be installed separately. The npm package contains only the NAPI bridge code (a few MB); the runtime libraries and support data are installed via platform package managers.
 
 **macOS (arm64):**
+
 ```bash
 brew install senzingsdk-runtime-unofficial
 export DYLD_LIBRARY_PATH=/opt/homebrew/opt/senzing/runtime/er/lib
 ```
 
 **Linux (x64, arm64):**
+
 ```bash
 # Debian/Ubuntu
 apt install senzingsdk-runtime
@@ -43,6 +44,7 @@ export LD_LIBRARY_PATH=/opt/senzing/er/lib
 ```
 
 **Windows (x64):**
+
 ```bash
 scoop install senzingsdk-runtime-unofficial
 # Ensure Sz.dll is on your PATH
@@ -84,14 +86,14 @@ const engine = env.getEngine();
 engine.addRecord(
   "CUSTOMERS",
   "1001",
-  JSON.stringify({ NAME_FULL: "Robert Smith", DATE_OF_BIRTH: "1985-02-15" })
+  JSON.stringify({ NAME_FULL: "Robert Smith", DATE_OF_BIRTH: "1985-02-15" }),
 );
 
 // Search by attributes
 const result = engine.searchByAttributes(
   JSON.stringify({ NAME_FULL: "Bob Smith" }),
   undefined,
-  SzFlags.SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS
+  SzFlags.SEARCH_BY_ATTRIBUTES_DEFAULT_FLAGS,
 );
 console.log(JSON.parse(result));
 
@@ -124,15 +126,15 @@ writeFileSync("config-modified.json", config);
 
 ### @senzing/sdk
 
-| Export | Description |
-|--------|-------------|
-| `SzEnvironment` | Lifecycle management. Constructor takes module name, settings JSON, and optional verbose logging flag. Provides `getEngine()`, `getConfigManager()`, `getDiagnostic()`, `getProduct()`, `destroy()`, and `reinitialize()`. |
-| `SzEngine` | Entity resolution operations: `addRecord`, `deleteRecord`, `getEntityById`, `getEntityByRecord`, `searchByAttributes`, `whyEntities`, `whyRecords`, `howEntity`, `findPath`, `findNetwork`, export iteration, and more. |
-| `SzConfigManager` | Configuration management: `createConfig`, `registerConfig`, `setDefaultConfig`, `replaceDefaultConfigId`, `getConfigRegistry`, and more. |
-| `SzDiagnostic` | System diagnostics: `checkRepositoryPerformance`, `getRepositoryInfo`, `getFeature`, `purgeRepository`. |
-| `SzProduct` | Product info: `getVersion`, `getLicense`. |
-| `SzFlags` | Frozen object containing all flag constants as `bigint` values. |
-| `SzError` (and subclasses) | Error hierarchy for structured error handling. |
+| Export                     | Description                                                                                                                                                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SzEnvironment`            | Lifecycle management. Constructor takes module name, settings JSON, and optional verbose logging flag. Provides `getEngine()`, `getConfigManager()`, `getDiagnostic()`, `getProduct()`, `destroy()`, and `reinitialize()`. |
+| `SzEngine`                 | Entity resolution operations: `addRecord`, `deleteRecord`, `getEntityById`, `getEntityByRecord`, `searchByAttributes`, `whyEntities`, `whyRecords`, `howEntity`, `findPath`, `findNetwork`, export iteration, and more.    |
+| `SzConfigManager`          | Configuration management: `createConfig`, `registerConfig`, `setDefaultConfig`, `replaceDefaultConfigId`, `getConfigRegistry`, and more.                                                                                   |
+| `SzDiagnostic`             | System diagnostics: `checkRepositoryPerformance`, `getRepositoryInfo`, `getFeature`, `purgeRepository`.                                                                                                                    |
+| `SzProduct`                | Product info: `getVersion`, `getLicense`.                                                                                                                                                                                  |
+| `SzFlags`                  | Frozen object containing all flag constants as `bigint` values.                                                                                                                                                            |
+| `SzError` (and subclasses) | Error hierarchy for structured error handling.                                                                                                                                                                             |
 
 Full type definitions are in `packages/sdk/sdk.d.ts`.
 
@@ -140,23 +142,23 @@ Full type definitions are in `packages/sdk/sdk.d.ts`.
 
 All functions are stateless: they accept a config JSON string and return a modified config JSON string (or query results as a JSON string).
 
-| Category | Functions |
-|----------|-----------|
-| Data Sources | `addDataSource`, `setDataSource`, `getDataSource`, `deleteDataSource`, `listDataSources` |
-| Attributes | `addAttribute`, `setAttribute`, `getAttribute`, `deleteAttribute`, `listAttributes` |
-| Features | `addFeature`, `setFeature`, `getFeature`, `deleteFeature`, `listFeatures` |
-| Elements | `addElement`, `setElement`, `getElement`, `deleteElement`, `listElements` |
-| Rules | `addRule`, `setRule`, `getRule`, `deleteRule`, `listRules` |
-| Fragments | `addFragment`, `setFragment`, `getFragment`, `deleteFragment`, `listFragments` |
-| Functions | Standardize, expression, comparison, distinct, matching, scoring, candidate, validation -- each with add/set/get/delete/list |
-| Calls | Standardize, expression, comparison, distinct calls -- each with add/set/get/delete/list |
-| Thresholds | `addComparisonThreshold`, `setComparisonThreshold`, `deleteComparisonThreshold`, `listComparisonThresholds` |
-| Behavior Overrides | `addBehaviorOverride`, `deleteBehaviorOverride`, `getBehaviorOverride`, `listBehaviorOverrides` |
-| Generic Plans | `cloneGenericPlan`, `deleteGenericPlan`, `setGenericPlan`, `listGenericPlans` |
-| System Params | `listSystemParameters`, `setSystemParameter` |
-| Config Sections | `addConfigSection`, `removeConfigSection`, `getConfigSection`, `listConfigSections` |
-| Versioning | `getVersion`, `getCompatibilityVersion`, `updateCompatibilityVersion`, `verifyCompatibilityVersion` |
-| Script Processing | `processScript`, `processFile` |
+| Category           | Functions                                                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Data Sources       | `addDataSource`, `setDataSource`, `getDataSource`, `deleteDataSource`, `listDataSources`                                     |
+| Attributes         | `addAttribute`, `setAttribute`, `getAttribute`, `deleteAttribute`, `listAttributes`                                          |
+| Features           | `addFeature`, `setFeature`, `getFeature`, `deleteFeature`, `listFeatures`                                                    |
+| Elements           | `addElement`, `setElement`, `getElement`, `deleteElement`, `listElements`                                                    |
+| Rules              | `addRule`, `setRule`, `getRule`, `deleteRule`, `listRules`                                                                   |
+| Fragments          | `addFragment`, `setFragment`, `getFragment`, `deleteFragment`, `listFragments`                                               |
+| Functions          | Standardize, expression, comparison, distinct, matching, scoring, candidate, validation -- each with add/set/get/delete/list |
+| Calls              | Standardize, expression, comparison, distinct calls -- each with add/set/get/delete/list                                     |
+| Thresholds         | `addComparisonThreshold`, `setComparisonThreshold`, `deleteComparisonThreshold`, `listComparisonThresholds`                  |
+| Behavior Overrides | `addBehaviorOverride`, `deleteBehaviorOverride`, `getBehaviorOverride`, `listBehaviorOverrides`                              |
+| Generic Plans      | `cloneGenericPlan`, `deleteGenericPlan`, `setGenericPlan`, `listGenericPlans`                                                |
+| System Params      | `listSystemParameters`, `setSystemParameter`                                                                                 |
+| Config Sections    | `addConfigSection`, `removeConfigSection`, `getConfigSection`, `listConfigSections`                                          |
+| Versioning         | `getVersion`, `getCompatibilityVersion`, `updateCompatibilityVersion`, `verifyCompatibilityVersion`                          |
+| Script Processing  | `processScript`, `processFile`                                                                                               |
 
 Full type definitions are in `packages/configtool/index.d.ts`.
 
@@ -174,7 +176,7 @@ engine.addRecord("DS", "1", record, SzFlags.ADD_RECORD_ALL_FLAGS);
 engine.getEntityByRecord(
   "DS",
   "1",
-  SzFlags.ENTITY_DEFAULT_FLAGS | SzFlags.ENTITY_INCLUDE_ALL_FEATURES
+  SzFlags.ENTITY_DEFAULT_FLAGS | SzFlags.ENTITY_INCLUDE_ALL_FEATURES,
 );
 
 // No flags
@@ -254,11 +256,11 @@ try {
 ## Platform Support
 
 | Platform | Architecture | @senzing/sdk | @senzing/configtool |
-|----------|-------------|:------------:|:-------------------:|
-| macOS    | arm64       | Yes          | Yes                 |
-| Linux    | x64         | Yes          | Yes                 |
-| Linux    | arm64       | Yes          | Yes                 |
-| Windows  | x64         | Yes          | Yes                 |
+| -------- | ------------ | :----------: | :-----------------: |
+| macOS    | arm64        |     Yes      |         Yes         |
+| Linux    | x64          |     Yes      |         Yes         |
+| Linux    | arm64        |     Yes      |         Yes         |
+| Windows  | x64          |     Yes      |         Yes         |
 
 macOS x86_64 (Intel) is not supported by the Senzing v4 runtime.
 
@@ -276,7 +278,7 @@ const worker = new Worker("./worker.js", {
 });
 ```
 
-See `examples/electron-worker.ts` for the complete pattern.
+See [examples/electron-worker/](examples/electron-worker/) for the complete pattern.
 
 ## Building from Source
 
@@ -311,6 +313,30 @@ npm test
 cd packages/configtool && npx vitest run
 ```
 
+## Documentation
+
+- [Getting Started](docs/getting-started.md) — Zero-to-first-entity walkthrough
+- [Config Management](docs/config-management.md) — Configuration lifecycle tutorial
+- [Error Handling](docs/error-handling.md) — Error hierarchy and patterns
+- [Deployment](docs/deployment.md) — Docker, PostgreSQL, monitoring
+
+## Examples
+
+Each example is a self-contained project with its own `package.json`:
+
+```bash
+cd examples/basic-sdk-usage
+npm install
+npm start
+```
+
+| Example                                          | Description                                    | Requires Runtime |
+| ------------------------------------------------ | ---------------------------------------------- | :--------------: |
+| [basic-sdk-usage](examples/basic-sdk-usage/)     | Add records, search, entity resolution, export |       Yes        |
+| [config-management](examples/config-management/) | Create, modify, register, and activate configs |       Yes        |
+| [configtool-usage](examples/configtool-usage/)   | Offline config editing with pure JSON          |        No        |
+| [electron-worker](examples/electron-worker/)     | Worker thread pattern for Electron apps        |       Yes        |
+
 ## Repository Structure
 
 ```
@@ -338,10 +364,15 @@ sz-napi/
       npm/                      # Platform-specific packages
       __tests__/
   examples/
-    basic-sdk-usage.ts          # Load records, search, get entities
-    config-management.ts        # Register data sources, manage configs
-    configtool-usage.ts         # Edit config JSON offline
-    electron-worker.ts          # Worker thread pattern for Electron
+    basic-sdk-usage/            # Load records, search, get entities
+    config-management/          # Register data sources, manage configs
+    configtool-usage/           # Edit config JSON offline
+    electron-worker/            # Worker thread pattern for Electron
+  docs/
+    getting-started.md          # Zero-to-first-entity walkthrough
+    config-management.md        # Configuration lifecycle tutorial
+    error-handling.md           # Error hierarchy and patterns
+    deployment.md               # Docker, PostgreSQL, monitoring
 ```
 
 ## License

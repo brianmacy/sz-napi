@@ -1,0 +1,14 @@
+{
+  "name": "electron-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@senzing/sdk": "file:../../packages/sdk"
+  },
+  "devDependencies": {
+    "tsx": "^4"
+  }
+}

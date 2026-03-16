@@ -1,0 +1,162 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build configtool native addon (no Senzing runtime needed)
+  # ---------------------------------------------------------------------------
+  build-configtool:
+    name: Build configtool (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+        with:
+          path: sz-napi
+
+      - name: Checkout sz-rust-sdk-configtool
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk-configtool
+          path: sz-rust-sdk-configtool
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies
+        working-directory: sz-napi
+        run: npm install
+
+      - name: Build configtool
+        working-directory: sz-napi/packages/configtool
+        run: npx napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: configtool-${{ matrix.target }}
+          path: sz-napi/packages/configtool/*.node
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Build SDK native addon (no Senzing runtime needed at build time)
+  # ---------------------------------------------------------------------------
+  build-sdk:
+    name: Build SDK (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+        with:
+          path: sz-napi
+
+      - name: Checkout sz-rust-sdk
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk
+          path: sz-rust-sdk
+
+      - name: Checkout sz-rust-sdk-configtool
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk-configtool
+          path: sz-rust-sdk-configtool
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies
+        working-directory: sz-napi
+        run: npm install
+
+      - name: Build SDK
+        working-directory: sz-napi/packages/sdk
+        run: npx napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-${{ matrix.target }}
+          path: sz-napi/packages/sdk/*.node
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Create GitHub Release and attach prebuilt .node artifacts
+  # ---------------------------------------------------------------------------
+  release:
+    name: Create GitHub Release
+    needs: [build-configtool, build-sdk]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Rename artifacts for release
+        run: |
+          mkdir -p release-assets
+          for dir in artifacts/*/; do
+            name=$(basename "$dir")
+            for file in "$dir"*.node; do
+              [ -f "$file" ] || continue
+              base=$(basename "$file")
+              cp "$file" "release-assets/${name}-${base}"
+            done
+          done
+          ls -la release-assets/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/*

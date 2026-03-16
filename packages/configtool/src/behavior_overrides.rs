@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::behavior_overrides;
 
-use crate::error::config_error_to_napi;
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 #[napi]
 pub fn add_behavior_override(
@@ -32,25 +32,14 @@ pub fn get_behavior_override(
     feature_code: String,
     usage_type: String,
 ) -> Result<String> {
-    let value =
-        behavior_overrides::get_behavior_override(&config_json, &feature_code, &usage_type)
-            .map_err(config_error_to_napi)?;
-    serde_json::to_string(&value).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    let value = behavior_overrides::get_behavior_override(&config_json, &feature_code, &usage_type)
+        .map_err(config_error_to_napi)?;
+    serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi]
 pub fn list_behavior_overrides(config_json: String) -> Result<String> {
     let values =
         behavior_overrides::list_behavior_overrides(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }

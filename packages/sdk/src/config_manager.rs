@@ -42,10 +42,7 @@ impl SzConfigManagerWrapper {
 
     /// Creates a configuration from a JSON definition string and exports it as JSON.
     #[napi]
-    pub fn create_config_from_definition(
-        &self,
-        config_definition: String,
-    ) -> napi::Result<String> {
+    pub fn create_config_from_definition(&self, config_definition: String) -> napi::Result<String> {
         self.inner
             .create_config_from_definition(&config_definition)
             .map_err(sz_error_to_napi)?

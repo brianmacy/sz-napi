@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::generic_plans;
 
-use crate::error::config_error_to_napi;
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 #[napi]
 pub fn clone_generic_plan(
@@ -30,12 +30,7 @@ pub fn delete_generic_plan(config_json: String, gplan_code: String) -> Result<St
 pub fn list_generic_plans(config_json: String, filter: Option<String>) -> Result<String> {
     let values = generic_plans::list_generic_plans(&config_json, filter.as_deref())
         .map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]

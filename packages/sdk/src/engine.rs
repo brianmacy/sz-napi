@@ -299,8 +299,7 @@ impl SzEngineWrapper {
         flags: Option<BigInt>,
     ) -> napi::Result<String> {
         let sz_flags = bigint_to_sz_flags(flags);
-        let avoid_set: Option<HashSet<i64>> =
-            avoid_entity_ids.map(|ids| ids.into_iter().collect());
+        let avoid_set: Option<HashSet<i64>> = avoid_entity_ids.map(|ids| ids.into_iter().collect());
         let required_set: Option<HashSet<String>> =
             required_data_sources.map(|ds| ds.into_iter().collect());
         self.inner
@@ -327,7 +326,13 @@ impl SzEngineWrapper {
     ) -> napi::Result<String> {
         let sz_flags = bigint_to_sz_flags(flags);
         self.inner
-            .find_network(&entity_ids, max_degrees, build_out_degree, max_entities, sz_flags)
+            .find_network(
+                &entity_ids,
+                max_degrees,
+                build_out_degree,
+                max_entities,
+                sz_flags,
+            )
             .map_err(sz_error_to_napi)
     }
 

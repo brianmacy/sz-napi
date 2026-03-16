@@ -2,7 +2,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use sz_configtool_lib::attributes;
 
-use crate::error::config_error_to_napi;
+use crate::error::{config_error_to_napi, json_serialize_error};
 
 #[napi(object)]
 pub struct AddAttributeOptions {
@@ -34,7 +34,8 @@ pub fn add_attribute(config_json: String, options: AddAttributeOptions) -> Resul
         internal: options.internal.as_deref(),
         required: options.required.as_deref(),
     };
-    let (config, _value) = attributes::add_attribute(&config_json, params).map_err(config_error_to_napi)?;
+    let (config, _value) =
+        attributes::add_attribute(&config_json, params).map_err(config_error_to_napi)?;
     Ok(config)
 }
 
@@ -46,23 +47,13 @@ pub fn delete_attribute(config_json: String, code: String) -> Result<String> {
 #[napi]
 pub fn get_attribute(config_json: String, code: String) -> Result<String> {
     let value = attributes::get_attribute(&config_json, &code).map_err(config_error_to_napi)?;
-    serde_json::to_string(&value).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
 #[napi]
 pub fn list_attributes(config_json: String) -> Result<String> {
     let values = attributes::list_attributes(&config_json).map_err(config_error_to_napi)?;
-    serde_json::to_string(&values).map_err(|e| {
-        napi::Error::new(
-            napi::Status::GenericFailure,
-            format!("[JsonParse] {e}"),
-        )
-    })
+    serde_json::to_string(&values).map_err(json_serialize_error)
 }
 
 #[napi]

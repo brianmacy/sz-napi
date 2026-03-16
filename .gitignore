@@ -30,6 +30,13 @@ dist/
 packages/*/npm/
 packages/*/*.node
 
+# NAPI-RS auto-generated JS/TS bindings
+packages/*/index.js
+packages/*/index.d.ts
+
 # npm
 package-lock.json
 coverage/
+
+# TypeDoc generated API docs
+docs/api/

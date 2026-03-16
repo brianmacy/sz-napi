@@ -33,7 +33,8 @@ pub fn sz_error_to_napi(err: SzError) -> napi::Error {
         SzError::Ffi(_) => "SZ_UNHANDLED",
         SzError::Json(_) => "SZ_UNHANDLED",
         SzError::StringConversion(_) => "SZ_UNHANDLED",
-        _ => "SZ_UNKNOWN",
+        // SzError is #[non_exhaustive]; catch any future variants added upstream.
+        _ => "SZ_UNHANDLED",
     };
 
     let message = format!("[{code}] {err}");

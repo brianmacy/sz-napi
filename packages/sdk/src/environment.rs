@@ -29,21 +29,15 @@ impl SzEnvironmentWrapper {
         verbose_logging: Option<bool>,
     ) -> napi::Result<Self> {
         let verbose = verbose_logging.unwrap_or(false);
-        let inner =
-            SzEnvironmentCore::get_instance(&module_name, &settings, verbose)
-                .map_err(sz_error_to_napi)?;
-        Ok(Self {
-            inner: Some(inner),
-        })
+        let inner = SzEnvironmentCore::get_instance(&module_name, &settings, verbose)
+            .map_err(sz_error_to_napi)?;
+        Ok(Self { inner: Some(inner) })
     }
 
     /// Checks if the environment has been destroyed.
     #[napi]
     pub fn is_destroyed(&self) -> bool {
-        match &self.inner {
-            Some(env) => env.is_destroyed(),
-            None => true,
-        }
+        self.inner.as_ref().is_none_or(|env| env.is_destroyed())
     }
 
     /// Destroys the environment and releases native resources.
@@ -54,7 +48,7 @@ impl SzEnvironmentWrapper {
         let env = self.inner.take().ok_or_else(|| {
             napi::Error::new(
                 napi::Status::GenericFailure,
-                "[SZ_ENVIRONMENT_DESTROYED] Environment has already been destroyed",
+                "[SZ_ENVIRONMENT_DESTROYED] Environment has been destroyed",
             )
         })?;
         env.destroy().map_err(sz_error_to_napi)

@@ -229,20 +229,38 @@ jobs:
           name: sdk-x86_64-unknown-linux-gnu
           path: packages/sdk/
 
-      # TODO: Install Senzing runtime.
-      # The SDK tests require the Senzing runtime to be installed on the host.
-      # Add installation steps here once a Senzing apt repository or tarball
-      # strategy is decided. Example:
-      #
-      # - name: Install Senzing runtime
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y <senzing-packages>
-      #     export SENZING_DIR=/opt/senzing
-      #
-      # Until then, this job serves as a placeholder to validate the artifact
-      # download and test harness wiring.
+      - name: Install Senzing runtime
+        run: |
+          # Add Senzing apt repository
+          curl -fsSL https://hub.senzing.com/gpg/senzing-production.asc \
+            | sudo gpg --dearmor -o /usr/share/keyrings/senzing-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/senzing-keyring.gpg] \
+            https://hub.senzing.com/apt stable main" \
+            | sudo tee /etc/apt/sources.list.d/senzing.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y senzingsdk-runtime
+
+      - name: Initialize Senzing SQLite database
+        run: |
+          /opt/senzing/er/tools/szinit \
+            -configPath /opt/senzing/er/resources/templates \
+            -resourcePath /opt/senzing/er/resources \
+            -supportPath /opt/senzing/data \
+            -sqlConnection "sqlite3://na:na@/tmp/senzing-test.db"
 
       - name: Run SDK tests
         working-directory: packages/sdk
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+          SENZING_SETTINGS: >-
+            {
+              "PIPELINE": {
+                "CONFIGPATH": "/opt/senzing/er/resources/templates",
+                "RESOURCEPATH": "/opt/senzing/er/resources",
+                "SUPPORTPATH": "/opt/senzing/data"
+              },
+              "SQL": {
+                "CONNECTION": "sqlite3://na:na@/tmp/senzing-test.db"
+              }
+            }
         run: npx vitest run
