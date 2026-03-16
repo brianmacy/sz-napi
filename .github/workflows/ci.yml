@@ -45,7 +45,9 @@ jobs:
 
       - name: Cargo fmt check
         working-directory: sz-napi
-        run: cargo fmt --all --check
+        run: |
+          cargo fmt -p senzing-sdk-napi --check
+          cargo fmt -p senzing-configtool-napi --check
 
   # ---------------------------------------------------------------------------
   # Build configtool native addon (no Senzing runtime needed)
@@ -109,7 +111,7 @@ jobs:
           if-no-files-found: error
 
   # ---------------------------------------------------------------------------
-  # Build SDK native addon (no Senzing runtime needed at build time)
+  # Build SDK native addon (requires Senzing runtime for linking)
   # ---------------------------------------------------------------------------
   build-sdk:
     name: Build SDK (${{ matrix.target }})
@@ -118,14 +120,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
-            target: aarch64-apple-darwin
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout sz-napi
         uses: actions/checkout@v6
@@ -143,6 +141,14 @@ jobs:
         with:
           repository: brianmacy/sz-rust-sdk-configtool
           path: sz-rust-sdk-configtool
+
+      - name: Install Senzing runtime
+        run: |
+          curl -fsSL https://senzing-production-apt.s3.amazonaws.com/senzingrepo_2.0.1-1_all.deb \
+            -o /tmp/senzingrepo.deb
+          sudo apt-get install -y /tmp/senzingrepo.deb
+          sudo apt-get update
+          sudo apt-get install -y senzingsdk-runtime
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v6
