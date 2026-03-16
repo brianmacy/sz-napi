@@ -59,7 +59,7 @@ jobs:
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: configtool-${{ matrix.target }}
           path: sz-napi/packages/configtool/*.node
@@ -120,7 +120,7 @@ jobs:
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sdk-${{ matrix.target }}
           path: sz-napi/packages/sdk/*.node
