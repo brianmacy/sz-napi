@@ -112,19 +112,27 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Build SDK native addon (requires Senzing runtime for linking)
+  # Amazon Linux 2023 is required for Senzing yum packages
   # ---------------------------------------------------------------------------
   build-sdk:
     name: Build SDK (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: amazonlinux:2023
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - runner: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-          - os: ubuntu-24.04-arm
+          - runner: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
     steps:
+      - name: Install system dependencies
+        run: |
+          yum install -y git tar gzip gcc gcc-c++ make openssl-devel \
+            curl findutils xz
+
       - name: Checkout sz-napi
         uses: actions/checkout@v6
         with:
@@ -143,14 +151,7 @@ jobs:
           path: sz-rust-sdk-configtool
 
       - name: Install Senzing runtime
-        run: |
-          curl -fsSL https://hub.senzing.com/gpg/senzing-production.asc \
-            | sudo gpg --dearmor -o /usr/share/keyrings/senzing-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/senzing-keyring.gpg] \
-            https://hub.senzing.com/apt stable main" \
-            | sudo tee /etc/apt/sources.list.d/senzing.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y senzingsdk-runtime
+        run: yum install -y senzingsdk-runtime
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v6
@@ -225,7 +226,12 @@ jobs:
     name: Test SDK (Linux x64)
     needs: build-sdk
     runs-on: ubuntu-latest
+    container:
+      image: amazonlinux:2023
     steps:
+      - name: Install system dependencies
+        run: yum install -y git tar gzip curl findutils sqlite
+
       - name: Checkout sz-napi
         uses: actions/checkout@v6
 
@@ -244,15 +250,7 @@ jobs:
           path: packages/sdk/
 
       - name: Install Senzing runtime
-        run: |
-          # Add Senzing apt repository
-          curl -fsSL https://hub.senzing.com/gpg/senzing-production.asc \
-            | sudo gpg --dearmor -o /usr/share/keyrings/senzing-keyring.gpg
-          echo "deb [signed-by=/usr/share/keyrings/senzing-keyring.gpg] \
-            https://hub.senzing.com/apt stable main" \
-            | sudo tee /etc/apt/sources.list.d/senzing.list > /dev/null
-          sudo apt-get update
-          sudo apt-get install -y senzingsdk-runtime
+        run: yum install -y senzingsdk-runtime
 
       - name: Initialize Senzing SQLite database
         run: |
