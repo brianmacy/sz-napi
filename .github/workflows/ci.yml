@@ -195,7 +195,7 @@ jobs:
         run: npm install
 
       - name: Download configtool artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: configtool-${{ matrix.target }}
           path: packages/configtool/
@@ -224,7 +224,7 @@ jobs:
         run: npm install
 
       - name: Download SDK artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: sdk-x86_64-unknown-linux-gnu
           path: packages/sdk/
