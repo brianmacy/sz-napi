@@ -18,18 +18,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: sz-napi
 
       - name: Checkout sz-rust-sdk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: brianmacy/sz-rust-sdk
           path: sz-rust-sdk
 
       - name: Checkout sz-rust-sdk-configtool
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: brianmacy/sz-rust-sdk-configtool
           path: sz-rust-sdk-configtool
@@ -67,18 +67,18 @@ jobs:
             target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: sz-napi
 
       - name: Checkout sz-rust-sdk-configtool
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: brianmacy/sz-rust-sdk-configtool
           path: sz-rust-sdk-configtool
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
 
@@ -96,7 +96,7 @@ jobs:
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: configtool-${{ matrix.target }}
           path: sz-napi/packages/configtool/*.node
@@ -122,24 +122,24 @@ jobs:
             target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: sz-napi
 
       - name: Checkout sz-rust-sdk
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: brianmacy/sz-rust-sdk
           path: sz-rust-sdk
 
       - name: Checkout sz-rust-sdk-configtool
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: brianmacy/sz-rust-sdk-configtool
           path: sz-rust-sdk-configtool
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
 
@@ -157,7 +157,7 @@ jobs:
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sdk-${{ matrix.target }}
           path: sz-napi/packages/sdk/*.node
@@ -184,10 +184,10 @@ jobs:
             target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
 
@@ -195,7 +195,7 @@ jobs:
         run: npm install
 
       - name: Download configtool artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: configtool-${{ matrix.target }}
           path: packages/configtool/
@@ -213,10 +213,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
 
@@ -224,7 +224,7 @@ jobs:
         run: npm install
 
       - name: Download SDK artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: sdk-x86_64-unknown-linux-gnu
           path: packages/sdk/
