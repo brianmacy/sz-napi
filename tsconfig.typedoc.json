@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": false,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "packages/sdk/sdk.d.ts",
+    "packages/sdk/index.d.ts",
+    "packages/sdk/js/errors.d.ts",
+    "packages/configtool/index.d.ts"
+  ]
+}

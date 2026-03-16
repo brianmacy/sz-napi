@@ -4,6 +4,7 @@
     "packages/sdk/sdk.d.ts",
     "packages/configtool/index.d.ts"
   ],
+  "tsconfig": "tsconfig.typedoc.json",
   "out": "docs/api",
   "name": "sz-napi",
   "readme": "none",
