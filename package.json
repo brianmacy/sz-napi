@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "workspaces": [
+    "packages/sdk",
+    "packages/configtool"
+  ],
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "vitest": "^3"
+  }
+}

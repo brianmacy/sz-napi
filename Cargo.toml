@@ -1,0 +1,3 @@
+[workspace]
+members = ["packages/sdk", "packages/configtool"]
+resolver = "3"

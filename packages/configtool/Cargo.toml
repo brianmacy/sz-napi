@@ -1,0 +1,16 @@
+[package]
+name = "senzing-configtool-napi"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3", features = ["napi9"] }
+napi-derive = "3"
+sz_configtool_lib = { path = "../../../sz-rust-sdk-configtool" }
+serde_json = "1.0"
+
+[build-dependencies]
+napi-build = "2"

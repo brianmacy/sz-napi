@@ -1,0 +1,25 @@
+{
+  "G2_CONFIG": {
+    "CFG_DSRC": [
+      {
+        "DSRC_ID": 1,
+        "DSRC_CODE": "SYSTEM",
+        "DSRC_DESC": "SYSTEM",
+        "DSRC_RELY": 1,
+        "RETENTION_LEVEL": "Remember",
+        "CONVERSATIONAL": "No"
+      },
+      {
+        "DSRC_ID": 2,
+        "DSRC_CODE": "SEARCH",
+        "DSRC_DESC": "SEARCH",
+        "DSRC_RELY": 1,
+        "RETENTION_LEVEL": "Remember",
+        "CONVERSATIONAL": "No"
+      }
+    ],
+    "CFG_ATTR": [],
+    "CFG_FTYPE": [],
+    "CFG_FELEM": []
+  }
+}

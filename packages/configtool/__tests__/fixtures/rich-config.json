@@ -1,0 +1,189 @@
+{
+  "G2_CONFIG": {
+    "CFG_DSRC": [
+      {
+        "DSRC_ID": 1,
+        "DSRC_CODE": "SYSTEM",
+        "DSRC_DESC": "SYSTEM",
+        "DSRC_RELY": 1,
+        "RETENTION_LEVEL": "Remember",
+        "CONVERSATIONAL": "No"
+      },
+      {
+        "DSRC_ID": 2,
+        "DSRC_CODE": "SEARCH",
+        "DSRC_DESC": "SEARCH",
+        "DSRC_RELY": 1,
+        "RETENTION_LEVEL": "Remember",
+        "CONVERSATIONAL": "No"
+      }
+    ],
+    "CFG_ATTR": [
+      {
+        "ATTR_ID": 1001,
+        "ATTR_CODE": "NAME_FULL",
+        "ATTR_CLASS": "NAME",
+        "FTYPE_CODE": "NAME",
+        "FELEM_CODE": "FULL_NAME",
+        "FELEM_REQ": "Any",
+        "DEFAULT_VALUE": null,
+        "INTERNAL": "No"
+      },
+      {
+        "ATTR_ID": 1002,
+        "ATTR_CODE": "ADDR_FULL",
+        "ATTR_CLASS": "ADDRESS",
+        "FTYPE_CODE": "ADDRESS",
+        "FELEM_CODE": "ADDR_FULL",
+        "FELEM_REQ": "Any",
+        "DEFAULT_VALUE": null,
+        "INTERNAL": "No"
+      },
+      {
+        "ATTR_ID": 1003,
+        "ATTR_CODE": "PHONE_NUMBER",
+        "ATTR_CLASS": "PHONE",
+        "FTYPE_CODE": "PHONE",
+        "FELEM_CODE": "PHONE_NUM",
+        "FELEM_REQ": "Any",
+        "DEFAULT_VALUE": null,
+        "INTERNAL": "No"
+      }
+    ],
+    "CFG_FTYPE": [
+      {
+        "FTYPE_ID": 1,
+        "FTYPE_CODE": "NAME",
+        "FTYPE_FREQ": "NAME",
+        "FCLASS_ID": 1,
+        "FTYPE_EXCL": "No",
+        "FTYPE_STAB": "No",
+        "PERSIST_HISTORY": "Yes",
+        "USED_FOR_CAND": "No",
+        "DERIVED": "No",
+        "RTYPE_ID": 0,
+        "ANONYMIZE": "No",
+        "VERSION": 2,
+        "SHOW_IN_MATCH_KEY": "Yes"
+      },
+      {
+        "FTYPE_ID": 2,
+        "FTYPE_CODE": "ADDRESS",
+        "FTYPE_FREQ": "FF",
+        "FCLASS_ID": 2,
+        "FTYPE_EXCL": "No",
+        "FTYPE_STAB": "Yes",
+        "PERSIST_HISTORY": "Yes",
+        "USED_FOR_CAND": "No",
+        "DERIVED": "No",
+        "RTYPE_ID": 0,
+        "ANONYMIZE": "No",
+        "VERSION": 2,
+        "SHOW_IN_MATCH_KEY": "Yes"
+      },
+      {
+        "FTYPE_ID": 3,
+        "FTYPE_CODE": "PHONE",
+        "FTYPE_FREQ": "FF",
+        "FCLASS_ID": 3,
+        "FTYPE_EXCL": "No",
+        "FTYPE_STAB": "No",
+        "PERSIST_HISTORY": "Yes",
+        "USED_FOR_CAND": "No",
+        "DERIVED": "No",
+        "RTYPE_ID": 0,
+        "ANONYMIZE": "No",
+        "VERSION": 2,
+        "SHOW_IN_MATCH_KEY": "Yes"
+      },
+      {
+        "FTYPE_ID": 4,
+        "FTYPE_CODE": "DOB",
+        "FTYPE_FREQ": "RARE",
+        "FCLASS_ID": 4,
+        "FTYPE_EXCL": "No",
+        "FTYPE_STAB": "No",
+        "PERSIST_HISTORY": "Yes",
+        "USED_FOR_CAND": "No",
+        "DERIVED": "No",
+        "RTYPE_ID": 0,
+        "ANONYMIZE": "No",
+        "VERSION": 2,
+        "SHOW_IN_MATCH_KEY": "Yes"
+      }
+    ],
+    "CFG_FELEM": [
+      {
+        "FELEM_ID": 1,
+        "FELEM_CODE": "FULL_NAME",
+        "FELEM_DESC": "Full name",
+        "DATA_TYPE": "string",
+        "TOKENIZE": "No"
+      },
+      {
+        "FELEM_ID": 2,
+        "FELEM_CODE": "ADDR_FULL",
+        "FELEM_DESC": "Full address",
+        "DATA_TYPE": "string",
+        "TOKENIZE": "No"
+      },
+      {
+        "FELEM_ID": 3,
+        "FELEM_CODE": "PHONE_NUM",
+        "FELEM_DESC": "Phone number",
+        "DATA_TYPE": "string",
+        "TOKENIZE": "No"
+      },
+      {
+        "FELEM_ID": 4,
+        "FELEM_CODE": "DOB_FULL",
+        "FELEM_DESC": "Date of birth",
+        "DATA_TYPE": "string",
+        "TOKENIZE": "No"
+      }
+    ],
+    "CFG_FCLASS": [
+      {
+        "FCLASS_ID": 1,
+        "FCLASS_CODE": "NAME"
+      },
+      {
+        "FCLASS_ID": 2,
+        "FCLASS_CODE": "ADDRESS"
+      },
+      {
+        "FCLASS_ID": 3,
+        "FCLASS_CODE": "PHONE"
+      },
+      {
+        "FCLASS_ID": 4,
+        "FCLASS_CODE": "ATTRIBUTE"
+      }
+    ],
+    "CONFIG_BASE_VERSION": {
+      "VERSION": "4.0.0",
+      "BUILD_VERSION": "4.0.0.24199",
+      "BUILD_DATE": "2024-07-17",
+      "BUILD_NUMBER": "2024_07_17__07_00",
+      "COMPATIBILITY_VERSION": {
+        "CONFIG_VERSION": "11"
+      }
+    },
+    "CFG_RTYPE": [],
+    "CFG_FBOM": [],
+    "CFG_SFUNC": [],
+    "CFG_EFUNC": [],
+    "CFG_CFUNC": [],
+    "CFG_DFUNC": [],
+    "CFG_SFCALL": [],
+    "CFG_EFCALL": [],
+    "CFG_CFCALL": [],
+    "CFG_DFCALL": [],
+    "CFG_GPLAN": [],
+    "CFG_LENS": [],
+    "CFG_GENERIC_THRESHOLD": [],
+    "CFG_ERFRAG": [],
+    "CFG_ERRULE": [],
+    "CFG_CFRTN": []
+  }
+}

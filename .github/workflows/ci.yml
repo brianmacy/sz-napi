@@ -1,0 +1,248 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Cargo checks (fast validation, Linux only)
+  # ---------------------------------------------------------------------------
+  cargo-check:
+    name: Cargo Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+        with:
+          path: sz-napi
+
+      - name: Checkout sz-rust-sdk
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk
+          path: sz-rust-sdk
+
+      - name: Checkout sz-rust-sdk-configtool
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk-configtool
+          path: sz-rust-sdk-configtool
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cargo clippy
+        working-directory: sz-napi
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Cargo fmt check
+        working-directory: sz-napi
+        run: cargo fmt --workspace --check
+
+  # ---------------------------------------------------------------------------
+  # Build configtool native addon (no Senzing runtime needed)
+  # ---------------------------------------------------------------------------
+  build-configtool:
+    name: Build configtool (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+        with:
+          path: sz-napi
+
+      - name: Checkout sz-rust-sdk-configtool
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk-configtool
+          path: sz-rust-sdk-configtool
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies
+        working-directory: sz-napi
+        run: npm install
+
+      - name: Build configtool
+        working-directory: sz-napi/packages/configtool
+        run: npx napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: configtool-${{ matrix.target }}
+          path: sz-napi/packages/configtool/*.node
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Build SDK native addon (no Senzing runtime needed at build time)
+  # ---------------------------------------------------------------------------
+  build-sdk:
+    name: Build SDK (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+        with:
+          path: sz-napi
+
+      - name: Checkout sz-rust-sdk
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk
+          path: sz-rust-sdk
+
+      - name: Checkout sz-rust-sdk-configtool
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk-configtool
+          path: sz-rust-sdk-configtool
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies
+        working-directory: sz-napi
+        run: npm install
+
+      - name: Build SDK
+        working-directory: sz-napi/packages/sdk
+        run: npx napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-${{ matrix.target }}
+          path: sz-napi/packages/sdk/*.node
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Test configtool (pure-Rust, no external runtime needed)
+  # ---------------------------------------------------------------------------
+  test-configtool:
+    name: Test configtool (${{ matrix.target }})
+    needs: build-configtool
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download configtool artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: configtool-${{ matrix.target }}
+          path: packages/configtool/
+
+      - name: Run configtool tests
+        working-directory: packages/configtool
+        run: npx vitest run
+
+  # ---------------------------------------------------------------------------
+  # Test SDK (requires Senzing runtime -- Linux x64 only for now)
+  # ---------------------------------------------------------------------------
+  test-sdk:
+    name: Test SDK (Linux x64)
+    needs: build-sdk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download SDK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sdk-x86_64-unknown-linux-gnu
+          path: packages/sdk/
+
+      # TODO: Install Senzing runtime.
+      # The SDK tests require the Senzing runtime to be installed on the host.
+      # Add installation steps here once a Senzing apt repository or tarball
+      # strategy is decided. Example:
+      #
+      # - name: Install Senzing runtime
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y <senzing-packages>
+      #     export SENZING_DIR=/opt/senzing
+      #
+      # Until then, this job serves as a placeholder to validate the artifact
+      # download and test harness wiring.
+
+      - name: Run SDK tests
+        working-directory: packages/sdk
+        run: npx vitest run

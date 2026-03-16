@@ -1,0 +1,239 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+# TODO: Configure npm authentication.
+# Add an NPM_TOKEN secret to the repository settings, then uncomment the
+# relevant env / registry-url lines below.
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build all platform binaries (reuses the CI build matrix logic)
+  # ---------------------------------------------------------------------------
+  build-configtool:
+    name: Build configtool (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+        with:
+          path: sz-napi
+
+      - name: Checkout sz-rust-sdk-configtool
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk-configtool
+          path: sz-rust-sdk-configtool
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          # TODO: uncomment when NPM_TOKEN is configured
+          # registry-url: https://registry.npmjs.org
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies
+        working-directory: sz-napi
+        run: npm install
+
+      - name: Build configtool
+        working-directory: sz-napi/packages/configtool
+        run: npx napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: configtool-${{ matrix.target }}
+          path: sz-napi/packages/configtool/*.node
+          if-no-files-found: error
+
+  build-sdk:
+    name: Build SDK (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+        with:
+          path: sz-napi
+
+      - name: Checkout sz-rust-sdk
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk
+          path: sz-rust-sdk
+
+      - name: Checkout sz-rust-sdk-configtool
+        uses: actions/checkout@v4
+        with:
+          repository: brianmacy/sz-rust-sdk-configtool
+          path: sz-rust-sdk-configtool
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          # TODO: uncomment when NPM_TOKEN is configured
+          # registry-url: https://registry.npmjs.org
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies
+        working-directory: sz-napi
+        run: npm install
+
+      - name: Build SDK
+        working-directory: sz-napi/packages/sdk
+        run: npx napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-${{ matrix.target }}
+          path: sz-napi/packages/sdk/*.node
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Publish @senzing/configtool
+  # ---------------------------------------------------------------------------
+  publish-configtool:
+    name: Publish @senzing/configtool
+    needs: build-configtool
+    runs-on: ubuntu-latest
+    # TODO: uncomment when ready to publish
+    # permissions:
+    #   contents: read
+    #   id-token: write
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          # TODO: uncomment when NPM_TOKEN is configured
+          # registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download all configtool artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: configtool-*
+          path: packages/configtool/.artifacts
+          merge-multiple: false
+
+      # TODO: Arrange .node files into the npm/<platform> directories expected
+      # by napi prepublish. The exact layout depends on the napi.triples config
+      # in package.json. Example:
+      #
+      # - name: Move artifacts
+      #   run: |
+      #     cd packages/configtool
+      #     for dir in .artifacts/configtool-*; do
+      #       target=$(basename "$dir" | sed 's/configtool-//')
+      #       mkdir -p "npm/${target}"
+      #       cp "$dir"/*.node "npm/${target}/"
+      #     done
+
+      - name: Prepublish
+        working-directory: packages/configtool
+        run: npx napi prepublish -t npm
+
+      # TODO: uncomment when NPM_TOKEN is configured
+      # - name: Publish
+      #   working-directory: packages/configtool
+      #   run: npm publish --access public
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish (dry-run)
+        working-directory: packages/configtool
+        run: echo "Skipping publish -- NPM_TOKEN not configured yet"
+
+  # ---------------------------------------------------------------------------
+  # Publish @senzing/sdk
+  # ---------------------------------------------------------------------------
+  publish-sdk:
+    name: Publish @senzing/sdk
+    needs: build-sdk
+    runs-on: ubuntu-latest
+    # TODO: uncomment when ready to publish
+    # permissions:
+    #   contents: read
+    #   id-token: write
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          # TODO: uncomment when NPM_TOKEN is configured
+          # registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download all SDK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sdk-*
+          path: packages/sdk/.artifacts
+          merge-multiple: false
+
+      # TODO: Arrange .node files into the npm/<platform> directories expected
+      # by napi prepublish. See configtool job above for an example.
+
+      - name: Prepublish
+        working-directory: packages/sdk
+        run: npx napi prepublish -t npm
+
+      # TODO: uncomment when NPM_TOKEN is configured
+      # - name: Publish
+      #   working-directory: packages/sdk
+      #   run: npm publish --access public
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish (dry-run)
+        working-directory: packages/sdk
+        run: echo "Skipping publish -- NPM_TOKEN not configured yet"
