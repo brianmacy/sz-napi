@@ -45,7 +45,7 @@ jobs:
 
       - name: Cargo fmt check
         working-directory: sz-napi
-        run: cargo fmt --workspace --check
+        run: cargo fmt --all --check
 
   # ---------------------------------------------------------------------------
   # Build configtool native addon (no Senzing runtime needed)
@@ -70,6 +70,12 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: sz-napi
+
+      - name: Checkout sz-rust-sdk
+        uses: actions/checkout@v6
+        with:
+          repository: brianmacy/sz-rust-sdk
+          path: sz-rust-sdk
 
       - name: Checkout sz-rust-sdk-configtool
         uses: actions/checkout@v6
