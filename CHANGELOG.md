@@ -18,12 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- CI hardening: improved `ci.yml` workflow
+- CI: SDK build and test jobs run in Amazon Linux 2023 containers with `yum install senzingsdk-runtime`
+- CI: configtool-usage example runs in configtool test job on all platforms
+- CI: basic-sdk-usage, config-management, configtool-usage examples run in SDK test job
+- CI: `release.yml` builds all platforms and attaches `.node` artifacts to GitHub Releases
+- CI: `cargo fmt` scoped to workspace packages only (`-p` flag) to avoid formatting sibling repos
 - Extracted `json_serialize_error` helper to reduce error-handling boilerplate in configtool Rust sources
-- Rust modernization and dead code cleanup across configtool modules
-- CI-compatible test adjustments in SDK test suite
-- Improved `SzExportIterator` TypeScript type definitions
-- `.gitignore` updated for generated files (`index.js`, `index.d.ts`)
+- Rust modernization: removed `extern crate`, use `is_none_or`, `Vec::with_capacity(80)` for flags
+- Removed blanket `#![allow(dead_code)]` from SDK crate (targeted `#[allow]` on FFI items only)
+- Improved `SzExportIterator` TypeScript type declarations with module augmentation
+- SDK tests read `SENZING_SETTINGS` env var for CI compatibility, fall back to macOS paths locally
+- Committed NAPI-RS generated `index.js` and `index.d.ts` (required at runtime)
+- Added `expect.assertions()` guards to error tests preventing silent pass on non-throwing code
 
 ## [0.1.0] - 2026-03-16
 

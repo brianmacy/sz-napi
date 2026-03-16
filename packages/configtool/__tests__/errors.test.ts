@@ -12,6 +12,7 @@ const fixtureConfig = readFileSync(
 
 describe('errors', () => {
   test('SzConfigError has correct name property', () => {
+    expect.assertions(2);
     try {
       configtool.deleteDataSource(fixtureConfig, 'NONEXISTENT');
     } catch (err: any) {
@@ -21,6 +22,7 @@ describe('errors', () => {
   });
 
   test('SzConfigError has correct errorType for NotFound', () => {
+    expect.assertions(2);
     try {
       configtool.getDataSource(fixtureConfig, 'NONEXISTENT');
     } catch (err: any) {
@@ -30,6 +32,7 @@ describe('errors', () => {
   });
 
   test('SzConfigError has correct errorType for AlreadyExists', () => {
+    expect.assertions(2);
     try {
       configtool.addDataSource(fixtureConfig, { code: 'SYSTEM' });
     } catch (err: any) {
@@ -39,6 +42,7 @@ describe('errors', () => {
   });
 
   test('SzConfigError from invalid JSON has errorType JsonParse', () => {
+    expect.assertions(2);
     try {
       configtool.listDataSources('not valid json');
     } catch (err: any) {
@@ -48,6 +52,7 @@ describe('errors', () => {
   });
 
   test('SzConfigError from empty string has errorType JsonParse', () => {
+    expect.assertions(2);
     try {
       configtool.listDataSources('');
     } catch (err: any) {
@@ -57,6 +62,7 @@ describe('errors', () => {
   });
 
   test('SzConfigError from missing section has errorType MissingSection', () => {
+    expect.assertions(2);
     const noSections = JSON.stringify({ G2_CONFIG: {} });
     try {
       configtool.listDataSources(noSections);
@@ -67,6 +73,7 @@ describe('errors', () => {
   });
 
   test('SzConfigError has meaningful message without error code prefix', () => {
+    expect.assertions(2);
     try {
       configtool.getDataSource(fixtureConfig, 'NONEXISTENT');
     } catch (err: any) {
@@ -77,6 +84,7 @@ describe('errors', () => {
   });
 
   test('SzConfigError from InvalidInput for system datasource deletion', () => {
+    expect.assertions(2);
     try {
       configtool.deleteDataSource(fixtureConfig, 'SYSTEM');
     } catch (err: any) {
