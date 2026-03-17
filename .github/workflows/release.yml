@@ -208,8 +208,25 @@ jobs:
         working-directory: sz-napi
         run: npm install
 
-      - name: Build SDK
+      - name: Generate Sz.lib import library (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $senzingLib = "$env:USERPROFILE\scoop\apps\senzingsdk-runtime-unofficial\current\er\lib"
+          # Generate .def file from DLL exports
+          $exports = & dumpbin /exports "$senzingLib\Sz.dll" | Select-String '^\s+\d+\s+[0-9A-F]+\s+[0-9A-F]+\s+(\S+)' | ForEach-Object { $_.Matches.Groups[1].Value }
+          $defContent = "LIBRARY Sz`nEXPORTS`n"
+          foreach ($exp in $exports) { $defContent += "  $exp`n" }
+          Set-Content -Path "$senzingLib\Sz.def" -Value $defContent
+          # Generate import library
+          & lib /def:"$senzingLib\Sz.def" /out:"$senzingLib\Sz.lib" /machine:x64
+          Write-Host "Generated Sz.lib with $($exports.Count) exports"
+
+      - name: Build SDK (macOS/Windows)
         working-directory: sz-napi/packages/sdk
+        shell: bash
+        env:
+          SENZING_LIB_PATH: ${{ runner.os == 'Windows' && format('{0}/scoop/apps/senzingsdk-runtime-unofficial/current/er/lib', env.USERPROFILE) || '' }}
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
@@ -224,7 +241,6 @@ jobs:
   # ---------------------------------------------------------------------------
   release:
     name: Create GitHub Release
-    if: always() && !cancelled()
     needs: [build-configtool, build-sdk-linux, build-sdk-host]
     runs-on: ubuntu-latest
     steps:
