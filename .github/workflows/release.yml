@@ -212,19 +212,26 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Generate Sz.lib import library (Windows)
+      - name: Generate import libraries from DLLs (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $senzingLib = "$env:USERPROFILE\scoop\apps\senzingsdk-runtime-unofficial\current\er\lib"
-          # Generate .def file from DLL exports
-          $exports = & dumpbin /exports "$senzingLib\Sz.dll" | Select-String '^\s+\d+\s+[0-9A-F]+\s+[0-9A-F]+\s+(\S+)' | ForEach-Object { $_.Matches.Groups[1].Value }
-          $defContent = "LIBRARY Sz`nEXPORTS`n"
-          foreach ($exp in $exports) { $defContent += "  $exp`n" }
-          Set-Content -Path "$senzingLib\Sz.def" -Value $defContent
-          # Generate import library
-          & lib /def:"$senzingLib\Sz.def" /out:"$senzingLib\Sz.lib" /machine:x64
-          Write-Host "Generated Sz.lib with $($exports.Count) exports"
+          # Helper function to generate .lib from .dll
+          function New-ImportLib($dllPath, $libName) {
+            $exports = & dumpbin /exports $dllPath |
+              Select-String '^\s+\d+\s+[0-9A-F]+\s+[0-9A-F]+\s+(\S+)' |
+              ForEach-Object { $_.Matches.Groups[1].Value }
+            $defContent = "LIBRARY $libName`nEXPORTS`n"
+            foreach ($exp in $exports) { $defContent += "  $exp`n" }
+            $defPath = Join-Path (Split-Path $dllPath) "$libName.def"
+            $libPath = Join-Path (Split-Path $dllPath) "$libName.lib"
+            Set-Content -Path $defPath -Value $defContent
+            & lib /def:$defPath /out:$libPath /machine:x64 /nologo
+            Write-Host "Generated $libName.lib ($($exports.Count) exports)"
+          }
+          New-ImportLib "$senzingLib\Sz.dll" "Sz"
+          New-ImportLib "$senzingLib\sqlite3.dll" "sqlite3"
 
       - name: Build SDK (macOS)
         if: runner.os == 'macOS'
