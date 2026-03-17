@@ -151,7 +151,11 @@ jobs:
           path: sz-rust-sdk-configtool
 
       - name: Install Senzing runtime
-        run: yum install -y senzingsdk-runtime
+        env:
+          SENZING_ACCEPT_EULA: I_ACCEPT_THE_SENZING_EULA
+        run: |
+          yum install -y https://senzing-production-yum.s3.amazonaws.com/senzingrepo-2.0.1-1.noarch.rpm
+          yum install -y senzingsdk-runtime
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v6
@@ -262,7 +266,11 @@ jobs:
           path: packages/configtool/
 
       - name: Install Senzing runtime
-        run: yum install -y senzingsdk-runtime
+        env:
+          SENZING_ACCEPT_EULA: I_ACCEPT_THE_SENZING_EULA
+        run: |
+          yum install -y https://senzing-production-yum.s3.amazonaws.com/senzingrepo-2.0.1-1.noarch.rpm
+          yum install -y senzingsdk-runtime
 
       - name: Initialize Senzing SQLite database
         run: |

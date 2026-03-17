@@ -72,9 +72,83 @@ jobs:
           if-no-files-found: error
 
   # ---------------------------------------------------------------------------
-  # Build SDK native addon (no Senzing runtime needed at build time)
+  # Build SDK native addon — Linux (requires Senzing runtime for linking)
+  # Amazon Linux 2023 container provides yum access to Senzing packages
   # ---------------------------------------------------------------------------
-  build-sdk:
+  build-sdk-linux:
+    name: Build SDK (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: amazonlinux:2023
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+    steps:
+      - name: Install system dependencies
+        run: |
+          yum install -y git tar gzip gcc gcc-c++ make openssl-devel \
+            findutils xz
+
+      - name: Checkout sz-napi
+        uses: actions/checkout@v6
+        with:
+          path: sz-napi
+
+      - name: Checkout sz-rust-sdk
+        uses: actions/checkout@v6
+        with:
+          repository: brianmacy/sz-rust-sdk
+          path: sz-rust-sdk
+
+      - name: Checkout sz-rust-sdk-configtool
+        uses: actions/checkout@v6
+        with:
+          repository: brianmacy/sz-rust-sdk-configtool
+          path: sz-rust-sdk-configtool
+
+      - name: Install Senzing runtime
+        env:
+          SENZING_ACCEPT_EULA: I_ACCEPT_THE_SENZING_EULA
+        run: |
+          yum install -y https://senzing-production-yum.s3.amazonaws.com/senzingrepo-2.0.1-1.noarch.rpm
+          yum install -y senzingsdk-runtime
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install dependencies
+        working-directory: sz-napi
+        run: npm install
+
+      - name: Build SDK
+        working-directory: sz-napi/packages/sdk
+        run: npx napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: sdk-${{ matrix.target }}
+          path: sz-napi/packages/sdk/*.node
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Build SDK native addon — macOS and Windows
+  # macOS: Senzing runtime via Homebrew (rpath embedded, no DYLD_LIBRARY_PATH)
+  # Windows: Senzing runtime via Scoop
+  # ---------------------------------------------------------------------------
+  build-sdk-host:
     name: Build SDK (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -83,10 +157,6 @@ jobs:
         include:
           - os: macos-14
             target: aarch64-apple-darwin
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
           - os: windows-latest
             target: x86_64-pc-windows-msvc
     steps:
@@ -106,6 +176,16 @@ jobs:
         with:
           repository: brianmacy/sz-rust-sdk-configtool
           path: sz-rust-sdk-configtool
+
+      - name: Install Senzing runtime (macOS)
+        if: runner.os == 'macOS'
+        run: brew install --cask brianmacy/senzingsdk-runtime-unofficial/senzingsdk-runtime-unofficial
+
+      - name: Install Senzing runtime (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          scoop bucket add senzing https://github.com/brianmacy/scoop-senzingsdk-runtime-unofficial
+          scoop install senzingsdk-runtime-unofficial
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v6
@@ -137,7 +217,7 @@ jobs:
   # ---------------------------------------------------------------------------
   release:
     name: Create GitHub Release
-    needs: [build-configtool, build-sdk]
+    needs: [build-configtool, build-sdk-linux, build-sdk-host]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

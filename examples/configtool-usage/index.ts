@@ -47,11 +47,19 @@ let configJson = readFileSync(configPath, "utf-8");
 console.log(`Loaded config from: ${configPath}`);
 
 // -- Version info -----------------------------------------------------------
-const version = getVersion(configJson);
-console.log(`Config version: ${version}`);
+try {
+  const version = getVersion(configJson);
+  console.log(`Config version: ${version}`);
 
-const compatVersion = getCompatibilityVersion(configJson);
-console.log(`Compatibility version: ${compatVersion}`);
+  const compatVersion = getCompatibilityVersion(configJson);
+  console.log(`Compatibility version: ${compatVersion}`);
+} catch (e) {
+  if (e instanceof SzConfigError) {
+    console.log("Version info not available in this config (skipping).");
+  } else {
+    throw e;
+  }
+}
 
 // -- List config sections ---------------------------------------------------
 const sections = listConfigSections(configJson);
