@@ -181,9 +181,12 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install --cask brianmacy/senzingsdk-runtime-unofficial/senzingsdk-runtime-unofficial
 
-      - name: Install Senzing runtime (Windows)
+      - name: Install Scoop and Senzing runtime (Windows)
         if: runner.os == 'Windows'
+        shell: pwsh
         run: |
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+          Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
           scoop bucket add senzing https://github.com/brianmacy/scoop-senzingsdk-runtime-unofficial
           scoop install senzingsdk-runtime-unofficial
 
