@@ -208,6 +208,10 @@ jobs:
         working-directory: sz-napi
         run: npm install
 
+      - name: Setup MSVC tools (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Generate Sz.lib import library (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -222,12 +226,18 @@ jobs:
           & lib /def:"$senzingLib\Sz.def" /out:"$senzingLib\Sz.lib" /machine:x64
           Write-Host "Generated Sz.lib with $($exports.Count) exports"
 
-      - name: Build SDK (macOS/Windows)
+      - name: Build SDK (macOS)
+        if: runner.os == 'macOS'
         working-directory: sz-napi/packages/sdk
-        shell: bash
-        env:
-          SENZING_LIB_PATH: ${{ runner.os == 'Windows' && format('{0}/scoop/apps/senzingsdk-runtime-unofficial/current/er/lib', env.USERPROFILE) || '' }}
         run: npx napi build --platform --release --target ${{ matrix.target }}
+
+      - name: Build SDK (Windows)
+        if: runner.os == 'Windows'
+        working-directory: sz-napi/packages/sdk
+        shell: pwsh
+        run: |
+          $env:SENZING_LIB_PATH = "$env:USERPROFILE\scoop\apps\senzingsdk-runtime-unofficial\current\er\lib"
+          npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
