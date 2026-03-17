@@ -274,11 +274,7 @@ jobs:
 
       - name: Initialize Senzing SQLite database
         run: |
-          /opt/senzing/er/tools/szinit \
-            -configPath /opt/senzing/er/resources/templates \
-            -resourcePath /opt/senzing/er/resources \
-            -supportPath /opt/senzing/data \
-            -sqlConnection "sqlite3://na:na@/tmp/senzing-test.db"
+          sqlite3 /tmp/senzing-test.db < /opt/senzing/er/resources/schema/szcore-schema-sqlite-create.sql
 
       - name: Run SDK tests
         working-directory: packages/sdk
