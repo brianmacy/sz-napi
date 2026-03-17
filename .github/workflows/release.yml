@@ -179,11 +179,15 @@ jobs:
 
       - name: Install Senzing runtime (macOS)
         if: runner.os == 'macOS'
+        env:
+          HOMEBREW_SENZING_EULA_ACCEPTED: "yes"
         run: brew install --cask brianmacy/senzingsdk-runtime-unofficial/senzingsdk-runtime-unofficial
 
       - name: Install Scoop and Senzing runtime (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          SENZING_EULA_ACCEPTED: "yes"
         run: |
           Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
           Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
