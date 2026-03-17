@@ -20,6 +20,9 @@
  *   - DYLD_LIBRARY_PATH or LD_LIBRARY_PATH set to the Senzing lib directory
  */
 
+import { fileURLToPath } from "node:url";
+import { execSync } from "node:child_process";
+import { existsSync, unlinkSync } from "node:fs";
 import {
   Worker,
   isMainThread,
@@ -68,9 +71,11 @@ type MainMessage = ResultMessage | ReadyMessage;
 // ---------------------------------------------------------------------------
 
 if (!isMainThread && parentPort) {
-  // Worker thread: import SDK and create a dedicated environment.
-  // Dynamic import ensures the native module loads in the worker context.
-  const { SzEnvironment, SzFlags, SzError } = require("@senzing/sdk");
+  // Worker thread: dynamically import SDK to load native module in worker context.
+  // CJS module exports are under .default when using dynamic import().
+  const sdkModule = await import("@senzing/sdk");
+  const sdk = (sdkModule as any).default ?? sdkModule;
+  const { SzEnvironment, SzFlags } = sdk;
 
   const settings: string = workerData.settings;
   const env = new SzEnvironment("electron-worker", settings, false);
@@ -145,20 +150,50 @@ if (!isMainThread && parentPort) {
 // ---------------------------------------------------------------------------
 
 if (isMainThread) {
+  // Detect platform paths
+  const isMac = process.platform === "darwin";
+  const senzingBase = isMac
+    ? "/opt/homebrew/opt/senzing/runtime/er"
+    : "/opt/senzing/er";
+  const supportPath = isMac
+    ? "/opt/homebrew/opt/senzing/runtime/data"
+    : "/opt/senzing/data";
+
   const settings = JSON.stringify({
     PIPELINE: {
-      CONFIGPATH: "/opt/senzing/er/resources/templates",
-      RESOURCEPATH: "/opt/senzing/er/resources",
-      SUPPORTPATH: "/opt/senzing/data",
+      CONFIGPATH: `${senzingBase}/resources/templates`,
+      RESOURCEPATH: `${senzingBase}/resources`,
+      SUPPORTPATH: supportPath,
     },
     SQL: {
       CONNECTION: "sqlite3://na:na@/tmp/senzing-worker-example.db",
     },
   });
 
+  // Bootstrap: set up data sources before spawning the worker
+  const { SzEnvironment } = await import("@senzing/sdk");
+  const { addDataSource } = await import("@senzing/configtool");
+
+  const setupEnv = new SzEnvironment("worker-setup", settings, false);
+  try {
+    const configMgr = setupEnv.getConfigManager();
+    let configJson = configMgr.createConfig();
+    configJson = addDataSource(configJson, { code: "CUSTOMERS" });
+    const configId = configMgr.setDefaultConfig(
+      configJson,
+      "Worker example config with CUSTOMERS"
+    );
+    setupEnv.reinitialize(configId);
+  } finally {
+    setupEnv.destroy();
+  }
+
+  // Derive __filename equivalent for ESM
+  const currentFile = fileURLToPath(import.meta.url);
+
   // Create a worker using this same file.
   // In an Electron app, you would point to a bundled worker script.
-  const worker = new Worker(__filename, {
+  const worker = new Worker(currentFile, {
     workerData: { settings },
   });
 
@@ -249,7 +284,7 @@ if (isMainThread) {
     console.log("\n[main] Sending shutdown...");
     worker.postMessage({ type: "shutdown" } as ShutdownMessage);
 
-    worker.on("exit", (code) => {
+    worker.on("exit", (code: number) => {
       console.log(`[main] Worker exited with code ${code}.`);
     });
   }
