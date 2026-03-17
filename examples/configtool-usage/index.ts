@@ -110,30 +110,46 @@ console.log(
 // -- Attributes -------------------------------------------------------------
 console.log("\n--- Attributes ---");
 
-const attributes = JSON.parse(listAttributes(configJson));
-console.log(`Total attributes: ${attributes.length}`);
-console.log("First 5 attributes:");
-for (const attr of attributes.slice(0, 5)) {
-  console.log(`  ${attr.ATTR_CODE} -> feature: ${attr.FTYPE_CODE}, class: ${attr.ATTR_CLASS}`);
-}
+try {
+  const attributes = JSON.parse(listAttributes(configJson));
+  console.log(`Total attributes: ${attributes.length}`);
+  console.log("First 5 attributes:");
+  for (const attr of attributes.slice(0, 5)) {
+    console.log(`  ${attr.ATTR_CODE} -> feature: ${attr.FTYPE_CODE}, class: ${attr.ATTR_CLASS}`);
+  }
 
-// Add a custom attribute
-configJson = addAttribute(configJson, {
-  attribute: "LOYALTY_NUMBER",
-  feature: "OTHER_ID",
-  element: "OTHER_ID_NUMBER",
-  class: "OTHER",
-});
-console.log("\nAdded LOYALTY_NUMBER attribute.");
+  // Add a custom attribute (requires OTHER_ID feature in config)
+  configJson = addAttribute(configJson, {
+    attribute: "LOYALTY_NUMBER",
+    feature: "OTHER_ID",
+    element: "OTHER_ID_NUMBER",
+    class: "OTHER",
+  });
+  console.log("\nAdded LOYALTY_NUMBER attribute.");
+} catch (e) {
+  if (e instanceof SzConfigError) {
+    console.log("Attributes section not fully available in this config (skipping).");
+  } else {
+    throw e;
+  }
+}
 
 // -- Features ---------------------------------------------------------------
 console.log("\n--- Features ---");
 
-const features = JSON.parse(listFeatures(configJson));
-console.log(`Total features: ${features.length}`);
-console.log("First 5 features:");
-for (const feat of features.slice(0, 5)) {
-  console.log(`  ${feat.FTYPE_CODE} (class: ${feat.FCLASS_CODE}, behavior: ${feat.BEHAVIOR})`);
+try {
+  const features = JSON.parse(listFeatures(configJson));
+  console.log(`Total features: ${features.length}`);
+  console.log("First 5 features:");
+  for (const feat of features.slice(0, 5)) {
+    console.log(`  ${feat.FTYPE_CODE} (class: ${feat.FCLASS_CODE}, behavior: ${feat.BEHAVIOR})`);
+  }
+} catch (e) {
+  if (e instanceof SzConfigError) {
+    console.log("Features section not available in this config (skipping).");
+  } else {
+    throw e;
+  }
 }
 
 // -- Batch script processing ------------------------------------------------

@@ -92,7 +92,7 @@ jobs:
       - name: Install system dependencies
         run: |
           yum install -y git tar gzip gcc gcc-c++ make openssl-devel \
-            findutils xz
+            findutils xz sqlite-devel
 
       - name: Checkout sz-napi
         uses: actions/checkout@v6
