@@ -270,7 +270,7 @@ jobs:
           SENZING_ACCEPT_EULA: I_ACCEPT_THE_SENZING_EULA
         run: |
           yum install -y https://senzing-production-yum.s3.amazonaws.com/senzingrepo-2.0.1-1.noarch.rpm
-          yum install -y senzingsdk-runtime
+          yum install -y senzingsdk-runtime senzingsdk-setup
 
       - name: Initialize Senzing SQLite database
         run: |
