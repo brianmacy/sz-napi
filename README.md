@@ -333,6 +333,7 @@ npm start
 | [config-management](examples/config-management/) | Create, modify, register, and activate configs |       Yes        |
 | [configtool-usage](examples/configtool-usage/)   | Offline config editing with pure JSON          |        No        |
 | [worker-threads](examples/worker-threads/)       | Worker thread pattern for heavy workloads      |       Yes        |
+| [entity-graph](examples/entity-graph/)           | Interactive D3.js entity graph visualization   |       Yes        |
 | [electron-app](examples/electron-app/)           | Electron desktop app with worker threads       |       Yes        |
 
 ## Repository Structure
@@ -366,6 +367,7 @@ sz-napi/
     config-management/          # Register data sources, manage configs
     configtool-usage/           # Edit config JSON offline
     worker-threads/             # Worker thread pattern for heavy workloads
+    entity-graph/               # Interactive D3.js entity graph visualization
     electron-app/               # Electron desktop app with worker threads
   docs/
     getting-started.md          # Zero-to-first-entity walkthrough

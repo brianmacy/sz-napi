@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Senzing Entity Graph</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  svg {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* Legend */
+  #legend {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    background: rgba(22, 22, 44, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13px;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+
+  #legend h3 {
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .legend-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .legend-section {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .legend-line {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .legend-line-sample {
+    width: 30px;
+    height: 2px;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Stats bar */
+  #stats {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background: rgba(22, 22, 44, 0.92);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 13px;
+    color: #a0a0b8;
+    z-index: 10;
+    gap: 24px;
+    backdrop-filter: blur(8px);
+  }
+
+  #stats span {
+    color: #e0e0e0;
+    font-weight: 600;
+  }
+
+  /* Detail panel */
+  #detail-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 380px;
+    height: 100vh;
+    background: rgba(22, 22, 44, 0.96);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+    z-index: 20;
+    padding: 20px;
+    display: none;
+    backdrop-filter: blur(12px);
+  }
+
+  #detail-panel.open {
+    display: block;
+  }
+
+  #detail-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #e0e0e0;
+    font-size: 20px;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+
+  #detail-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  #detail-panel h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    padding-right: 40px;
+    color: #ffffff;
+  }
+
+  #detail-panel .entity-id {
+    font-size: 12px;
+    color: #8888a8;
+    margin-bottom: 16px;
+  }
+
+  #detail-panel h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #b0b0cc;
+    margin: 16px 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .record-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .record-item .ds-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 6px;
+    color: #fff;
+  }
+
+  .relation-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .relation-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .relation-item .match-key {
+    font-size: 11px;
+    color: #8888a8;
+    margin-top: 4px;
+    word-break: break-all;
+  }
+
+  .relation-item .match-level {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    margin-left: 6px;
+  }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed;
+    background: rgba(10, 10, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #e0e0e0;
+    pointer-events: none;
+    display: none;
+    z-index: 30;
+    max-width: 300px;
+    word-break: break-all;
+    backdrop-filter: blur(8px);
+  }
+
+  /* Loading overlay */
+  #loading {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    font-size: 18px;
+    color: #a0a0b8;
+  }
+
+  #loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #6c6ce0;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  Loading entity graph...
+</div>
+
+<div id="legend"></div>
+
+<div id="stats"></div>
+
+<div id="tooltip"></div>
+
+<div id="detail-panel">
+  <button id="detail-close">&times;</button>
+  <div id="detail-content"></div>
+</div>
+
+<svg id="graph"></svg>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+(async function() {
+  const resp = await fetch("/graph.json");
+  const data = await resp.json();
+
+  document.getElementById("loading").style.display = "none";
+
+  const nodes = data.nodes;
+  const edges = data.edges;
+
+  // Collect all data sources
+  const allDataSources = new Set();
+  nodes.forEach(n => Object.keys(n.dataSources).forEach(ds => allDataSources.add(ds)));
+  const dsList = Array.from(allDataSources).sort();
+
+  const color = d3.scaleOrdinal(d3.schemeTableau10).domain(dsList);
+
+  // Dominant data source for each node
+  function dominantDS(node) {
+    let best = null, bestCount = 0;
+    for (const [ds, count] of Object.entries(node.dataSources)) {
+      if (count > bestCount) { best = ds; bestCount = count; }
+    }
+    return best;
+  }
+
+  function isMultiSource(node) {
+    return Object.keys(node.dataSources).length > 1;
+  }
+
+  function nodeRadius(node) {
+    return Math.sqrt(node.recordCount) * 4 + 6;
+  }
+
+  // Match level styles
+  function edgeStyle(matchLevel) {
+    switch (matchLevel) {
+      case "POSSIBLY_SAME":
+        return { stroke: "#cccccc", dasharray: "none", width: 1.5 };
+      case "POSSIBLY_RELATED":
+        return { stroke: "#888888", dasharray: "6,3", width: 1.2 };
+      case "NAME_ONLY":
+        return { stroke: "#555555", dasharray: "2,2", width: 1 };
+      case "DISCLOSED":
+        return { stroke: "#4a90d9", dasharray: "none", width: 2 };
+      default:
+        return { stroke: "#999999", dasharray: "none", width: 1.2 };
+    }
+  }
+
+  function linkDistance(matchLevel) {
+    switch (matchLevel) {
+      case "POSSIBLY_SAME": return 80;
+      case "POSSIBLY_RELATED": return 130;
+      case "NAME_ONLY": return 180;
+      case "DISCLOSED": return 100;
+      default: return 100;
+    }
+  }
+
+  // Build legend
+  const legendEl = document.getElementById("legend");
+  let legendHtml = "<h3>Data Sources</h3>";
+  dsList.forEach(ds => {
+    legendHtml += `<div class="legend-item">
+      <div class="legend-circle" style="background:${color(ds)}"></div>
+      ${ds}
+    </div>`;
+  });
+  legendHtml += `<div class="legend-section"><h3>Relationships</h3>`;
+  const edgeTypes = [
+    { label: "Possibly Same", style: "background:#cccccc" },
+    { label: "Possibly Related", style: "background:repeating-linear-gradient(90deg,#888 0,#888 6px,transparent 6px,transparent 9px)" },
+    { label: "Name Only", style: "background:repeating-linear-gradient(90deg,#555 0,#555 2px,transparent 2px,transparent 4px)" },
+    { label: "Disclosed", style: "background:#4a90d9" },
+  ];
+  edgeTypes.forEach(et => {
+    legendHtml += `<div class="legend-line">
+      <div class="legend-line-sample" style="${et.style}"></div>
+      ${et.label}
+    </div>`;
+  });
+  legendHtml += "</div>";
+  legendEl.innerHTML = legendHtml;
+
+  // Stats bar
+  document.getElementById("stats").innerHTML =
+    `Entities: <span>${nodes.length.toLocaleString()}</span>` +
+    `Relationships: <span>${edges.length.toLocaleString()}</span>` +
+    `Records: <span>${nodes.reduce((s, n) => s + n.recordCount, 0).toLocaleString()}</span>`;
+
+  // SVG setup
+  const svg = d3.select("#graph");
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const g = svg.append("g");
+
+  // Zoom
+  const zoom = d3.zoom()
+    .scaleExtent([0.05, 8])
+    .on("zoom", (event) => g.attr("transform", event.transform));
+  svg.call(zoom);
+
+  // Build node map for quick lookup
+  const nodeMap = new Map();
+  nodes.forEach(n => nodeMap.set(n.id, n));
+
+  // Create simulation
+  const simulation = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(edges)
+      .id(d => d.id)
+      .distance(d => linkDistance(d.matchLevel))
+    )
+    .force("charge", d3.forceManyBody().strength(-200))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collide", d3.forceCollide().radius(d => nodeRadius(d) + 4));
+
+  // Draw edges
+  const link = g.append("g")
+    .selectAll("line")
+    .data(edges)
+    .join("line")
+    .attr("stroke", d => edgeStyle(d.matchLevel).stroke)
+    .attr("stroke-width", d => edgeStyle(d.matchLevel).width)
+    .attr("stroke-dasharray", d => {
+      const s = edgeStyle(d.matchLevel);
+      return s.dasharray === "none" ? null : s.dasharray;
+    })
+    .attr("stroke-opacity", 0.6);
+
+  // Edge hover areas (wider invisible lines for easy hovering)
+  const linkHover = g.append("g")
+    .selectAll("line")
+    .data(edges)
+    .join("line")
+    .attr("stroke", "transparent")
+    .attr("stroke-width", 12)
+    .style("cursor", "pointer");
+
+  const tooltip = document.getElementById("tooltip");
+
+  linkHover
+    .on("mouseover", (event, d) => {
+      const src = typeof d.source === "object" ? d.source : nodeMap.get(d.source);
+      const tgt = typeof d.target === "object" ? d.target : nodeMap.get(d.target);
+      const srcName = src ? src.name : d.source;
+      const tgtName = tgt ? tgt.name : d.target;
+      tooltip.innerHTML = `<strong>${srcName}</strong> &harr; <strong>${tgtName}</strong><br/>
+        Match Level: ${d.matchLevel}<br/>
+        Match Key: ${d.matchKey}`;
+      tooltip.style.display = "block";
+    })
+    .on("mousemove", (event) => {
+      tooltip.style.left = (event.clientX + 14) + "px";
+      tooltip.style.top = (event.clientY - 10) + "px";
+    })
+    .on("mouseout", () => {
+      tooltip.style.display = "none";
+    });
+
+  // Draw nodes
+  const node = g.append("g")
+    .selectAll("circle")
+    .data(nodes)
+    .join("circle")
+    .attr("r", d => nodeRadius(d))
+    .attr("fill", d => color(dominantDS(d)))
+    .attr("stroke", d => isMultiSource(d) ? "#ffffff" : color(dominantDS(d)))
+    .attr("stroke-width", d => isMultiSource(d) ? 3 : 1.5)
+    .attr("stroke-opacity", d => isMultiSource(d) ? 0.7 : 0.3)
+    .style("cursor", "pointer");
+
+  // Node labels (always show for recordCount >= 3, otherwise show on hover)
+  const label = g.append("g")
+    .selectAll("text")
+    .data(nodes)
+    .join("text")
+    .text(d => d.name)
+    .attr("font-size", 11)
+    .attr("font-family", "-apple-system, BlinkMacSystemFont, sans-serif")
+    .attr("fill", "#d0d0e0")
+    .attr("text-anchor", "middle")
+    .attr("dy", d => -nodeRadius(d) - 5)
+    .attr("pointer-events", "none")
+    .style("opacity", d => d.recordCount >= 3 ? 1 : 0)
+    .style("text-shadow", "0 0 4px #1a1a2e, 0 0 8px #1a1a2e");
+
+  // Hover: show label for small nodes
+  node
+    .on("mouseover", (event, d) => {
+      if (d.recordCount < 3) {
+        label.filter(l => l.id === d.id).style("opacity", 1);
+      }
+      // Highlight connected edges
+      link.attr("stroke-opacity", e => {
+        const sid = typeof e.source === "object" ? e.source.id : e.source;
+        const tid = typeof e.target === "object" ? e.target.id : e.target;
+        return (sid === d.id || tid === d.id) ? 1 : 0.15;
+      });
+      node.style("opacity", n => {
+        if (n.id === d.id) return 1;
+        const connected = edges.some(e => {
+          const sid = typeof e.source === "object" ? e.source.id : e.source;
+          const tid = typeof e.target === "object" ? e.target.id : e.target;
+          return (sid === d.id && tid === n.id) || (tid === d.id && sid === n.id);
+        });
+        return connected ? 1 : 0.2;
+      });
+    })
+    .on("mouseout", (event, d) => {
+      if (d.recordCount < 3) {
+        label.filter(l => l.id === d.id).style("opacity", 0);
+      }
+      link.attr("stroke-opacity", 0.6);
+      node.style("opacity", 1);
+    });
+
+  // Click: show detail panel
+  node.on("click", async (event, d) => {
+    event.stopPropagation();
+    const panel = document.getElementById("detail-panel");
+    const content = document.getElementById("detail-content");
+
+    content.innerHTML = `<h2>${d.name}</h2>
+      <div class="entity-id">Entity ID: ${d.id}</div>
+      <p style="font-size:13px;color:#8888a8;">Loading details...</p>`;
+    panel.classList.add("open");
+
+    try {
+      const resp = await fetch(`/entity/${d.id}`);
+      const entity = await resp.json();
+      const resolved = entity.RESOLVED_ENTITY || {};
+      const related = entity.RELATED_ENTITIES || [];
+
+      let html = `<h2>${resolved.ENTITY_NAME || d.name}</h2>
+        <div class="entity-id">Entity ID: ${d.id} &middot; ${d.recordCount} record${d.recordCount !== 1 ? "s" : ""}</div>`;
+
+      // Records
+      html += "<h3>Records</h3>";
+      const records = resolved.RECORDS || d.records;
+      for (const rec of records) {
+        const ds = rec.DATA_SOURCE || rec.dataSource;
+        const rid = rec.RECORD_ID || rec.recordId;
+        html += `<div class="record-item">
+          <span class="ds-badge" style="background:${color(ds)}">${ds}</span>
+          ${rid}
+        </div>`;
+      }
+
+      // Relationships
+      if (related.length > 0) {
+        html += `<h3>Relationships (${related.length})</h3>`;
+        for (const rel of related) {
+          const relName = rel.ENTITY_NAME || `Entity ${rel.ENTITY_ID}`;
+          html += `<div class="relation-item" data-entity-id="${rel.ENTITY_ID}">
+            <strong>${relName}</strong>
+            <span class="match-level">${rel.MATCH_LEVEL_CODE || ""}</span>
+            <div class="match-key">${rel.MATCH_KEY || ""}</div>
+          </div>`;
+        }
+      }
+
+      content.innerHTML = html;
+
+      // Click on related entity to navigate
+      content.querySelectorAll(".relation-item").forEach(item => {
+        item.addEventListener("click", () => {
+          const eid = parseInt(item.getAttribute("data-entity-id"), 10);
+          const targetNode = nodes.find(n => n.id === eid);
+          if (targetNode) {
+            node.dispatch("click", { detail: targetNode });
+            // Re-trigger our click handler
+            const fakeEvent = { stopPropagation: () => {} };
+            node.filter(n => n.id === eid).dispatch("click");
+          }
+        });
+      });
+
+    } catch (err) {
+      content.innerHTML += `<p style="color:#ff6666;">Error loading entity details</p>`;
+    }
+  });
+
+  // Close detail panel
+  document.getElementById("detail-close").addEventListener("click", () => {
+    document.getElementById("detail-panel").classList.remove("open");
+  });
+
+  svg.on("click", () => {
+    document.getElementById("detail-panel").classList.remove("open");
+  });
+
+  // Drag behavior
+  const drag = d3.drag()
+    .on("start", (event, d) => {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    })
+    .on("drag", (event, d) => {
+      d.fx = event.x;
+      d.fy = event.y;
+    })
+    .on("end", (event, d) => {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    });
+
+  node.call(drag);
+
+  // Tick
+  simulation.on("tick", () => {
+    link
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+
+    linkHover
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+
+    node
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y);
+
+    label
+      .attr("x", d => d.x)
+      .attr("y", d => d.y);
+  });
+
+  // Initial zoom to fit
+  simulation.on("end", () => {
+    const bounds = g.node().getBBox();
+    const fullWidth = bounds.width;
+    const fullHeight = bounds.height;
+    const midX = bounds.x + fullWidth / 2;
+    const midY = bounds.y + fullHeight / 2;
+
+    const scale = 0.85 / Math.max(fullWidth / width, fullHeight / height);
+    const translate = [width / 2 - scale * midX, height / 2 - scale * midY];
+
+    svg.transition()
+      .duration(750)
+      .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+  });
+
+})();
+</script>
+</body>
+</html>

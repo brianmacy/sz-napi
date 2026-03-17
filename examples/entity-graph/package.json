@@ -1,0 +1,15 @@
+{
+  "name": "entity-graph",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@senzing/sdk": "file:../../packages/sdk",
+    "@senzing/configtool": "file:../../packages/configtool"
+  },
+  "devDependencies": {
+    "tsx": "^4"
+  }
+}

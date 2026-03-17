@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Interactive entity graph visualization example with D3.js force-directed layout (`examples/entity-graph`)
 - Production documentation: getting-started, error-handling, config-management, and deployment guides
 - TypeDoc configuration for API reference generation (`typedoc.json`, `docs.yml` workflow)
 - Runnable examples with `package.json` and `tsconfig.json` for basic-sdk-usage, config-management, configtool-usage, and worker-threads
