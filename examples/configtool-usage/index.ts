@@ -38,7 +38,7 @@ import {
 //   - A template shipped with your application
 const configPath = process.argv[2];
 if (!configPath) {
-  console.error("Usage: ts-node configtool-usage.ts <config-json-file>");
+  console.error("Usage: tsx index.ts <config-json-file>");
   console.error("  Get a config file with: configManager.createConfig()");
   process.exit(1);
 }

@@ -2,7 +2,14 @@
   "name": "@senzing/configtool",
   "version": "0.1.0",
   "main": "configtool.js",
-  "types": "index.d.ts",
+  "types": "configtool.d.ts",
+  "exports": {
+    ".": {
+      "import": "./configtool.mjs",
+      "require": "./configtool.js",
+      "types": "./configtool.d.ts"
+    }
+  },
   "napi": {
     "binaryName": "senzing-configtool",
     "targets": [

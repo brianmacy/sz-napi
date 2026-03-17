@@ -106,12 +106,11 @@ Keep credentials out of source code. Read `SENZING_DB_URL` (or equivalent) from 
 
 The Senzing shared libraries must be on the dynamic linker search path before Node.js starts.
 
-| Platform | Variable            | Typical value                              |
-| -------- | ------------------- | ------------------------------------------ |
-| Linux    | `LD_LIBRARY_PATH`   | `/opt/senzing/er/lib`                      |
-| macOS    | `DYLD_LIBRARY_PATH` | `/opt/homebrew/opt/senzing/runtime/er/lib` |
+| Platform | Variable          | Typical value         |
+| -------- | ----------------- | --------------------- |
+| Linux    | `LD_LIBRARY_PATH` | `/opt/senzing/er/lib` |
 
-Set these in your shell profile, systemd unit file, Docker `ENV` directive, or Kubernetes `env` block — not inside your Node.js process, because the dynamic linker reads them before the process starts.
+On macOS, the prebuilt `.node` binary embeds an rpath so no `DYLD_LIBRARY_PATH` is needed. On Linux production deployments (Docker, systemd), set `LD_LIBRARY_PATH` in your shell profile, systemd unit file, Docker `ENV` directive, or Kubernetes `env` block — not inside your Node.js process, because the dynamic linker reads them before the process starts.
 
 ```bash
 # systemd unit excerpt
@@ -211,7 +210,7 @@ if (!isMainThread && parentPort) {
 }
 ```
 
-See `examples/electron-worker.ts` for the complete bidirectional pattern.
+See `examples/worker-threads/` for the complete bidirectional pattern.
 
 ---
 

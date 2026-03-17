@@ -11,10 +11,10 @@
  *
  * Prerequisites:
  *   - Senzing runtime installed (brew install senzingsdk-runtime-unofficial on macOS)
- *   - DYLD_LIBRARY_PATH or LD_LIBRARY_PATH set to the Senzing lib directory
- *   - A pre-initialized Senzing repository (SQLite database)
  */
 
+import { execSync } from "node:child_process";
+import { existsSync, unlinkSync } from "node:fs";
 import {
   SzEnvironment,
   SzFlags,
@@ -22,25 +22,52 @@ import {
   SzBadInputError,
   SzNotFoundError,
 } from "@senzing/sdk";
+import { addDataSource } from "@senzing/configtool";
 
-// -- Configuration ----------------------------------------------------------
-// SQLite connection for a simple local setup. Adjust paths for your platform.
+// -- Platform detection -------------------------------------------------------
+const isMac = process.platform === "darwin";
+const senzingBase = isMac
+  ? "/opt/homebrew/opt/senzing/runtime/er"
+  : "/opt/senzing/er";
+const supportPath = isMac
+  ? "/opt/homebrew/opt/senzing/runtime/data"
+  : "/opt/senzing/data";
+
+// -- Configuration ------------------------------------------------------------
+const dbPath = "/tmp/senzing-example.db";
+const schemaPath = `${senzingBase}/resources/schema/szcore-schema-sqlite-create.sql`;
+
 const settings = JSON.stringify({
   PIPELINE: {
-    CONFIGPATH: "/opt/senzing/er/resources/templates",
-    RESOURCEPATH: "/opt/senzing/er/resources",
-    SUPPORTPATH: "/opt/senzing/data",
+    CONFIGPATH: `${senzingBase}/resources/templates`,
+    RESOURCEPATH: `${senzingBase}/resources`,
+    SUPPORTPATH: supportPath,
   },
   SQL: {
-    CONNECTION: "sqlite3://na:na@/tmp/senzing-example.db",
+    CONNECTION: `sqlite3://na:na@${dbPath}`,
   },
 });
 
-// -- Initialize the environment ---------------------------------------------
+// -- Initialize SQLite database with schema -----------------------------------
+if (existsSync(dbPath)) unlinkSync(dbPath);
+execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
+
+// -- Initialize the environment -----------------------------------------------
 const env = new SzEnvironment("basic-example", settings, false);
 
 try {
-  // -- Product info ---------------------------------------------------------
+  // -- Bootstrap data sources -------------------------------------------------
+  const configManager = env.getConfigManager();
+  let configJson = configManager.createConfig();
+  configJson = addDataSource(configJson, { code: "CUSTOMERS" });
+  configJson = addDataSource(configJson, { code: "WATCHLIST" });
+  const configId = configManager.setDefaultConfig(
+    configJson,
+    "Basic example config with CUSTOMERS and WATCHLIST"
+  );
+  env.reinitialize(configId);
+
+  // -- Product info -----------------------------------------------------------
   const product = env.getProduct();
   const version = JSON.parse(product.getVersion());
   console.log(`Senzing version: ${version.VERSION}`);
@@ -49,10 +76,10 @@ try {
   const license = JSON.parse(product.getLicense());
   console.log(`License type:    ${license.licenseType}`);
 
-  // -- Get the engine -------------------------------------------------------
+  // -- Get the engine ---------------------------------------------------------
   const engine = env.getEngine();
 
-  // -- Add records ----------------------------------------------------------
+  // -- Add records ------------------------------------------------------------
   // Records from two different data sources. The engine performs entity
   // resolution across all records regardless of source.
 
@@ -90,7 +117,7 @@ try {
   engine.addRecord("CUSTOMERS", "1002", record3, SzFlags.NO_FLAGS);
   console.log("Record 1002 added.");
 
-  // -- Get entity by record -------------------------------------------------
+  // -- Get entity by record ---------------------------------------------------
   // Retrieve the resolved entity that contains record 1001.
   console.log("\nGetting entity for record CUSTOMERS/1001...");
   const entityJson = engine.getEntityByRecord(
@@ -104,7 +131,7 @@ try {
     `Records in entity: ${entity.RESOLVED_ENTITY.RECORDS?.length ?? 0}`
   );
 
-  // -- Search by attributes -------------------------------------------------
+  // -- Search by attributes ---------------------------------------------------
   // Search for entities matching a set of attributes.
   const searchAttrs = JSON.stringify({
     NAME_FULL: "Robert Smith",
@@ -129,21 +156,18 @@ try {
     );
   }
 
-  // -- Export entities -------------------------------------------------------
-  // Iterate over all resolved entities using the export handle pattern.
+  // -- Export entities ---------------------------------------------------------
+  // Iterate over all resolved entities using the SzExportIterator.
   console.log("\nExporting entities...");
-  const exportHandle = engine.exportJsonEntityReport(
-    SzFlags.EXPORT_DEFAULT_FLAGS
-  );
   let entityCount = 0;
-  let chunk: string;
-  while ((chunk = engine.fetchNext(exportHandle)) !== "") {
+  for (const entity of engine.exportJsonEntityReport(
+    SzFlags.EXPORT_DEFAULT_FLAGS
+  )) {
     entityCount++;
   }
-  engine.closeExport(exportHandle);
   console.log(`Export complete: ${entityCount} entities`);
 
-  // -- Error handling -------------------------------------------------------
+  // -- Error handling ---------------------------------------------------------
   // Demonstrate the error hierarchy with instanceof checks.
   console.log("\nDemonstrating error handling...");
   try {
@@ -160,12 +184,12 @@ try {
     }
   }
 
-  // -- Engine stats ---------------------------------------------------------
+  // -- Engine stats -----------------------------------------------------------
   console.log("\nEngine statistics:");
   const stats = JSON.parse(engine.getStats());
   console.log(JSON.stringify(stats, null, 2));
 
-  // -- Cleanup records (optional) -------------------------------------------
+  // -- Cleanup records (optional) ---------------------------------------------
   engine.deleteRecord("CUSTOMERS", "1001");
   engine.deleteRecord("WATCHLIST", "W100");
   engine.deleteRecord("CUSTOMERS", "1002");
@@ -174,4 +198,6 @@ try {
   // Always destroy the environment to release native resources.
   env.destroy();
   console.log("Environment destroyed.");
+  // Clean up the SQLite database file
+  if (existsSync(dbPath)) unlinkSync(dbPath);
 }

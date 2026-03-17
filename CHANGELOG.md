@@ -11,10 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Production documentation: getting-started, error-handling, config-management, and deployment guides
 - TypeDoc configuration for API reference generation (`typedoc.json`, `docs.yml` workflow)
-- Runnable examples with `package.json` and `tsconfig.json` for basic-sdk-usage, config-management, configtool-usage, and electron-worker
+- Runnable examples with `package.json` and `tsconfig.json` for basic-sdk-usage, config-management, configtool-usage, and worker-threads
 - GitHub templates: issue templates (bug report, feature request), pull request template, CODEOWNERS, dependabot.yml
 - CONTRIBUTING.md and SECURITY.md
 - `release.yml` workflow for automated publishing
+- ESM support with dual CJS/ESM exports for @senzing/sdk (`sdk.mjs`) and @senzing/configtool (`configtool.mjs`)
+- Proper `configtool.d.ts` TypeScript types including `SzConfigError`
+- Electron desktop app example (`examples/electron-app`)
 
 ### Changed
 
@@ -30,6 +33,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SDK tests read `SENZING_SETTINGS` env var for CI compatibility, fall back to macOS paths locally
 - Committed NAPI-RS generated `index.js` and `index.d.ts` (required at runtime)
 - Added `expect.assertions()` guards to error tests preventing silent pass on non-throwing code
+- Renamed `examples/electron-worker` to `examples/worker-threads`
+- basic-sdk-usage now uses `SzExportIterator` `for...of` pattern
+
+### Fixed
+
+- config-management example `getEngine()` before config registration
+- configtool-usage usage message (`ts-node` to `tsx`)
+
+### Removed
+
+- Stale `DYLD_LIBRARY_PATH`/`LD_LIBRARY_PATH` references from examples and docs
 
 ## [0.1.0] - 2026-03-16
 

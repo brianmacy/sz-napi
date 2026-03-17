@@ -12,44 +12,60 @@
  *
  * Prerequisites:
  *   - Senzing runtime installed
- *   - DYLD_LIBRARY_PATH or LD_LIBRARY_PATH set to the Senzing lib directory
  */
 
+import { execSync } from "node:child_process";
+import { existsSync, unlinkSync } from "node:fs";
 import { SzEnvironment, SzFlags } from "@senzing/sdk";
 import { addDataSource, listDataSources } from "@senzing/configtool";
 
-// -- Configuration ----------------------------------------------------------
+// -- Platform detection -------------------------------------------------------
+const isMac = process.platform === "darwin";
+const senzingBase = isMac
+  ? "/opt/homebrew/opt/senzing/runtime/er"
+  : "/opt/senzing/er";
+const supportPath = isMac
+  ? "/opt/homebrew/opt/senzing/runtime/data"
+  : "/opt/senzing/data";
+
+// -- Configuration ------------------------------------------------------------
+const dbPath = "/tmp/senzing-config-example.db";
+const schemaPath = `${senzingBase}/resources/schema/szcore-schema-sqlite-create.sql`;
+
 const settings = JSON.stringify({
   PIPELINE: {
-    CONFIGPATH: "/opt/senzing/er/resources/templates",
-    RESOURCEPATH: "/opt/senzing/er/resources",
-    SUPPORTPATH: "/opt/senzing/data",
+    CONFIGPATH: `${senzingBase}/resources/templates`,
+    RESOURCEPATH: `${senzingBase}/resources`,
+    SUPPORTPATH: supportPath,
   },
   SQL: {
-    CONNECTION: "sqlite3://na:na@/tmp/senzing-config-example.db",
+    CONNECTION: `sqlite3://na:na@${dbPath}`,
   },
 });
 
-// -- Initialize -------------------------------------------------------------
+// -- Initialize SQLite database with schema -----------------------------------
+if (existsSync(dbPath)) unlinkSync(dbPath);
+execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
+
+// -- Initialize ---------------------------------------------------------------
 const env = new SzEnvironment("config-example", settings, false);
 
 try {
   const configManager = env.getConfigManager();
-  const engine = env.getEngine();
 
-  // -- Step 1: Create a config template from the engine ---------------------
+  // -- Step 1: Create a config template from the engine -----------------------
   // createConfig() generates a new config from the built-in template.
   console.log("Creating config template...");
   let configJson = configManager.createConfig();
   console.log(`Template created (${configJson.length} bytes)`);
 
-  // -- Step 2: Inspect the default data sources ----------------------------
+  // -- Step 2: Inspect the default data sources ------------------------------
   const defaultSources = JSON.parse(listDataSources(configJson));
   console.log(
     `\nDefault data sources: ${defaultSources.map((ds: { DSRC_CODE: string }) => ds.DSRC_CODE).join(", ")}`
   );
 
-  // -- Step 3: Add custom data sources using @senzing/configtool -----------
+  // -- Step 3: Add custom data sources using @senzing/configtool -------------
   // The configtool functions are stateless: they take a config JSON string,
   // return a modified config JSON string.
   console.log("\nAdding custom data sources...");
@@ -72,7 +88,7 @@ try {
     `\nAll data sources: ${updatedSources.map((ds: { DSRC_CODE: string }) => ds.DSRC_CODE).join(", ")}`
   );
 
-  // -- Step 4: Register the modified config --------------------------------
+  // -- Step 4: Register the modified config ----------------------------------
   // registerConfig() stores the config in the repository and returns an ID.
   console.log("\nRegistering modified config...");
   const newConfigId = configManager.registerConfig(
@@ -81,15 +97,14 @@ try {
   );
   console.log(`Registered config ID: ${newConfigId}`);
 
-  // -- Step 5: Set as default config ---------------------------------------
-  // Use replaceDefaultConfigId for safe concurrent updates (optimistic locking).
-  const currentDefaultId = configManager.getDefaultConfigId();
-  console.log(`Current default config ID: ${currentDefaultId}`);
+  // -- Step 5: Set as default config -----------------------------------------
+  // On a fresh database there is no default config yet, so use setDefaultConfigId.
+  // In production with an existing config, use replaceDefaultConfigId for
+  // safe concurrent updates (optimistic locking).
+  configManager.setDefaultConfigId(newConfigId);
+  console.log(`Default config set to: ${newConfigId}`);
 
-  configManager.replaceDefaultConfigId(currentDefaultId, newConfigId);
-  console.log(`Default config updated to: ${newConfigId}`);
-
-  // -- Step 6: Reinitialize the environment --------------------------------
+  // -- Step 6: Reinitialize the environment ----------------------------------
   // The engine must be reinitialized to pick up the new config.
   console.log("\nReinitializing environment...");
   env.reinitialize(newConfigId);
@@ -99,7 +114,8 @@ try {
   const activeConfigId = env.getActiveConfigId();
   console.log(`Active config ID: ${activeConfigId}`);
 
-  // -- Step 7: Use the engine with new data sources ------------------------
+  // -- Step 7: Use the engine with new data sources --------------------------
+  const engine = env.getEngine();
   console.log("\nAdding a record to the CUSTOMERS data source...");
   const record = JSON.stringify({
     NAME_FULL: "Robert Smith",
@@ -110,7 +126,7 @@ try {
   engine.addRecord("CUSTOMERS", "1001", record, SzFlags.NO_FLAGS);
   console.log("Record added successfully to CUSTOMERS.");
 
-  // -- Step 8: Review the config registry ----------------------------------
+  // -- Step 8: Review the config registry ------------------------------------
   const registry = JSON.parse(configManager.getConfigRegistry());
   console.log(`\nConfig registry has ${registry.CONFIGS?.length ?? 0} entries:`);
   for (const config of registry.CONFIGS ?? []) {
@@ -119,7 +135,7 @@ try {
     );
   }
 
-  // -- Alternatively, use setDefaultConfig for a simpler one-step flow -----
+  // -- Alternatively, use setDefaultConfig for a simpler one-step flow -------
   // setDefaultConfig() registers and activates in one operation:
   //
   //   const configId = configManager.setDefaultConfig(
@@ -128,10 +144,12 @@ try {
   //   );
   //   env.reinitialize(configId);
 
-  // -- Cleanup --------------------------------------------------------------
+  // -- Cleanup ----------------------------------------------------------------
   engine.deleteRecord("CUSTOMERS", "1001");
   console.log("\nCleanup complete.");
 } finally {
   env.destroy();
   console.log("Environment destroyed.");
+  // Clean up the SQLite database file
+  if (existsSync(dbPath)) unlinkSync(dbPath);
 }

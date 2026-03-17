@@ -63,6 +63,7 @@ Note: Do NOT use `cargo fmt --all` — it formats sibling repo path dependencies
 ### CI
 
 CI runs in GitHub Actions with:
+
 - Cargo check (clippy + fmt) on Ubuntu
 - Configtool build/test on 4 platforms (macOS, Linux x64, Linux arm64, Windows)
 - SDK build/test on Amazon Linux 2023 containers (x64, arm64) with `yum install senzingsdk-runtime`

@@ -1,0 +1,19 @@
+{
+  "name": "electron-app",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc && cp src/renderer/index.html dist/renderer/index.html",
+    "start": "npm run build && electron .",
+    "rebuild": "electron-rebuild"
+  },
+  "dependencies": {
+    "@senzing/sdk": "file:../../packages/sdk",
+    "@senzing/configtool": "file:../../packages/configtool"
+  },
+  "devDependencies": {
+    "electron": "^41",
+    "typescript": "^5",
+    "@electron/rebuild": "^3"
+  }
+}

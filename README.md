@@ -28,7 +28,6 @@ The `@senzing/sdk` package requires the Senzing runtime to be installed separate
 
 ```bash
 brew install senzingsdk-runtime-unofficial
-export DYLD_LIBRARY_PATH=/opt/homebrew/opt/senzing/runtime/er/lib
 ```
 
 **Linux (x64, arm64):**
@@ -39,8 +38,6 @@ apt install senzingsdk-runtime
 
 # RHEL/CentOS
 yum install senzingsdk-runtime
-
-export LD_LIBRARY_PATH=/opt/senzing/er/lib
 ```
 
 **Windows (x64):**
@@ -160,7 +157,7 @@ All functions are stateless: they accept a config JSON string and return a modif
 | Versioning         | `getVersion`, `getCompatibilityVersion`, `updateCompatibilityVersion`, `verifyCompatibilityVersion`                          |
 | Script Processing  | `processScript`, `processFile`                                                                                               |
 
-Full type definitions are in `packages/configtool/index.d.ts`.
+Full type definitions are in `packages/configtool/configtool.d.ts`.
 
 ## SzFlags
 
@@ -278,7 +275,7 @@ const worker = new Worker("./worker.js", {
 });
 ```
 
-See [examples/electron-worker/](examples/electron-worker/) for the complete pattern.
+See [examples/worker-threads/](examples/worker-threads/) for the complete pattern.
 
 ## Building from Source
 
@@ -335,7 +332,8 @@ npm start
 | [basic-sdk-usage](examples/basic-sdk-usage/)     | Add records, search, entity resolution, export |       Yes        |
 | [config-management](examples/config-management/) | Create, modify, register, and activate configs |       Yes        |
 | [configtool-usage](examples/configtool-usage/)   | Offline config editing with pure JSON          |        No        |
-| [electron-worker](examples/electron-worker/)     | Worker thread pattern for Electron apps        |       Yes        |
+| [worker-threads](examples/worker-threads/)       | Worker thread pattern for heavy workloads      |       Yes        |
+| [electron-app](examples/electron-app/)           | Electron desktop app with worker threads       |       Yes        |
 
 ## Repository Structure
 
@@ -367,7 +365,8 @@ sz-napi/
     basic-sdk-usage/            # Load records, search, get entities
     config-management/          # Register data sources, manage configs
     configtool-usage/           # Edit config JSON offline
-    electron-worker/            # Worker thread pattern for Electron
+    worker-threads/             # Worker thread pattern for heavy workloads
+    electron-app/               # Electron desktop app with worker threads
   docs/
     getting-started.md          # Zero-to-first-entity walkthrough
     config-management.md        # Configuration lifecycle tutorial

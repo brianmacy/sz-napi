@@ -37,3 +37,4 @@ coverage/
 
 # TypeDoc generated API docs
 docs/api/
+packages/sdk/docs/

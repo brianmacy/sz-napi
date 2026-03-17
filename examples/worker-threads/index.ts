@@ -1,8 +1,8 @@
 /**
- * Electron Worker Thread Pattern
+ * Worker Threads Pattern
  *
  * Demonstrates how to use @senzing/sdk with Node.js worker_threads
- * to keep the main thread responsive in an Electron application.
+ * to keep the main thread responsive.
  *
  * Architecture:
  *   Main thread  -- sends work messages --> Worker thread
@@ -12,12 +12,12 @@
  * Each worker creates its own SzEnvironment. The Senzing engine is
  * thread-safe, so multiple workers can operate concurrently.
  *
- * In an Electron app, the main thread handles the UI while workers
- * handle the heavy entity resolution workload.
+ * This pattern is useful for Electron apps or Node.js services where
+ * the main thread must remain responsive while entity resolution
+ * runs in the background.
  *
  * Prerequisites:
  *   - Senzing runtime installed
- *   - DYLD_LIBRARY_PATH or LD_LIBRARY_PATH set to the Senzing lib directory
  */
 
 import { fileURLToPath } from "node:url";
@@ -78,7 +78,7 @@ if (!isMainThread && parentPort) {
   const { SzEnvironment, SzFlags } = sdk;
 
   const settings: string = workerData.settings;
-  const env = new SzEnvironment("electron-worker", settings, false);
+  const env = new SzEnvironment("sz-worker", settings, false);
   const engine = env.getEngine();
 
   console.log("[worker] Environment initialized.");
@@ -169,6 +169,12 @@ if (isMainThread) {
       CONNECTION: "sqlite3://na:na@/tmp/senzing-worker-example.db",
     },
   });
+
+  // Initialize SQLite database with schema
+  const dbPath = "/tmp/senzing-worker-example.db";
+  const schemaPath = `${senzingBase}/resources/schema/szcore-schema-sqlite-create.sql`;
+  if (existsSync(dbPath)) unlinkSync(dbPath);
+  execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
 
   // Bootstrap: set up data sources before spawning the worker
   const { SzEnvironment } = await import("@senzing/sdk");
@@ -286,6 +292,8 @@ if (isMainThread) {
 
     worker.on("exit", (code: number) => {
       console.log(`[main] Worker exited with code ${code}.`);
+      // Clean up the SQLite database file
+      if (existsSync(dbPath)) unlinkSync(dbPath);
     });
   }
 

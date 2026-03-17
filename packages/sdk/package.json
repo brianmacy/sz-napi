@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "main": "sdk.js",
   "types": "sdk.d.ts",
+  "exports": {
+    ".": {
+      "import": "./sdk.mjs",
+      "require": "./sdk.js",
+      "types": "./sdk.d.ts"
+    }
+  },
   "napi": {
     "binaryName": "senzing-sdk",
     "targets": [
