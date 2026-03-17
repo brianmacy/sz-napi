@@ -224,6 +224,7 @@ jobs:
   # ---------------------------------------------------------------------------
   release:
     name: Create GitHub Release
+    if: always() && !cancelled()
     needs: [build-configtool, build-sdk-linux, build-sdk-host]
     runs-on: ubuntu-latest
     steps:
