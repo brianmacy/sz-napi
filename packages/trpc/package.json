@@ -1,0 +1,47 @@
+{
+  "name": "@senzing/trpc",
+  "version": "0.1.0",
+  "description": "tRPC routers and client types for remote access to Senzing NAPI bindings",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.mjs",
+      "require": "./dist/client.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@trpc/server": "^11",
+    "superjson": "^2",
+    "zod": "^3"
+  },
+  "peerDependencies": {
+    "@senzing/sdk": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@senzing/sdk": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@senzing/sdk": "*",
+    "@trpc/client": "^11",
+    "tsup": "^8",
+    "typescript": "^5"
+  },
+  "files": [
+    "dist"
+  ]
+}
