@@ -1,13 +1,44 @@
 /**
  * Preload script — exposes the Senzing SDK as `window.senzing`.
  *
- * Each service is a Proxy — any method call becomes a generic "sz:call" IPC invoke.
  * All args are positional, matching the native SDK signatures.
+ * Uses a single generic "sz:call" IPC channel for all method dispatch.
  * String results that look like JSON are automatically parsed.
+ *
+ * Note: contextBridge.exposeInMainWorld cannot clone Proxy objects,
+ * so we build a plain object with explicit function properties.
  */
 import { contextBridge, ipcRenderer } from "electron";
 
-const SERVICES = ["engine", "product", "configManager", "diagnostic"] as const;
+/** Methods for each service — used to build the API object. */
+const SERVICE_METHODS: Record<string, string[]> = {
+  engine: [
+    "primeEngine", "getStats",
+    "addRecord", "deleteRecord", "getRecord", "getRecordPreview",
+    "reevaluateRecord", "reevaluateEntity",
+    "getEntityById", "getEntityByRecord", "searchByAttributes",
+    "whySearch", "whyEntities", "whyRecords", "whyRecordInEntity",
+    "howEntity", "getVirtualEntity",
+    "findInterestingEntitiesById", "findInterestingEntitiesByRecord",
+    "findPath", "findNetwork",
+    "getRedoRecord", "countRedoRecords", "processRedoRecord",
+    "exportJsonEntityReport", "exportCsvEntityReport",
+  ],
+  product: ["getVersion", "getLicense"],
+  configManager: [
+    "createConfig", "createConfigFromId", "createConfigFromDefinition",
+    "getConfigRegistry", "getDefaultConfigId",
+    "registerConfig", "replaceDefaultConfigId",
+    "setDefaultConfig", "setDefaultConfigId",
+  ],
+  diagnostic: [
+    "checkRepositoryPerformance", "getFeature",
+    "getRepositoryInfo", "purgeRepository",
+  ],
+  lifecycle: [
+    "initialize", "destroy", "reinitialize", "getActiveConfigId",
+  ],
+};
 
 function tryParseJson(val: unknown): unknown {
   if (typeof val === "string" && val.length > 0 && (val[0] === "{" || val[0] === "[")) {
@@ -16,36 +47,34 @@ function tryParseJson(val: unknown): unknown {
   return val;
 }
 
-async function szCall(service: string, method: string, args: any[]): Promise<any> {
-  const envelope = await ipcRenderer.invoke("sz:call", service, method, args);
-  if (envelope.__szError) {
-    const err = new Error(envelope.message) as any;
-    err.name = envelope.className;
-    err.szCode = envelope.szCode;
-    err.category = envelope.category;
-    err.severity = envelope.severity;
-    throw err;
-  }
-  return tryParseJson(envelope.result);
+function makeMethod(service: string, method: string) {
+  return async (...args: any[]) => {
+    const envelope = await ipcRenderer.invoke("sz:call", service, method, args);
+    if (envelope.__szError) {
+      const err = new Error(envelope.message) as any;
+      err.name = envelope.className;
+      err.szCode = envelope.szCode;
+      err.category = envelope.category;
+      err.severity = envelope.severity;
+      throw err;
+    }
+    return tryParseJson(envelope.result);
+  };
 }
 
-// Build the API object — each service is a Proxy
+// Build the API object with plain function properties
 const api: Record<string, any> = {
   flags: {},
 };
 
-for (const service of SERVICES) {
-  api[service] = new Proxy({}, {
-    get: (_t, method: string) =>
-      (...args: any[]) => szCall(service, method, args),
-  });
+for (const [service, methods] of Object.entries(SERVICE_METHODS)) {
+  api[service] = {};
+  for (const method of methods) {
+    api[service][method] = makeMethod(service, method);
+  }
 }
 
-// Lifecycle as a Proxy too, plus hoisted to top level
-api.lifecycle = new Proxy({}, {
-  get: (_t, method: string) =>
-    (...args: any[]) => szCall("lifecycle", method, args),
-});
+// Hoist lifecycle methods to top level
 api.initialize = api.lifecycle.initialize;
 api.destroy = api.lifecycle.destroy;
 
