@@ -1,11 +1,21 @@
 /**
- * SzElectronMain — registers IPC handlers and manages the SDK worker thread.
+ * SzElectronEnvironment — Electron IPC bridge with SDK-style service accessors.
  *
- * Uses a single generic "sz:call" IPC channel. All args are positional.
+ * Mirrors the native SzEnvironment API: access services as properties
+ * and call methods with positional args matching the native SDK.
  *
  * Usage in Electron main process:
- *   const sz = new SzElectronMain();
- *   app.whenReady().then(() => sz.setup());
+ *   const sz = new SzElectronEnvironment();
+ *   app.whenReady().then(async () => {
+ *     sz.setup();
+ *     await sz.initialize(settings);
+ *
+ *     const config = await sz.configManager.createConfig();
+ *     const version = await sz.product.getVersion();
+ *     await sz.engine.addRecord("CUSTOMERS", "1001", '{"NAME_FULL":"Bob"}');
+ *
+ *     // ... create window ...
+ *   });
  *   app.on('before-quit', () => sz.teardown());
  */
 import { ipcMain } from "electron";
@@ -13,18 +23,36 @@ import { Worker } from "node:worker_threads";
 import * as path from "node:path";
 import * as crypto from "node:crypto";
 
-export interface SzElectronMainOptions {
+export interface SzElectronEnvironmentOptions {
   workerPath?: string;
 }
 
-export class SzElectronMain {
+/** Service proxy type — any method call returns a Promise. */
+type ServiceProxy = Record<string, (...args: any[]) => Promise<any>>;
+
+export class SzElectronEnvironment {
   private worker: Worker | null = null;
   private pending = new Map<string, { resolve: (value: any) => void }>();
   private workerPath: string;
   private workerReady: Promise<void> | null = null;
 
-  constructor(options?: SzElectronMainOptions) {
+  /** Engine service: entity resolution, search, pathfinding, export, etc. */
+  readonly engine: ServiceProxy;
+  /** Product service: version and license info. */
+  readonly product: ServiceProxy;
+  /** Config manager service: create, register, activate configs. */
+  readonly configManager: ServiceProxy;
+  /** Diagnostic service: repository info, performance benchmarks. */
+  readonly diagnostic: ServiceProxy;
+
+  constructor(options?: SzElectronEnvironmentOptions) {
     this.workerPath = options?.workerPath ?? path.join(__dirname, "worker.js");
+
+    // Create service proxies
+    this.engine = this.createServiceProxy("engine");
+    this.product = this.createServiceProxy("product");
+    this.configManager = this.createServiceProxy("configManager");
+    this.diagnostic = this.createServiceProxy("diagnostic");
   }
 
   /**
@@ -55,18 +83,7 @@ export class SzElectronMain {
   }
 
   /**
-   * Call any SDK method from the main process.
-   */
-  async call(service: string, method: string, ...args: any[]): Promise<any> {
-    const result = await this.callWorker(service, method, args);
-    if (result.__szError) {
-      throw new Error(result.message ?? `${service}.${method} failed`);
-    }
-    return result.result;
-  }
-
-  /**
-   * Initialize the SDK from the main process (before any renderer window).
+   * Initialize the SDK worker and Senzing environment.
    */
   async initialize(settings: string, opts?: { moduleName?: string; verbose?: boolean }) {
     const result = await this.callWorker("lifecycle", "initialize", [settings, opts]);
@@ -76,7 +93,21 @@ export class SzElectronMain {
   }
 
   /**
-   * Remove IPC handlers and terminate the worker.
+   * Get the active config ID.
+   */
+  async getActiveConfigId(): Promise<number> {
+    return this.callService("lifecycle", "getActiveConfigId");
+  }
+
+  /**
+   * Reinitialize the SDK with a new config.
+   */
+  async reinitialize(configId: number): Promise<void> {
+    await this.callService("lifecycle", "reinitialize", configId);
+  }
+
+  /**
+   * Remove IPC handlers, destroy the SDK, and terminate the worker.
    */
   async teardown() {
     ipcMain.removeHandler("sz:call");
@@ -86,6 +117,22 @@ export class SzElectronMain {
       this.worker = null;
       this.workerReady = null;
     }
+  }
+
+  private createServiceProxy(service: string): ServiceProxy {
+    return new Proxy({} as ServiceProxy, {
+      get: (_target, method: string) => {
+        return (...args: any[]) => this.callService(service, method, ...args);
+      },
+    });
+  }
+
+  private async callService(service: string, method: string, ...args: any[]): Promise<any> {
+    const result = await this.callWorker(service, method, args);
+    if (result.__szError) {
+      throw new Error(result.message ?? `${service}.${method} failed`);
+    }
+    return result.result;
   }
 
   private ensureWorker(): Promise<void> {

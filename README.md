@@ -12,7 +12,7 @@ This monorepo provides four npm packages:
 - **`@senzing/sdk`** -- Runtime bindings for the Senzing entity resolution engine. Add records, resolve entities, search by attributes, analyze relationships, and manage configurations.
 - **`@senzing/configtool`** -- Pure JSON manipulation of Senzing configuration documents. No Senzing runtime needed. Works anywhere Node.js runs.
 - **`@senzing/trpc`** -- tRPC routers that expose the SDK as typed remote procedures over HTTP. Enables browser and remote clients to call Senzing without native libraries installed locally. Includes `SzTrpcEnvironment` for lifecycle management, Zod input schemas, and superjson for bigint flag serialization.
-- **`@senzing/electron`** -- Electron IPC bridge that runs the SDK in a worker thread and exposes it to the renderer via `contextBridge`. Accepts both positional and object-style arguments (matching the tRPC schemas) for seamless integration with Angular or other frontend frameworks.
+- **`@senzing/electron`** -- Electron IPC bridge that runs the SDK in a worker thread and exposes it to the renderer via `contextBridge`. Uses positional args matching the native SDK signatures for seamless integration with Angular or other frontend frameworks.
 
 `@senzing/sdk` and `@senzing/configtool` are built with [NAPI-RS](https://napi.rs) (Rust native bindings), providing full TypeScript type definitions generated from Rust source code and prebuilt native binaries for all supported platforms. `@senzing/trpc` and `@senzing/electron` are pure TypeScript packages that wrap the native bindings for remote and desktop access respectively.
 
@@ -378,11 +378,10 @@ sz-napi/
     electron/                   # @senzing/electron
       package.json
       src/                      # TypeScript source
-        main/index.ts           # SzElectronMain — IPC handler + worker management
+        main/index.ts           # SzElectronEnvironment — IPC handler + worker management
         main/worker.ts          # Worker thread owning SzEnvironment
         preload/index.ts        # contextBridge exposing window.senzing
         renderer/types.ts       # TypeScript declarations for window.senzing
-        shared/channels.ts      # Method registry with arg names
         shared/errors.ts        # Error serialization across IPC boundary
   examples/
     basic-sdk-usage/            # Load records, search, get entities

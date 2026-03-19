@@ -1,0 +1,19 @@
+{
+  "name": "electron-package-example",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc && cp src/renderer/index.html dist/renderer/index.html",
+    "start": "npm run build && electron ."
+  },
+  "dependencies": {
+    "@senzing/sdk": "file:../../packages/sdk",
+    "@senzing/electron": "file:../../packages/electron",
+    "@senzing/configtool": "file:../../packages/configtool"
+  },
+  "devDependencies": {
+    "electron": "^35",
+    "typescript": "^5",
+    "@types/node": "^22"
+  }
+}
