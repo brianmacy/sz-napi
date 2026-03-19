@@ -19,6 +19,8 @@ interface SzErrorLike extends Error {
 type TRPCErrorCode = ConstructorParameters<typeof TRPCError>[0]['code'];
 
 function classifyError(err: SzErrorLike): TRPCErrorCode {
+  // SzNotFoundError is a subclass of SzBadInputError — check before generic bad-input
+  if (err.szCode === 'SZ_NOT_FOUND') return 'NOT_FOUND';
   if (err.isBadInput?.()) return 'BAD_REQUEST';
   if (err.isConfiguration?.()) return 'PRECONDITION_FAILED';
   if (err.isLicense?.()) return 'FORBIDDEN';

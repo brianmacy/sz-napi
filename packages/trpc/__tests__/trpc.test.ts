@@ -26,6 +26,21 @@ describe('toTRPCError', () => {
     expect(result.cause).toEqual(expect.objectContaining({ szCode: 'SZ_BAD_INPUT' }));
   });
 
+  test('maps not-found errors to NOT_FOUND', () => {
+    const szErr = Object.assign(new Error('record not found'), {
+      isBadInput: () => true,
+      isRetryable: () => false,
+      isConfiguration: () => false,
+      isLicense: () => false,
+      isInitialization: () => false,
+      szCode: 'SZ_NOT_FOUND',
+      category: 'BadInput',
+      severity: 'Warning',
+    });
+    const result = toTRPCError(szErr);
+    expect(result.code).toBe('NOT_FOUND');
+  });
+
   test('maps retryable errors to TOO_MANY_REQUESTS', () => {
     const szErr = Object.assign(new Error('retry'), {
       isBadInput: () => false,
