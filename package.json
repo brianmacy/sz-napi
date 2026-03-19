@@ -1,6 +1,7 @@
 {
   "private": true,
   "workspaces": [
+    "packages/types",
     "packages/sdk",
     "packages/configtool",
     "packages/trpc",

@@ -582,6 +582,17 @@ declare module './index' {
 
   interface SzDiagnostic {
     /**
+     * Gets detailed feature information by feature ID.
+     *
+     * @example Get feature details
+     * ```typescript
+     * const diag = env.getDiagnostic();
+     * const feature = JSON.parse(diag.getFeature(1));
+     * console.log("Feature:", JSON.stringify(feature, null, 2));
+     * ```
+     */
+    getFeature(featureId: number): string;
+    /**
      * Runs a performance benchmark on the repository for the specified duration.
      *
      * @example Run a 3-second benchmark
@@ -624,3 +635,11 @@ declare module './index' {
     getRepositoryInfo(): string;
   }
 }
+
+export {
+  SzEngineNative,
+  SzConfigManagerNative,
+  SzDiagnosticNative,
+  SzProductNative,
+  SzEnvironmentNative,
+} from './js/adapter';

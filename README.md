@@ -7,14 +7,15 @@ Node.js/TypeScript SDK for Senzing v4 entity resolution, built with NAPI-RS.
 
 ## Overview
 
-This monorepo provides four npm packages:
+This monorepo provides five npm packages:
 
-- **`@senzing/sdk`** -- Runtime bindings for the Senzing entity resolution engine. Add records, resolve entities, search by attributes, analyze relationships, and manage configurations.
+- **`@senzing/types`** -- Shared TypeScript interfaces (`SzEngine`, `SzConfigManager`, `SzDiagnostic`, `SzProduct`, `SzEnvironment`) that define the canonical Senzing API contract. All transports implement these interfaces, enabling transport-agnostic consumer code.
+- **`@senzing/sdk`** -- Runtime bindings for the Senzing entity resolution engine. Add records, resolve entities, search by attributes, analyze relationships, and manage configurations. Includes `SzEngineNative` and other adapter classes that implement `@senzing/types` interfaces.
 - **`@senzing/configtool`** -- Pure JSON manipulation of Senzing configuration documents. No Senzing runtime needed. Works anywhere Node.js runs.
 - **`@senzing/trpc`** -- tRPC routers that expose the SDK as typed remote procedures over HTTP. Enables browser and remote clients to call Senzing without native libraries installed locally. Includes `SzTrpcEnvironment` for lifecycle management, Zod input schemas, and superjson for bigint flag serialization.
 - **`@senzing/electron`** -- Electron IPC bridge that runs the SDK in a worker thread and exposes it to the renderer via `contextBridge`. Uses positional args matching the native SDK signatures for seamless integration with Angular or other frontend frameworks.
 
-`@senzing/sdk` and `@senzing/configtool` are built with [NAPI-RS](https://napi.rs) (Rust native bindings), providing full TypeScript type definitions generated from Rust source code and prebuilt native binaries for all supported platforms. `@senzing/trpc` and `@senzing/electron` are pure TypeScript packages that wrap the native bindings for remote and desktop access respectively.
+`@senzing/sdk` and `@senzing/configtool` are built with [NAPI-RS](https://napi.rs) (Rust native bindings), providing full TypeScript type definitions generated from Rust source code and prebuilt native binaries for all supported platforms. `@senzing/types`, `@senzing/trpc`, and `@senzing/electron` are pure TypeScript packages. All transports implement the shared `@senzing/types` interfaces, so consumer code can be written once and work with any transport.
 
 ## Prerequisites
 
@@ -375,6 +376,13 @@ sz-napi/
   package.json                  # npm workspace root
   README.md
   packages/
+    types/                      # @senzing/types
+      src/                      # Shared TypeScript interfaces
+        engine.ts               # SzEngine interface
+        config-manager.ts       # SzConfigManager interface
+        diagnostic.ts           # SzDiagnostic interface
+        product.ts              # SzProduct interface
+        environment.ts          # SzEnvironment interface
     sdk/                        # @senzing/sdk
       Cargo.toml                # napi-rs crate, depends on sz-rust-sdk
       package.json

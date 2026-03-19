@@ -23,6 +23,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@senzing/types": "*",
     "@trpc/server": "^11",
     "superjson": "^2",
     "zod": "^3"

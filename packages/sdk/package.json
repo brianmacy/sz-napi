@@ -25,6 +25,9 @@
     "prepublishOnly": "napi prepublish -t npm",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@senzing/types": "*"
+  },
   "devDependencies": {
     "@napi-rs/cli": "^3"
   }

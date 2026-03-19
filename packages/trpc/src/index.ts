@@ -58,3 +58,13 @@ export { METHOD_REGISTRY, METHOD_MAP, type MethodDef } from './methods.js';
 // Client wrapper
 export { wrapClient } from './wrapper.js';
 export type { SzTrpcClient } from './wrapper-types.js';
+
+// Shared interface types (re-exported from @senzing/types for convenience)
+export type {
+  SzEngine,
+  SzConfigManager,
+  SzDiagnostic,
+  SzProduct,
+  SzEnvironment,
+  RecordKey,
+} from '@senzing/types';

@@ -3,6 +3,7 @@
 const native = require('./index.js');
 const { wrapClass } = require('./js/wrapper');
 const errors = require('./js/errors');
+const adapters = require('./js/adapter');
 
 // Wrap all class methods with error mapping
 
@@ -165,4 +166,11 @@ module.exports = {
   SzReplaceConflictError: errors.SzReplaceConflictError,
   SzEnvironmentDestroyedError: errors.SzEnvironmentDestroyedError,
   mapToSzError: errors.mapToSzError,
+
+  // Adapter classes (async parsed-JSON wrappers)
+  SzEngineNative: adapters.SzEngineNative,
+  SzConfigManagerNative: adapters.SzConfigManagerNative,
+  SzDiagnosticNative: adapters.SzDiagnosticNative,
+  SzProductNative: adapters.SzProductNative,
+  SzEnvironmentNative: adapters.SzEnvironmentNative,
 };

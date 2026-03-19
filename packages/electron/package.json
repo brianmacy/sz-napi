@@ -32,6 +32,7 @@
   "devDependencies": {
     "@senzing/sdk": "file:../sdk",
     "@senzing/trpc": "file:../trpc",
+    "@senzing/types": "file:../types",
     "@types/node": "^22",
     "electron": "^35",
     "typescript": "^5",

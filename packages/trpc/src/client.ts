@@ -28,6 +28,14 @@ import type { SzTrpcClient } from './wrapper-types.js';
 
 export type { SzRouter } from './router.js';
 export type { SzTrpcClient } from './wrapper-types.js';
+export type {
+  SzEngine,
+  SzConfigManager,
+  SzDiagnostic,
+  SzProduct,
+  SzEnvironment,
+  RecordKey,
+} from '@senzing/types';
 
 export interface CreateSzClientOptions {
   /** Full URL to the tRPC endpoint, e.g. "http://localhost:3000/trpc" */

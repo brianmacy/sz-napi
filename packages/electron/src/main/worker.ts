@@ -96,7 +96,11 @@ parentPort.on("message", (req: any) => {
       for (const chunk of iter) {
         chunks.push(chunk);
       }
-      respond({ success: true, result: chunks });
+      // JSON exports return parsed objects; CSV exports return concatenated string
+      const result = req.method === 'exportCsvEntityReport'
+        ? chunks.join('')
+        : JSON.parse(chunks.join(''));
+      respond({ success: true, result });
       return;
     }
 
