@@ -9,36 +9,15 @@
  * so we build a plain object with explicit function properties.
  */
 import { contextBridge, ipcRenderer } from "electron";
+import { METHOD_REGISTRY } from "@senzing/trpc";
 
-/** Methods for each service — used to build the API object. */
-const SERVICE_METHODS: Record<string, string[]> = {
-  engine: [
-    "primeEngine", "getStats",
-    "addRecord", "deleteRecord", "getRecord", "getRecordPreview",
-    "reevaluateRecord", "reevaluateEntity",
-    "getEntityById", "getEntityByRecord", "searchByAttributes",
-    "whySearch", "whyEntities", "whyRecords", "whyRecordInEntity",
-    "howEntity", "getVirtualEntity",
-    "findInterestingEntitiesById", "findInterestingEntitiesByRecord",
-    "findPath", "findNetwork",
-    "getRedoRecord", "countRedoRecords", "processRedoRecord",
-    "exportJsonEntityReport", "exportCsvEntityReport",
-  ],
-  product: ["getVersion", "getLicense"],
-  configManager: [
-    "createConfig", "createConfigFromId", "createConfigFromDefinition",
-    "getConfigRegistry", "getDefaultConfigId",
-    "registerConfig", "replaceDefaultConfigId",
-    "setDefaultConfig", "setDefaultConfigId",
-  ],
-  diagnostic: [
-    "checkRepositoryPerformance", "getFeature",
-    "getRepositoryInfo", "purgeRepository",
-  ],
-  lifecycle: [
-    "initialize", "destroy", "reinitialize", "getActiveConfigId",
-  ],
-};
+/** Derive service methods from the tRPC method registry (single source of truth). */
+const SERVICE_METHODS: Record<string, string[]> = {};
+for (const def of METHOD_REGISTRY) {
+  (SERVICE_METHODS[def.service] ??= []).push(def.method);
+}
+// Lifecycle methods are Electron-specific (not in the tRPC registry)
+SERVICE_METHODS.lifecycle = ['initialize', 'destroy', 'reinitialize', 'getActiveConfigId'];
 
 function tryParseJson(val: unknown): unknown {
   if (typeof val === "string" && val.length > 0 && (val[0] === "{" || val[0] === "[")) {

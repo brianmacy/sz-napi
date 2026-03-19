@@ -1,33 +1,30 @@
 import { z } from 'zod';
 import { t } from '../trpc.js';
-import { toTRPCError } from '../errors.js';
-import type { SzContext } from '../context.js';
-
-function szCall<T>(fn: () => T): T {
-  try {
-    return fn();
-  } catch (err) {
-    throw toTRPCError(err);
-  }
-}
+import { szCall } from '../sz-call.js';
 
 export const environmentRouter = t.router({
   getActiveConfigId: t.procedure
     .query(({ ctx }) => {
-      const { env } = ctx as SzContext;
+      const { env } = ctx;
       return szCall(() => env.getActiveConfigId());
     }),
 
   reinitialize: t.procedure
     .input(z.object({ configId: z.number() }))
     .mutation(({ input, ctx }) => {
-      const { env } = ctx as SzContext;
+      const { env } = ctx;
       szCall(() => env.reinitialize(input.configId));
     }),
 
   isDestroyed: t.procedure
     .query(({ ctx }) => {
-      const { env } = ctx as SzContext;
+      const { env } = ctx;
       return env.isDestroyed();
+    }),
+
+  destroy: t.procedure
+    .mutation(({ ctx }) => {
+      const { env } = ctx;
+      szCall(() => env.destroy());
     }),
 });

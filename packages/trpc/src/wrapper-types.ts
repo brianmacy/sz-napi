@@ -76,6 +76,7 @@ export interface SzEnvironmentClient {
   getActiveConfigId(): Promise<number>;
   reinitialize(configId: number): Promise<void>;
   isDestroyed(): Promise<boolean>;
+  destroy(): Promise<void>;
 }
 
 export interface SzTrpcClient {

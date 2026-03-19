@@ -3,10 +3,11 @@
   "workspaces": [
     "packages/sdk",
     "packages/configtool",
-    "packages/trpc"
+    "packages/trpc",
+    "packages/electron"
   ],
   "scripts": {
-    "test": "vitest run --workspace",
+    "test": "vitest run",
     "docs": "typedoc"
   },
   "devDependencies": {

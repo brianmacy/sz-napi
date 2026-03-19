@@ -81,6 +81,7 @@ export const METHOD_REGISTRY: MethodDef[] = [
   { service: 'environment', method: 'getActiveConfigId', args: [], type: 'query' },
   { service: 'environment', method: 'reinitialize', args: ['configId'], type: 'mutation' },
   { service: 'environment', method: 'isDestroyed', args: [], type: 'query' },
+  { service: 'environment', method: 'destroy', args: [], type: 'mutation' },
 ];
 
 /** Lookup map: "service.method" → MethodDef */

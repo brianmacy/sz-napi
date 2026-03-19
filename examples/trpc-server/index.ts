@@ -99,6 +99,11 @@ const szTrpc = new SzTrpcEnvironment({ environment: env });
 
 const app = express();
 
+// ⚠️  SECURITY: Access-Control-Allow-Origin: * is for development only.
+// In production, restrict the origin to your frontend's domain.
+// Also consider guarding destructive operations like purgeRepository
+// with authentication middleware (see createAuthMiddleware in @senzing/trpc).
+
 // Enable CORS for development (e.g. Angular on a different port)
 app.use((_req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");

@@ -1,17 +1,6 @@
-import { TRPCError } from '@trpc/server';
 import { t } from '../trpc.js';
 import * as s from '../schemas.js';
-import { toTRPCError } from '../errors.js';
-import type { SzContext } from '../context.js';
-
-/** Wrap a handler so Senzing errors become typed TRPCErrors. */
-function szCall<T>(fn: () => T): T {
-  try {
-    return fn();
-  } catch (err) {
-    throw toTRPCError(err);
-  }
-}
+import { szCall } from '../sz-call.js';
 
 export const engineRouter = t.router({
   // ── Record Operations ───────────────────────────────────────────
@@ -19,7 +8,7 @@ export const engineRouter = t.router({
   addRecord: t.procedure
     .input(s.addRecord)
     .mutation(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.addRecord(input.dataSourceCode, input.recordId, input.recordDefinition, input.flags)),
       );
@@ -28,7 +17,7 @@ export const engineRouter = t.router({
   deleteRecord: t.procedure
     .input(s.deleteRecord)
     .mutation(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.deleteRecord(input.dataSourceCode, input.recordId, input.flags)),
       );
@@ -37,7 +26,7 @@ export const engineRouter = t.router({
   getRecord: t.procedure
     .input(s.getRecord)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.getRecord(input.dataSourceCode, input.recordId, input.flags)),
       );
@@ -46,7 +35,7 @@ export const engineRouter = t.router({
   getRecordPreview: t.procedure
     .input(s.getRecordPreview)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.getRecordPreview(input.recordDefinition, input.flags)),
       );
@@ -55,7 +44,7 @@ export const engineRouter = t.router({
   reevaluateRecord: t.procedure
     .input(s.reevaluateRecord)
     .mutation(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.reevaluateRecord(input.dataSourceCode, input.recordId, input.flags)),
       );
@@ -64,7 +53,7 @@ export const engineRouter = t.router({
   reevaluateEntity: t.procedure
     .input(s.reevaluateEntity)
     .mutation(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.reevaluateEntity(input.entityId, input.flags)),
       );
@@ -75,7 +64,7 @@ export const engineRouter = t.router({
   getEntityById: t.procedure
     .input(s.getEntityById)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.getEntityById(input.entityId, input.flags)),
       );
@@ -84,7 +73,7 @@ export const engineRouter = t.router({
   getEntityByRecord: t.procedure
     .input(s.getEntityByRecord)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.getEntityByRecord(input.dataSourceCode, input.recordId, input.flags)),
       );
@@ -93,7 +82,7 @@ export const engineRouter = t.router({
   searchByAttributes: t.procedure
     .input(s.searchByAttributes)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.searchByAttributes(input.attributes, input.searchProfile, input.flags)),
       );
@@ -104,7 +93,7 @@ export const engineRouter = t.router({
   whySearch: t.procedure
     .input(s.whySearch)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.whySearch(input.attributes, input.entityId, input.searchProfile, input.flags)),
       );
@@ -113,7 +102,7 @@ export const engineRouter = t.router({
   whyEntities: t.procedure
     .input(s.whyEntities)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.whyEntities(input.entityId1, input.entityId2, input.flags)),
       );
@@ -122,7 +111,7 @@ export const engineRouter = t.router({
   whyRecords: t.procedure
     .input(s.whyRecords)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.whyRecords(input.dsCode1, input.recId1, input.dsCode2, input.recId2, input.flags)),
       );
@@ -131,7 +120,7 @@ export const engineRouter = t.router({
   whyRecordInEntity: t.procedure
     .input(s.whyRecordInEntity)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.whyRecordInEntity(input.dataSourceCode, input.recordId, input.flags)),
       );
@@ -140,7 +129,7 @@ export const engineRouter = t.router({
   howEntity: t.procedure
     .input(s.howEntity)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.howEntity(input.entityId, input.flags)),
       );
@@ -149,7 +138,7 @@ export const engineRouter = t.router({
   getVirtualEntity: t.procedure
     .input(s.getVirtualEntity)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.getVirtualEntity(input.recordKeys, input.flags)),
       );
@@ -160,7 +149,7 @@ export const engineRouter = t.router({
   findInterestingEntitiesById: t.procedure
     .input(s.findInterestingEntitiesById)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.findInterestingEntitiesById(input.entityId, input.flags)),
       );
@@ -169,7 +158,7 @@ export const engineRouter = t.router({
   findInterestingEntitiesByRecord: t.procedure
     .input(s.findInterestingEntitiesByRecord)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.findInterestingEntitiesByRecord(input.dataSourceCode, input.recordId, input.flags)),
       );
@@ -180,7 +169,7 @@ export const engineRouter = t.router({
   findPath: t.procedure
     .input(s.findPath)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.findPath(
           input.startEntityId, input.endEntityId, input.maxDegrees,
@@ -192,7 +181,7 @@ export const engineRouter = t.router({
   findNetwork: t.procedure
     .input(s.findNetwork)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.findNetwork(
           input.entityIds, input.maxDegrees, input.buildOutDegree,
@@ -205,20 +194,20 @@ export const engineRouter = t.router({
 
   getRedoRecord: t.procedure
     .query(({ ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() => JSON.parse(engine.getRedoRecord()));
     }),
 
   countRedoRecords: t.procedure
     .query(({ ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() => engine.countRedoRecords());
     }),
 
   processRedoRecord: t.procedure
     .input(s.processRedoRecord)
     .mutation(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() =>
         JSON.parse(engine.processRedoRecord(input.redoRecord, input.flags)),
       );
@@ -228,13 +217,13 @@ export const engineRouter = t.router({
 
   primeEngine: t.procedure
     .mutation(({ ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       szCall(() => engine.primeEngine());
     }),
 
   getStats: t.procedure
     .query(({ ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() => JSON.parse(engine.getStats()));
     }),
 
@@ -247,9 +236,10 @@ export const engineRouter = t.router({
   exportJsonEntityReport: t.procedure
     .input(s.exportJsonEntityReport)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() => {
-        const iter = (engine as any).exportJsonEntityReport(input.flags);
+        // SzExportIterator implements [Symbol.iterator]() for for...of iteration
+        const iter = engine.exportJsonEntityReport(input.flags);
         const chunks: string[] = [];
         for (const chunk of iter) {
           chunks.push(chunk);
@@ -261,9 +251,10 @@ export const engineRouter = t.router({
   exportCsvEntityReport: t.procedure
     .input(s.exportCsvEntityReport)
     .query(({ input, ctx }) => {
-      const { engine } = ctx as SzContext;
+      const { engine } = ctx;
       return szCall(() => {
-        const iter = (engine as any).exportCsvEntityReport(input.csvColumnList, input.flags);
+        // SzExportIterator implements [Symbol.iterator]() for for...of iteration
+        const iter = engine.exportCsvEntityReport(input.csvColumnList, input.flags);
         const lines: string[] = [];
         for (const chunk of iter) {
           lines.push(chunk);

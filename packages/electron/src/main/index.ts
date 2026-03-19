@@ -22,9 +22,11 @@ import { ipcMain } from "electron";
 import { Worker } from "node:worker_threads";
 import * as path from "node:path";
 import * as crypto from "node:crypto";
+import { deserializeSzError } from "../shared/errors";
 
 export interface SzElectronEnvironmentOptions {
   workerPath?: string;
+  timeoutMs?: number;
 }
 
 /** Service proxy type — any method call returns a Promise. */
@@ -32,7 +34,8 @@ type ServiceProxy = Record<string, (...args: any[]) => Promise<any>>;
 
 export class SzElectronEnvironment {
   private worker: Worker | null = null;
-  private pending = new Map<string, { resolve: (value: any) => void }>();
+  private pending = new Map<string, { resolve: (value: any) => void; reject: (err: Error) => void }>();
+  private readonly timeoutMs: number;
   private workerPath: string;
   private workerReady: Promise<void> | null = null;
 
@@ -47,6 +50,7 @@ export class SzElectronEnvironment {
 
   constructor(options?: SzElectronEnvironmentOptions) {
     this.workerPath = options?.workerPath ?? path.join(__dirname, "worker.js");
+    this.timeoutMs = options?.timeoutMs ?? 60000;
 
     // Create service proxies
     this.engine = this.createServiceProxy("engine");
@@ -88,7 +92,7 @@ export class SzElectronEnvironment {
   async initialize(settings: string, opts?: { moduleName?: string; verbose?: boolean }) {
     const result = await this.callWorker("lifecycle", "initialize", [settings, opts]);
     if (result.__szError) {
-      throw new Error(result.message ?? "SDK initialization failed");
+      throw deserializeSzError(result);
     }
   }
 
@@ -130,7 +134,7 @@ export class SzElectronEnvironment {
   private async callService(service: string, method: string, ...args: any[]): Promise<any> {
     const result = await this.callWorker(service, method, args);
     if (result.__szError) {
-      throw new Error(result.message ?? `${service}.${method} failed`);
+      throw deserializeSzError(result);
     }
     return result.result;
   }
@@ -174,8 +178,18 @@ export class SzElectronEnvironment {
   private async callWorker(service: string, method: string, args: any[]): Promise<any> {
     await this.ensureWorker();
     const id = crypto.randomUUID();
-    return new Promise((resolve) => {
-      this.pending.set(id, { resolve });
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`Worker call timed out after ${this.timeoutMs}ms: ${service}.${method}`));
+      }, this.timeoutMs);
+      this.pending.set(id, {
+        resolve: (value: any) => {
+          clearTimeout(timeout);
+          resolve(value);
+        },
+        reject,
+      });
       this.worker!.postMessage({ id, service, method, args });
     });
   }

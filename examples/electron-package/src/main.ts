@@ -86,6 +86,10 @@ function createWindow(): BrowserWindow {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
+      // Note: sandbox is disabled to allow the preload script to use
+      // Node.js APIs (contextBridge, ipcRenderer). This is the standard
+      // pattern for Electron IPC. Context isolation remains enabled,
+      // keeping the renderer's JS environment separate from Node.js.
       sandbox: false,
     },
   });
