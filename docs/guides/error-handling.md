@@ -1,7 +1,13 @@
+---
+title: Error Handling
+group: Guides
+category: Reference
+---
+
 # Error Handling in sz-napi
 
 sz-napi surfaces two independent error hierarchies: one for the core SDK
-(`@sz-napi/sdk`) and one for the config-manipulation helper (`@sz-napi/configtool`).
+(`@senzing/sdk`) and one for the config-manipulation helper (`@senzing/configtool`).
 
 ---
 
@@ -54,7 +60,7 @@ import {
   SzRetryableError,
   SzUnrecoverableError,
   SzReplaceConflictError,
-} from "@sz-napi/sdk";
+} from "@senzing/sdk";
 
 try {
   const result = engine.getRecord("CUSTOMERS", recordId);
@@ -98,7 +104,7 @@ try {
 hard-code category strings.
 
 ```typescript
-import { SzError } from "@sz-napi/sdk";
+import { SzError } from "@senzing/sdk";
 
 function handleSzError(err: SzError): void {
   if (err.isRetryable()) {
@@ -147,7 +153,7 @@ When a `SzRetryableError` is thrown the operation is safe to retry after a
 short delay. Use exponential backoff with a finite attempt cap.
 
 ```typescript
-import { SzRetryableError } from "@sz-napi/sdk";
+import { SzRetryableError } from "@senzing/sdk";
 
 async function withRetry<T>(
   op: () => T,
@@ -194,7 +200,7 @@ Thrown when the data source name passed to an engine method (e.g. `addRecord`,
 configuration.
 
 ```typescript
-import { SzUnknownDataSourceError, SzConfigurationError } from "@sz-napi/sdk";
+import { SzUnknownDataSourceError, SzConfigurationError } from "@senzing/sdk";
 
 try {
   engine.addRecord("UNKNOWN_DS", "42", JSON.stringify({ NAME_FULL: "Alice" }));
@@ -213,7 +219,7 @@ Thrown by `getRecord`, `getEntityById`, `getEntityByRecord`, and similar
 read operations when the requested item is absent from the repository.
 
 ```typescript
-import { SzNotFoundError } from "@sz-napi/sdk";
+import { SzNotFoundError } from "@senzing/sdk";
 
 try {
   const raw = engine.getRecord("CUSTOMERS", "9999");
@@ -234,7 +240,7 @@ current config from `SzConfigManager`, apply changes afresh, and re-register
 with the new IDs.
 
 ```typescript
-import { SzReplaceConflictError } from "@sz-napi/sdk";
+import { SzReplaceConflictError } from "@senzing/sdk";
 
 async function addDataSourceSafe(
   env: SzEnvironment,
@@ -271,13 +277,13 @@ async function addDataSourceSafe(
 
 ## ConfigTool Errors (SzConfigError)
 
-The `@sz-napi/configtool` package uses its own flat error class, `SzConfigError`.
+The `@senzing/configtool` package uses its own flat error class, `SzConfigError`.
 It extends `Error` directly (not `SzError`) and carries a single `errorType`
 discriminant instead of a category hierarchy.
 
 ```typescript
-import { SzConfigError } from "@sz-napi/configtool";
-// or: const { SzConfigError } = require('@sz-napi/configtool');
+import { SzConfigError } from "@senzing/configtool";
+// or: const { SzConfigError } = require('@senzing/configtool');
 ```
 
 | Property    | Type              | Description                     |
@@ -303,8 +309,8 @@ import { SzConfigError } from "@sz-napi/configtool";
 ### Handling SzConfigError
 
 ```typescript
-import { SzConfigError } from "@sz-napi/configtool";
-import * as configtool from "@sz-napi/configtool";
+import { SzConfigError } from "@senzing/configtool";
+import * as configtool from "@senzing/configtool";
 
 function ensureDataSource(configJson: string, code: string): string {
   try {
@@ -362,8 +368,8 @@ import {
   SzUnhandledError,
   SzReplaceConflictError,
   SzEnvironmentDestroyedError,
-} from "@sz-napi/sdk";
+} from "@senzing/sdk";
 
 // ConfigTool errors
-import { SzConfigError } from "@sz-napi/configtool";
+import { SzConfigError } from "@senzing/configtool";
 ```

@@ -1,3 +1,9 @@
+---
+title: Deployment
+group: Guides
+category: Reference
+---
+
 # Deployment Guide
 
 Production deployment guide for `@senzing/sdk` (sz-napi).

@@ -1,3 +1,9 @@
+---
+title: Getting Started
+group: Guides
+category: Tutorials
+---
+
 # Getting Started: Zero to First Entity
 
 This guide walks you through installing the Senzing runtime, setting up a SQLite
@@ -336,7 +342,7 @@ try {
 
 ## Next Steps
 
-- **Full API reference** — see [README.md](../README.md)
+- **Full API reference** — see [README.md](../../README.md)
 - **SzFlags** — all flag constants are `bigint` values; combine with `|`
   (`SzFlags.ENTITY_DEFAULT_FLAGS | SzFlags.ENTITY_INCLUDE_ALL_FEATURES`)
 - **Config management** — `@senzing/configtool` lets you modify configuration

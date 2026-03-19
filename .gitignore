@@ -35,6 +35,7 @@ packages/*/*.node
 package-lock.json
 coverage/
 
-# TypeDoc generated API docs
+# TypeDoc generated docs
+docs/site/
 docs/api/
 packages/sdk/docs/

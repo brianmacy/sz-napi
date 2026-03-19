@@ -229,6 +229,16 @@ jobs:
           npm install
           npm start -- ../../packages/configtool/__tests__/fixtures/test-config.json
 
+      - name: Install code-snippets dependencies
+        run: |
+          cd code-snippets
+          npm install
+
+      - name: Run configtool code snippets
+        run: |
+          npx tsx code-snippets/configtool/basic-usage/index.ts packages/configtool/__tests__/fixtures/test-config.json
+          npx tsx code-snippets/configtool/process-script/index.ts packages/configtool/__tests__/fixtures/test-config.json
+
   # ---------------------------------------------------------------------------
   # Test SDK (requires Senzing runtime -- Linux x64 only for now)
   # ---------------------------------------------------------------------------
@@ -317,3 +327,75 @@ jobs:
           cd examples/configtool-usage
           npm install
           npm start -- ../../packages/configtool/__tests__/fixtures/test-config.json
+
+      - name: Install code-snippets dependencies
+        run: |
+          cd code-snippets
+          npm install
+
+      - name: Run information code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/information/get-version/index.ts
+          npx tsx code-snippets/information/get-license/index.ts
+          npx tsx code-snippets/information/check-datastore-performance/index.ts
+
+      - name: Run initialization code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/initialization/environment-and-hubs/index.ts
+          npx tsx code-snippets/initialization/engine-priming/index.ts
+          npx tsx code-snippets/initialization/purge-repository/index.ts
+          npx tsx code-snippets/initialization/lifecycle-patterns/index.ts
+
+      - name: Run configuration code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/configuration/init-default-config/index.ts
+          npx tsx code-snippets/configuration/register-data-sources/index.ts
+
+      - name: Run loading code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/loading/load-records/index.ts
+          npx tsx code-snippets/loading/load-with-info/index.ts
+
+      - name: Run searching code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/searching/search-records/index.ts
+          npx tsx code-snippets/searching/why-search/index.ts
+
+      - name: Run deleting code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/deleting/delete-records/index.ts
+          npx tsx code-snippets/deleting/delete-loop/index.ts
+
+      - name: Run redo code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/redo/redo-continuous/index.ts
+          npx tsx code-snippets/redo/load-with-redo/index.ts
+          npx tsx code-snippets/redo/redo-with-info/index.ts
+
+      - name: Run error-handling code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/error-handling/error-inspection/index.ts
+          npx tsx code-snippets/error-handling/retry-with-backoff/index.ts
+
+      - name: Run stewardship code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/stewardship/force-resolve/index.ts
+          npx tsx code-snippets/stewardship/force-unresolve/index.ts

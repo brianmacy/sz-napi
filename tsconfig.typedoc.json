@@ -11,6 +11,7 @@
     "packages/sdk/sdk.d.ts",
     "packages/sdk/index.d.ts",
     "packages/sdk/js/errors.d.ts",
-    "packages/configtool/index.d.ts"
+    "packages/configtool/index.d.ts",
+    "packages/configtool/configtool-docs.d.ts"
   ]
 }
