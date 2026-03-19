@@ -314,10 +314,13 @@ cd packages/configtool && npx vitest run
 
 ## Documentation
 
-- [Getting Started](docs/getting-started.md) — Zero-to-first-entity walkthrough
-- [Config Management](docs/config-management.md) — Configuration lifecycle tutorial
-- [Error Handling](docs/error-handling.md) — Error hierarchy and patterns
-- [Deployment](docs/deployment.md) — Docker, PostgreSQL, monitoring
+Full API reference and guides are published to GitHub Pages via TypeDoc.
+
+- [Getting Started](docs/guides/getting-started.md) — Zero-to-first-entity walkthrough
+- [Config Management](docs/guides/config-management.md) — Configuration lifecycle tutorial
+- [Error Handling](docs/guides/error-handling.md) — Error hierarchy and patterns
+- [Deployment](docs/guides/deployment.md) — Docker, PostgreSQL, monitoring
+- [Code Snippets](docs/guides/code-snippets.md) — 27 runnable snippets covering every SDK operation
 
 ## Examples
 
@@ -339,6 +342,30 @@ npm start
 | [electron-app](examples/electron-app/)           | Electron desktop app with worker threads                      |       Yes        |
 | [trpc-server](examples/trpc-server/)             | Express server exposing SDK via tRPC, loads truthset from GitHub |    Yes        |
 | [trpc-client](examples/trpc-client/)             | Standalone tRPC client — no native SDK needed                 |        No        |
+
+## Code Snippets
+
+Focused, runnable TypeScript examples for every SDK operation category. See the
+[full snippet reference](docs/guides/code-snippets.md) for details.
+
+```bash
+cd code-snippets
+npm install
+npx tsx information/get-version/index.ts
+```
+
+| Category                                        | Snippets                                                                   | Requires Runtime |
+| ----------------------------------------------- | -------------------------------------------------------------------------- | :--------------: |
+| [Information](code-snippets/information/)       | get-version, get-license, check-datastore-performance                      |       Yes        |
+| [Initialization](code-snippets/initialization/) | environment-and-hubs, engine-priming, purge-repository, lifecycle-patterns |       Yes        |
+| [Configuration](code-snippets/configuration/)   | init-default-config, register-data-sources                                 |       Yes        |
+| [Loading](code-snippets/loading/)               | load-records, load-with-info, load-worker-pool                             |       Yes        |
+| [Searching](code-snippets/searching/)           | search-records, search-worker-pool, why-search                             |       Yes        |
+| [Deleting](code-snippets/deleting/)             | delete-records, delete-loop                                                |       Yes        |
+| [Redo](code-snippets/redo/)                     | redo-continuous, redo-worker-pool, load-with-redo, redo-with-info          |       Yes        |
+| [Error Handling](code-snippets/error-handling/) | error-inspection, retry-with-backoff                                       |       Yes        |
+| [Stewardship](code-snippets/stewardship/)       | force-resolve, force-unresolve                                             |       Yes        |
+| [ConfigTool](code-snippets/configtool/)         | basic-usage, process-script                                                |        No        |
 
 ## Repository Structure
 
@@ -392,11 +419,26 @@ sz-napi/
     electron-app/               # Electron desktop app with worker threads
     trpc-server/                # Express + tRPC server with truthset loading
     trpc-client/                # Standalone typed tRPC client
+  code-snippets/
+    _utils/                     # Shared init/cleanup helper
+    information/                # Version, license, performance
+    initialization/             # Environment lifecycle patterns
+    configuration/              # Config creation and data sources
+    loading/                    # Record ingestion patterns
+    searching/                  # Search and why analysis
+    deleting/                   # Record deletion patterns
+    redo/                       # Redo processing patterns
+    error-handling/             # Error hierarchy and retry
+    stewardship/                # Force resolve/unresolve
+    configtool/                 # Offline config editing (no runtime)
   docs/
-    getting-started.md          # Zero-to-first-entity walkthrough
-    config-management.md        # Configuration lifecycle tutorial
-    error-handling.md           # Error hierarchy and patterns
-    deployment.md               # Docker, PostgreSQL, monitoring
+    index.md                    # TypeDoc landing page
+    guides/
+      getting-started.md        # Zero-to-first-entity walkthrough
+      config-management.md      # Configuration lifecycle tutorial
+      error-handling.md         # Error hierarchy and patterns
+      deployment.md             # Docker, PostgreSQL, monitoring
+      code-snippets.md          # Snippet reference and usage guide
 ```
 
 ## License

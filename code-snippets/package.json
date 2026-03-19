@@ -1,0 +1,12 @@
+{
+  "name": "code-snippets",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@senzing/sdk": "file:../packages/sdk",
+    "@senzing/configtool": "file:../packages/configtool"
+  },
+  "devDependencies": {
+    "tsx": "^4"
+  }
+}

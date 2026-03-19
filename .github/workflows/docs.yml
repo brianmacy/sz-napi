@@ -32,13 +32,13 @@ jobs:
       - name: Install TypeDoc
         run: npm install --no-save typedoc
 
-      - name: Generate API docs
+      - name: Generate docs
         run: npx typedoc
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
-          path: docs/api
+          path: docs/site
 
   deploy:
     needs: build

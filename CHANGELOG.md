@@ -19,12 +19,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ESM support with dual CJS/ESM exports for @senzing/sdk (`sdk.mjs`) and @senzing/configtool (`configtool.mjs`)
 - Proper `configtool.d.ts` TypeScript types including `SzConfigError`
 - Electron desktop app example (`examples/electron-app`)
+- 27 runnable code snippets covering every SDK operation category: information, initialization, configuration, loading, searching, deleting, redo, error-handling, stewardship, and configtool (`code-snippets/`)
+- Shared snippet utility for environment setup and cleanup (`code-snippets/_utils/snippet-utils.ts`)
+- Code snippets documentation page (`docs/guides/code-snippets.md`)
+
+- TypeDoc `projectDocuments` integration with landing page (`docs/index.md`) and `@example` tags linking to code snippets
+- `configtool-docs.d.ts` documentation-only type declarations for TypeDoc configtool coverage
 
 ### Changed
+
+- Guide documentation restructured from `docs/*.md` to `docs/guides/*.md`
 
 - CI: SDK build and test jobs run in Amazon Linux 2023 containers with `yum install senzingsdk-runtime`
 - CI: configtool-usage example runs in configtool test job on all platforms
 - CI: basic-sdk-usage, config-management, configtool-usage examples run in SDK test job
+- CI: code-snippets executed in both test-configtool (configtool snippets) and test-sdk (all SDK snippets) jobs
 - CI: `release.yml` builds all platforms and attaches `.node` artifacts to GitHub Releases
 - CI: `cargo fmt` scoped to workspace packages only (`-p` flag) to avoid formatting sibling repos
 - Extracted `json_serialize_error` helper to reduce error-handling boilerplate in configtool Rust sources

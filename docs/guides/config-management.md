@@ -1,3 +1,9 @@
+---
+title: Configuration Lifecycle
+group: Guides
+category: Tutorials
+---
+
 # Senzing Configuration Lifecycle
 
 This tutorial walks through the full Senzing configuration lifecycle using

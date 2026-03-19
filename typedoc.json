@@ -2,12 +2,45 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
     "packages/sdk/sdk.d.ts",
-    "packages/configtool/index.d.ts"
+    "packages/configtool/index.d.ts",
+    "packages/configtool/configtool-docs.d.ts"
   ],
   "tsconfig": "tsconfig.typedoc.json",
-  "out": "docs/api",
-  "name": "sz-napi",
-  "readme": "none",
+  "out": "docs/site",
+  "name": "Senzing Node.js SDK",
+  "readme": "docs/index.md",
   "excludePrivate": true,
-  "excludeInternal": true
+  "excludeInternal": true,
+  "projectDocuments": [
+    "docs/guides/getting-started.md",
+    "docs/guides/config-management.md",
+    "docs/guides/error-handling.md",
+    "docs/guides/deployment.md",
+    "docs/guides/code-snippets.md"
+  ],
+  "navigationLinks": {
+    "GitHub": "https://github.com/senzing-garage/sz-napi",
+    "npm": "https://www.npmjs.com/package/@senzing/sdk"
+  },
+  "sort": ["source-order"],
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "categorizeByGroup": true,
+  "highlightLanguages": [
+    "bash",
+    "console",
+    "css",
+    "dockerfile",
+    "html",
+    "javascript",
+    "json",
+    "jsonc",
+    "powershell",
+    "shell",
+    "sql",
+    "typescript",
+    "yaml"
+  ]
 }
