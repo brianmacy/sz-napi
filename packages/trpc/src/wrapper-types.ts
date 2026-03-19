@@ -1,15 +1,15 @@
 /**
- * TypeScript declarations for the `window.senzing` API exposed by the preload script.
+ * TypeScript declarations for the wrapped Senzing tRPC client.
  *
- * All methods use positional args matching the native @senzing/sdk signatures.
+ * Methods match the native @senzing/sdk signatures — positional args, Promise returns.
  */
 
-export interface SenzingProductAPI {
-  getLicense(): Promise<any>;
+export interface SzProductClient {
   getVersion(): Promise<any>;
+  getLicense(): Promise<any>;
 }
 
-export interface SenzingEngineAPI {
+export interface SzEngineClient {
   // Record Operations
   addRecord(dataSourceCode: string, recordId: string, recordDefinition: string, flags?: bigint): Promise<any>;
   deleteRecord(dataSourceCode: string, recordId: string, flags?: bigint): Promise<any>;
@@ -21,10 +21,10 @@ export interface SenzingEngineAPI {
   // Entity Retrieval
   getEntityById(entityId: number, flags?: bigint): Promise<any>;
   getEntityByRecord(dataSourceCode: string, recordId: string, flags?: bigint): Promise<any>;
-  searchByAttributes(attributes: string, searchProfile?: string, flags?: bigint): Promise<any>;
+  searchByAttributes(attributes: string, searchProfile?: string | null, flags?: bigint): Promise<any>;
 
   // Why/How Analysis
-  whySearch(attributes: string, entityId: number, searchProfile?: string, flags?: bigint): Promise<any>;
+  whySearch(attributes: string, entityId: number, searchProfile?: string | null, flags?: bigint): Promise<any>;
   whyEntities(entityId1: number, entityId2: number, flags?: bigint): Promise<any>;
   whyRecords(dsCode1: string, recId1: string, dsCode2: string, recId2: string, flags?: bigint): Promise<any>;
   whyRecordInEntity(dataSourceCode: string, recordId: string, flags?: bigint): Promise<any>;
@@ -36,7 +36,7 @@ export interface SenzingEngineAPI {
   findInterestingEntitiesByRecord(dataSourceCode: string, recordId: string, flags?: bigint): Promise<any>;
 
   // Pathfinding
-  findPath(startEntityId: number, endEntityId: number, maxDegrees: number, avoidEntityIds?: number[], requiredDataSources?: string[], flags?: bigint): Promise<any>;
+  findPath(startEntityId: number, endEntityId: number, maxDegrees: number, avoidEntityIds?: number[] | null, requiredDataSources?: string[] | null, flags?: bigint): Promise<any>;
   findNetwork(entityIds: number[], maxDegrees: number, buildOutDegree: number, maxEntities: number, flags?: bigint): Promise<any>;
 
   // Redo
@@ -50,48 +50,38 @@ export interface SenzingEngineAPI {
 
   // Export
   exportJsonEntityReport(flags?: bigint): Promise<any>;
-  exportCsvEntityReport(csvColumnList: string, flags?: bigint): Promise<string[]>;
+  exportCsvEntityReport(csvColumnList: string, flags?: bigint): Promise<string>;
 }
 
-export interface SenzingConfigManagerAPI {
+export interface SzConfigManagerClient {
   createConfig(): Promise<any>;
   createConfigFromId(configId: number): Promise<any>;
   createConfigFromDefinition(configDefinition: string): Promise<any>;
   getConfigRegistry(): Promise<any>;
   getDefaultConfigId(): Promise<number>;
-  registerConfig(configDefinition: string, configComment?: string): Promise<number>;
+  registerConfig(configDefinition: string, configComment?: string | null): Promise<number>;
   replaceDefaultConfigId(currentDefaultConfigId: number, newDefaultConfigId: number): Promise<void>;
-  setDefaultConfig(configDefinition: string, configComment?: string): Promise<number>;
+  setDefaultConfig(configDefinition: string, configComment?: string | null): Promise<number>;
   setDefaultConfigId(configId: number): Promise<void>;
 }
 
-export interface SenzingDiagnosticAPI {
+export interface SzDiagnosticClient {
   checkRepositoryPerformance(secondsToRun: number): Promise<any>;
   getFeature(featureId: number): Promise<any>;
   getRepositoryInfo(): Promise<any>;
   purgeRepository(): Promise<void>;
 }
 
-export interface SenzingLifecycleAPI {
-  initialize(settings: string, opts?: { moduleName?: string; verbose?: boolean }): Promise<void>;
-  destroy(): Promise<void>;
-  reinitialize(configId: number): Promise<void>;
+export interface SzEnvironmentClient {
   getActiveConfigId(): Promise<number>;
+  reinitialize(configId: number): Promise<void>;
+  isDestroyed(): Promise<boolean>;
 }
 
-export interface SenzingAPI {
-  product: SenzingProductAPI;
-  engine: SenzingEngineAPI;
-  configManager: SenzingConfigManagerAPI;
-  diagnostic: SenzingDiagnosticAPI;
-  lifecycle: SenzingLifecycleAPI;
-  flags: Readonly<Record<string, bigint>>;
-  initialize(settings: string, opts?: { moduleName?: string; verbose?: boolean }): Promise<void>;
-  destroy(): Promise<void>;
-}
-
-declare global {
-  interface Window {
-    senzing: SenzingAPI;
-  }
+export interface SzTrpcClient {
+  product: SzProductClient;
+  engine: SzEngineClient;
+  configManager: SzConfigManagerClient;
+  diagnostic: SzDiagnosticClient;
+  environment: SzEnvironmentClient;
 }

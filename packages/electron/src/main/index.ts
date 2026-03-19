@@ -1,6 +1,8 @@
 /**
  * SzElectronMain — registers IPC handlers and manages the SDK worker thread.
  *
+ * Uses a single generic "sz:call" IPC channel. All args are positional.
+ *
  * Usage in Electron main process:
  *   const sz = new SzElectronMain();
  *   app.whenReady().then(() => sz.setup());
@@ -10,7 +12,6 @@ import { ipcMain } from "electron";
 import { Worker } from "node:worker_threads";
 import * as path from "node:path";
 import * as crypto from "node:crypto";
-import { METHOD_REGISTRY } from "../shared/channels";
 
 export interface SzElectronMainOptions {
   workerPath?: string;
@@ -27,14 +28,13 @@ export class SzElectronMain {
   }
 
   /**
-   * Register all IPC handlers. Call once in app.whenReady().
+   * Register IPC handlers. Call once in app.whenReady().
    */
   setup() {
-    for (const def of METHOD_REGISTRY) {
-      ipcMain.handle(def.channel, async (_event, ...args) => {
-        return this.callWorker(def.service, def.method, args);
-      });
-    }
+    // Generic dispatch — all SDK calls go through one channel
+    ipcMain.handle("sz:call", async (_event, service: string, method: string, args: any[]) => {
+      return this.callWorker(service, method, args);
+    });
 
     // Serve SzFlags synchronously for preload bootstrap.
     // BigInt can't be sent via sendSync, so serialize as strings.
@@ -55,15 +55,7 @@ export class SzElectronMain {
   }
 
   /**
-   * Remove IPC handlers and terminate the worker.
-   */
-  /**
-   * Initialize the SDK from the main process (before any renderer window).
-   * Spawns the worker and calls lifecycle.initialize.
-   */
-  /**
    * Call any SDK method from the main process.
-   * Args can be positional or a single object (same as renderer).
    */
   async call(service: string, method: string, ...args: any[]): Promise<any> {
     const result = await this.callWorker(service, method, args);
@@ -83,10 +75,11 @@ export class SzElectronMain {
     }
   }
 
+  /**
+   * Remove IPC handlers and terminate the worker.
+   */
   async teardown() {
-    for (const def of METHOD_REGISTRY) {
-      ipcMain.removeHandler(def.channel);
-    }
+    ipcMain.removeHandler("sz:call");
     if (this.worker) {
       await this.callWorker("lifecycle", "destroy", []);
       await this.worker.terminate();

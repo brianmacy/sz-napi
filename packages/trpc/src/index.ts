@@ -45,3 +45,10 @@ export * as schemas from './schemas.js';
 
 // Error mapping
 export { toTRPCError } from './errors.js';
+
+// Method registry (for consumers who want to build custom wrappers)
+export { METHOD_REGISTRY, METHOD_MAP, type MethodDef } from './methods.js';
+
+// Client wrapper
+export { wrapClient } from './wrapper.js';
+export type { SzTrpcClient } from './wrapper-types.js';

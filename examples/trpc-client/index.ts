@@ -4,6 +4,9 @@
  * Demonstrates using the @senzing/trpc client to talk to a remote
  * Senzing server — no native Senzing libraries needed on this machine.
  *
+ * The client uses native-style positional args, matching the @senzing/sdk
+ * API exactly — no `.query()` / `.mutate()` wrappers needed.
+ *
  * This example:
  * - Connects to the tRPC server
  * - Fetches product version and license info
@@ -30,35 +33,32 @@ const sz = createSzClient({ url: serverUrl });
 console.log(`Connecting to Senzing tRPC server at ${serverUrl}\n`);
 
 // -- Product info -------------------------------------------------------------
-const version = await sz.product.getVersion.query();
+const version = await sz.product.getVersion();
 console.log(`Senzing version: ${version.VERSION}`);
 console.log(`Build date:      ${version.BUILD_DATE}`);
 
-const license = await sz.product.getLicense.query();
+const license = await sz.product.getLicense();
 console.log(`License type:    ${license.licenseType}\n`);
 
 // -- Add a record with WITH_INFO ----------------------------------------------
 // WITH_INFO flag (bit 62) is a bigint — superjson handles serialization.
 const WITH_INFO = 1n << 62n;
 
-const info = await sz.engine.addRecord.mutate({
-  dataSourceCode: "CUSTOMERS",
-  recordId: "CLIENT-2001",
-  recordDefinition: JSON.stringify({
+const info = await sz.engine.addRecord(
+  "CUSTOMERS",
+  "CLIENT-2001",
+  JSON.stringify({
     NAME_FULL: "Robert Smith",
     DATE_OF_BIRTH: "1985-02-15",
     ADDR_FULL: "123 Main St, Las Vegas, NV 89101",
   }),
-  flags: WITH_INFO,
-});
+  WITH_INFO,
+);
 console.log("Added record CLIENT-2001:");
 console.log(JSON.stringify(info, null, 2));
 
 // -- Get entity by record -----------------------------------------------------
-const entity = await sz.engine.getEntityByRecord.query({
-  dataSourceCode: "CUSTOMERS",
-  recordId: "CLIENT-2001",
-});
+const entity = await sz.engine.getEntityByRecord("CUSTOMERS", "CLIENT-2001");
 const entityId = entity.RESOLVED_ENTITY.ENTITY_ID;
 console.log(`\nResolved entity ID: ${entityId}`);
 console.log(
@@ -66,12 +66,12 @@ console.log(
 );
 
 // -- Search by attributes -----------------------------------------------------
-const searchResults = await sz.engine.searchByAttributes.query({
-  attributes: JSON.stringify({
+const searchResults = await sz.engine.searchByAttributes(
+  JSON.stringify({
     NAME_FULL: "Bob Smith",
     ADDR_FULL: "123 Main St, Las Vegas, NV",
   }),
-});
+);
 console.log(
   `\nSearch returned ${searchResults.RESOLVED_ENTITIES?.length ?? 0} entities:`
 );
@@ -84,7 +84,7 @@ for (const match of searchResults.RESOLVED_ENTITIES ?? []) {
 
 // -- Get entity by ID ---------------------------------------------------------
 console.log(`\nFetching entity ${entityId} by ID...`);
-const byId = await sz.engine.getEntityById.query({ entityId });
+const byId = await sz.engine.getEntityById(entityId);
 console.log(
   `Entity name: ${byId.RESOLVED_ENTITY.ENTITY_NAME ?? "(unnamed)"}`
 );
@@ -100,25 +100,22 @@ if (records.length > 1) {
     `\nWhy did ${rec1.DATA_SOURCE}/${rec1.RECORD_ID} resolve with ` +
       `${rec2.DATA_SOURCE}/${rec2.RECORD_ID}?`
   );
-  const why = await sz.engine.whyRecords.query({
-    dsCode1: rec1.DATA_SOURCE,
-    recId1: rec1.RECORD_ID,
-    dsCode2: rec2.DATA_SOURCE,
-    recId2: rec2.RECORD_ID,
-  });
+  const why = await sz.engine.whyRecords(
+    rec1.DATA_SOURCE,
+    rec1.RECORD_ID,
+    rec2.DATA_SOURCE,
+    rec2.RECORD_ID,
+  );
   console.log(JSON.stringify(why, null, 2));
 }
 
 // -- Engine stats -------------------------------------------------------------
-const stats = await sz.engine.getStats.query();
+const stats = await sz.engine.getStats();
 console.log("\nEngine stats:");
 console.log(JSON.stringify(stats, null, 2));
 
 // -- Cleanup ------------------------------------------------------------------
-await sz.engine.deleteRecord.mutate({
-  dataSourceCode: "CUSTOMERS",
-  recordId: "CLIENT-2001",
-});
+await sz.engine.deleteRecord("CUSTOMERS", "CLIENT-2001");
 console.log("\nDeleted record CLIENT-2001.");
 
 console.log("\nDone!");
