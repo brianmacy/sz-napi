@@ -240,6 +240,32 @@ jobs:
           npx tsx code-snippets/configtool/process-script/index.ts packages/configtool/__tests__/fixtures/test-config.json
 
   # ---------------------------------------------------------------------------
+  # Test tRPC + Electron packages (pure TypeScript, no runtime needed)
+  # ---------------------------------------------------------------------------
+  test-trpc:
+    name: Test tRPC & Electron
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sz-napi
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tRPC unit tests
+        working-directory: packages/trpc
+        run: npx vitest run
+
+      - name: Run Electron unit tests
+        working-directory: packages/electron
+        run: npx vitest run
+
+  # ---------------------------------------------------------------------------
   # Test SDK (requires Senzing runtime -- Linux x64 only for now)
   # ---------------------------------------------------------------------------
   test-sdk:
@@ -302,6 +328,12 @@ jobs:
               }
             }
         run: npx vitest run
+
+      - name: Run tRPC integration tests
+        working-directory: packages/trpc
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: npx vitest run __tests__/integration.test.ts
 
       - name: Install tsx for examples
         run: npm install -g tsx
