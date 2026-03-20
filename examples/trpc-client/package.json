@@ -1,0 +1,16 @@
+{
+  "name": "trpc-client",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@senzing/trpc": "file:../../packages/trpc",
+    "@trpc/client": "^11",
+    "superjson": "^2"
+  },
+  "devDependencies": {
+    "tsx": "^4"
+  }
+}

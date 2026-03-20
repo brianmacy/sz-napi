@@ -1,0 +1,19 @@
+{
+  "name": "trpc-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@senzing/sdk": "file:../../packages/sdk",
+    "@senzing/configtool": "file:../../packages/configtool",
+    "@senzing/trpc": "file:../../packages/trpc",
+    "@trpc/server": "^11",
+    "express": "^4"
+  },
+  "devDependencies": {
+    "@types/express": "^5",
+    "tsx": "^4"
+  }
+}

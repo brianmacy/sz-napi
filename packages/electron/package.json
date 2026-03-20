@@ -1,0 +1,44 @@
+{
+  "name": "@senzing/electron",
+  "version": "0.1.0",
+  "description": "Electron IPC bridge for @senzing/sdk — runs SDK in a worker thread, exposes via contextBridge",
+  "main": "dist/main/index.js",
+  "exports": {
+    ".": "./dist/main/index.js",
+    "./preload": "./dist/preload/index.js",
+    "./renderer": "./dist/renderer/types.js"
+  },
+  "typesVersions": {
+    "*": {
+      ".": ["dist/main/index.d.ts"],
+      "preload": ["dist/preload/index.d.ts"],
+      "renderer": ["dist/renderer/types.d.ts"]
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@senzing/sdk": ">=0.1.0",
+    "@senzing/trpc": ">=0.1.0",
+    "electron": ">=28.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@senzing/trpc": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@senzing/sdk": "file:../sdk",
+    "@senzing/trpc": "file:../trpc",
+    "@senzing/types": "file:../types",
+    "@types/node": "^22",
+    "electron": "^35",
+    "typescript": "^5",
+    "vitest": "^4"
+  },
+  "files": [
+    "dist"
+  ]
+}

@@ -7,12 +7,15 @@ Node.js/TypeScript SDK for Senzing v4 entity resolution, built with NAPI-RS.
 
 ## Overview
 
-This monorepo provides two npm packages:
+This monorepo provides five npm packages:
 
-- **`@senzing/sdk`** -- Runtime bindings for the Senzing entity resolution engine. Add records, resolve entities, search by attributes, analyze relationships, and manage configurations.
+- **`@senzing/types`** -- Shared TypeScript interfaces (`SzEngine`, `SzConfigManager`, `SzDiagnostic`, `SzProduct`, `SzEnvironment`) that define the canonical Senzing API contract. All transports implement these interfaces, enabling transport-agnostic consumer code.
+- **`@senzing/sdk`** -- Runtime bindings for the Senzing entity resolution engine. Add records, resolve entities, search by attributes, analyze relationships, and manage configurations. Includes `SzEngineNative` and other adapter classes that implement `@senzing/types` interfaces.
 - **`@senzing/configtool`** -- Pure JSON manipulation of Senzing configuration documents. No Senzing runtime needed. Works anywhere Node.js runs.
+- **`@senzing/trpc`** -- tRPC routers that expose the SDK as typed remote procedures over HTTP. Enables browser and remote clients to call Senzing without native libraries installed locally. Includes `SzTrpcEnvironment` for lifecycle management, Zod input schemas, and superjson for bigint flag serialization.
+- **`@senzing/electron`** -- Electron IPC bridge that runs the SDK in a worker thread and exposes it to the renderer via `contextBridge`. Uses positional args matching the native SDK signatures for seamless integration with Angular or other frontend frameworks.
 
-Both packages are built with [NAPI-RS](https://napi.rs) (Rust native bindings), providing full TypeScript type definitions generated from Rust source code and prebuilt native binaries for all supported platforms.
+`@senzing/sdk` and `@senzing/configtool` are built with [NAPI-RS](https://napi.rs) (Rust native bindings), providing full TypeScript type definitions generated from Rust source code and prebuilt native binaries for all supported platforms. `@senzing/types`, `@senzing/trpc`, and `@senzing/electron` are pure TypeScript packages. All transports implement the shared `@senzing/types` interfaces, so consumer code can be written once and work with any transport.
 
 ## Prerequisites
 
@@ -330,14 +333,16 @@ npm install
 npm start
 ```
 
-| Example                                          | Description                                    | Requires Runtime |
-| ------------------------------------------------ | ---------------------------------------------- | :--------------: |
-| [basic-sdk-usage](examples/basic-sdk-usage/)     | Add records, search, entity resolution, export |       Yes        |
-| [config-management](examples/config-management/) | Create, modify, register, and activate configs |       Yes        |
-| [configtool-usage](examples/configtool-usage/)   | Offline config editing with pure JSON          |        No        |
-| [worker-threads](examples/worker-threads/)       | Worker thread pattern for heavy workloads      |       Yes        |
-| [entity-graph](examples/entity-graph/)           | Interactive D3.js entity graph visualization   |       Yes        |
-| [electron-app](examples/electron-app/)           | Electron desktop app with worker threads       |       Yes        |
+| Example                                          | Description                                                   | Requires Runtime |
+| ------------------------------------------------ | ------------------------------------------------------------- | :--------------: |
+| [basic-sdk-usage](examples/basic-sdk-usage/)     | Add records, search, entity resolution, export                |       Yes        |
+| [config-management](examples/config-management/) | Create, modify, register, and activate configs                |       Yes        |
+| [configtool-usage](examples/configtool-usage/)   | Offline config editing with pure JSON                         |        No        |
+| [worker-threads](examples/worker-threads/)       | Worker thread pattern for heavy workloads                     |       Yes        |
+| [entity-graph](examples/entity-graph/)           | Interactive D3.js entity graph visualization                  |       Yes        |
+| [electron-app](examples/electron-app/)           | Electron desktop app with worker threads                      |       Yes        |
+| [trpc-server](examples/trpc-server/)             | Express server exposing SDK via tRPC, loads truthset from GitHub |    Yes        |
+| [trpc-client](examples/trpc-client/)             | Standalone tRPC client — no native SDK needed                 |        No        |
 
 ## Code Snippets
 
@@ -371,6 +376,13 @@ sz-napi/
   package.json                  # npm workspace root
   README.md
   packages/
+    types/                      # @senzing/types
+      src/                      # Shared TypeScript interfaces
+        engine.ts               # SzEngine interface
+        config-manager.ts       # SzConfigManager interface
+        diagnostic.ts           # SzDiagnostic interface
+        product.ts              # SzProduct interface
+        environment.ts          # SzEnvironment interface
     sdk/                        # @senzing/sdk
       Cargo.toml                # napi-rs crate, depends on sz-rust-sdk
       package.json
@@ -389,6 +401,23 @@ sz-napi/
       js/                       # JS error mapping and wrapper
       npm/                      # Platform-specific packages
       __tests__/
+    trpc/                       # @senzing/trpc
+      package.json
+      src/                      # TypeScript source
+        router.ts               # Combined szRouter with sub-routers
+        context.ts              # SzTrpcEnvironment lifecycle wrapper
+        schemas.ts              # Zod input schemas for all procedures
+        errors.ts               # SzError → TRPCError mapping
+        client.ts               # createSzClient() for browser/Node clients
+        routers/                # Per-service routers (engine, configManager, etc.)
+    electron/                   # @senzing/electron
+      package.json
+      src/                      # TypeScript source
+        main/index.ts           # SzElectronEnvironment — IPC handler + worker management
+        main/worker.ts          # Worker thread owning SzEnvironment
+        preload/index.ts        # contextBridge exposing window.senzing
+        renderer/types.ts       # TypeScript declarations for window.senzing
+        shared/errors.ts        # Error serialization across IPC boundary
   examples/
     basic-sdk-usage/            # Load records, search, get entities
     config-management/          # Register data sources, manage configs
@@ -396,6 +425,8 @@ sz-napi/
     worker-threads/             # Worker thread pattern for heavy workloads
     entity-graph/               # Interactive D3.js entity graph visualization
     electron-app/               # Electron desktop app with worker threads
+    trpc-server/                # Express + tRPC server with truthset loading
+    trpc-client/                # Standalone typed tRPC client
   code-snippets/
     _utils/                     # Shared init/cleanup helper
     information/                # Version, license, performance

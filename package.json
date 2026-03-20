@@ -1,11 +1,14 @@
 {
   "private": true,
   "workspaces": [
+    "packages/types",
     "packages/sdk",
-    "packages/configtool"
+    "packages/configtool",
+    "packages/trpc",
+    "packages/electron"
   ],
   "scripts": {
-    "test": "vitest run --workspace",
+    "test": "vitest run",
     "docs": "typedoc"
   },
   "devDependencies": {
