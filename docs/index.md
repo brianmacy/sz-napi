@@ -93,7 +93,7 @@ Browse the full API reference using the sidebar navigation:
 
 ## Examples and Code Snippets
 
-The repository includes [6 full examples](https://github.com/senzing-garage/sz-napi/tree/main/examples) and [27 focused code snippets](https://github.com/senzing-garage/sz-napi/tree/main/code-snippets) covering:
+The repository includes [6 full examples](https://github.com/brianmacy/sz-napi/tree/main/examples) and [27 focused code snippets](https://github.com/brianmacy/sz-napi/tree/main/code-snippets) covering:
 
 | Category       | Topics                                         |
 | -------------- | ---------------------------------------------- |

@@ -25,7 +25,7 @@ import type { AddDataSourceOptions, AddAttributeOptions } from './index';
  * config = addDataSource(config, { code: "WATCHLIST", retentionLevel: "Remember" });
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
  */
 export declare function addDataSource(configJson: string, options: AddDataSourceOptions): string;
 
@@ -46,7 +46,7 @@ export declare function addDataSource(configJson: string, options: AddDataSource
  * }
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
  */
 export declare function listDataSources(configJson: string): string;
 
@@ -66,7 +66,7 @@ export declare function listDataSources(configJson: string): string;
  * console.log(ds.DSRC_CODE, ds.DSRC_RELY);
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
  */
 export declare function getDataSource(configJson: string, code: string): string;
 
@@ -85,7 +85,7 @@ export declare function getDataSource(configJson: string, code: string): string;
  * configJson = deleteDataSource(configJson, "OLD_SOURCE");
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
  */
 export declare function deleteDataSource(configJson: string, code: string): string;
 
@@ -106,7 +106,7 @@ export declare function deleteDataSource(configJson: string, code: string): stri
  * configJson = processScript(configJson, script);
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configtool/process-script | process-script snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configtool/process-script | process-script snippet}
  */
 export declare function processScript(configJson: string, script: string): string;
 
@@ -151,7 +151,7 @@ export declare function listFeatures(configJson: string): string;
  * });
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
  */
 export declare function addAttribute(configJson: string, options: AddAttributeOptions): string;
 
@@ -173,7 +173,7 @@ export declare function addAttribute(configJson: string, options: AddAttributeOp
  * }
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configtool/basic-usage | basic-usage snippet}
  */
 export declare class SzConfigError extends Error {
   name: 'SzConfigError';

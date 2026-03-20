@@ -57,7 +57,7 @@ toolchain required for normal use.
 
 ```bash
 # Clone the repo and its Rust dependency
-git clone https://github.com/senzing-garage/sz-napi
+git clone https://github.com/brianmacy/sz-napi
 cd sz-napi
 
 # Build the Rust workspace

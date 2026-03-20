@@ -104,5 +104,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config versioning support
 - Script processing support
 
-[Unreleased]: https://github.com/senzing-garage/sz-napi/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/senzing-garage/sz-napi/releases/tag/v0.1.0
+[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/brianmacy/sz-napi/releases/tag/v0.1.0

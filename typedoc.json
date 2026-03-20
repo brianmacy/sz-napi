@@ -19,7 +19,7 @@
     "docs/guides/code-snippets.md"
   ],
   "navigationLinks": {
-    "GitHub": "https://github.com/senzing-garage/sz-napi",
+    "GitHub": "https://github.com/brianmacy/sz-napi",
     "npm": "https://www.npmjs.com/package/@senzing/sdk"
   },
   "sort": ["source-order"],

@@ -61,8 +61,8 @@ declare module './index' {
      * }
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/environment-and-hubs | environment-and-hubs snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/lifecycle-patterns | lifecycle-patterns snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/environment-and-hubs | environment-and-hubs snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/lifecycle-patterns | lifecycle-patterns snippet}
      */
     constructor(moduleName: string, settings: string, verboseLogging?: boolean | undefined | null);
 
@@ -80,7 +80,7 @@ declare module './index' {
      * }
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/lifecycle-patterns | lifecycle-patterns snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/lifecycle-patterns | lifecycle-patterns snippet}
      */
     destroy(): void;
 
@@ -95,7 +95,7 @@ declare module './index' {
      * const engine = env.getEngine();
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/lifecycle-patterns | lifecycle-patterns snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/lifecycle-patterns | lifecycle-patterns snippet}
      */
     isDestroyed(): boolean;
 
@@ -110,7 +110,7 @@ declare module './index' {
      * env.reinitialize(configId);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
      */
     reinitialize(configId: number): void;
 
@@ -123,7 +123,7 @@ declare module './index' {
      * console.log(`Active configuration ID: ${activeId}`);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
      */
     getActiveConfigId(): number;
 
@@ -135,7 +135,7 @@ declare module './index' {
      * const engine = env.getEngine();
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/environment-and-hubs | environment-and-hubs snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/environment-and-hubs | environment-and-hubs snippet}
      */
     getEngine(): SzEngine;
 
@@ -147,7 +147,7 @@ declare module './index' {
      * const configMgr = env.getConfigManager();
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
      */
     getConfigManager(): SzConfigManager;
 
@@ -159,7 +159,7 @@ declare module './index' {
      * const diag = env.getDiagnostic();
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/environment-and-hubs | environment-and-hubs snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/environment-and-hubs | environment-and-hubs snippet}
      */
     getDiagnostic(): SzDiagnostic;
 
@@ -171,7 +171,7 @@ declare module './index' {
      * const product = env.getProduct();
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/information/get-version | get-version snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/information/get-version | get-version snippet}
      */
     getProduct(): SzProductWrapper;
   }
@@ -190,8 +190,8 @@ declare module './index' {
      * const affected = JSON.parse(info).AFFECTED_ENTITIES;
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/loading/load-records | load-records snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/loading/load-with-info | load-with-info snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/loading/load-records | load-records snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/loading/load-with-info | load-with-info snippet}
      */
     addRecord(dataSourceCode: string, recordId: string, recordDefinition: string, flags?: bigint | undefined | null): string;
 
@@ -204,8 +204,8 @@ declare module './index' {
      * console.log("Affected entities:", JSON.parse(info).AFFECTED_ENTITIES);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/deleting/delete-records | delete-records snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/deleting/delete-loop | delete-loop snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/deleting/delete-records | delete-records snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/deleting/delete-loop | delete-loop snippet}
      */
     deleteRecord(dataSourceCode: string, recordId: string, flags?: bigint | undefined | null): string;
 
@@ -219,7 +219,7 @@ declare module './index' {
      * console.log("Entity name:", entity.ENTITY_NAME);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/searching/search-records | search-records snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/searching/search-records | search-records snippet}
      */
     getEntityById(entityId: number, flags?: bigint | undefined | null): string;
 
@@ -236,7 +236,7 @@ declare module './index' {
      * console.log("Entity ID:", entity.ENTITY_ID);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/loading/load-with-info | load-with-info snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/loading/load-with-info | load-with-info snippet}
      */
     getEntityByRecord(dataSourceCode: string, recordId: string, flags?: bigint | undefined | null): string;
 
@@ -251,8 +251,8 @@ declare module './index' {
      * console.log(`Found ${entities.length} matching entities`);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/searching/search-records | search-records snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/searching/search-worker-pool | search-worker-pool snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/searching/search-records | search-records snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/searching/search-worker-pool | search-worker-pool snippet}
      */
     searchByAttributes(attributes: string, searchProfile?: string | undefined | null, flags?: bigint | undefined | null): string;
 
@@ -266,7 +266,7 @@ declare module './index' {
      * console.log("Match level:", whyResults[0].MATCH_INFO.WHY_KEY);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/searching/why-search | why-search snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/searching/why-search | why-search snippet}
      */
     whyEntities(entityId1: number, entityId2: number, flags?: bigint | undefined | null): string;
 
@@ -284,7 +284,7 @@ declare module './index' {
      * console.log("Match key:", whyResults[0].MATCH_INFO.MATCH_KEY);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/searching/why-search | why-search snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/searching/why-search | why-search snippet}
      */
     whyRecords(dsCode1: string, recId1: string, dsCode2: string, recId2: string, flags?: bigint | undefined | null): string;
 
@@ -303,14 +303,14 @@ declare module './index' {
      * }
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/loading/load-records | load-records snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/loading/load-records | load-records snippet}
      */
     exportJsonEntityReport(flags?: bigint | undefined | null): SzExportIterator;
 
     /**
      * Starts a CSV entity export. Returns an SzExportIterator.
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/loading/load-records | load-records snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/loading/load-records | load-records snippet}
      */
     exportCsvEntityReport(csvColumnList: string, flags?: bigint | undefined | null): SzExportIterator;
 
@@ -323,8 +323,8 @@ declare module './index' {
      * console.log(`${count} redo records pending`);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/redo/redo-continuous | redo-continuous snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/redo/load-with-redo | load-with-redo snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/redo/redo-continuous | redo-continuous snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/redo/load-with-redo | load-with-redo snippet}
      */
     countRedoRecords(): number;
 
@@ -340,8 +340,8 @@ declare module './index' {
      * }
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/redo/redo-continuous | redo-continuous snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/redo/redo-with-info | redo-with-info snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/redo/redo-continuous | redo-continuous snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/redo/redo-with-info | redo-with-info snippet}
      */
     getRedoRecord(): string;
 
@@ -357,8 +357,8 @@ declare module './index' {
      * }
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/redo/redo-with-info | redo-with-info snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/redo/redo-worker-pool | redo-worker-pool snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/redo/redo-with-info | redo-with-info snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/redo/redo-worker-pool | redo-worker-pool snippet}
      */
     processRedoRecord(redoRecord: string, flags?: bigint | undefined | null): string;
 
@@ -372,7 +372,7 @@ declare module './index' {
      * console.log("Engine caches loaded");
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/engine-priming | engine-priming snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/engine-priming | engine-priming snippet}
      */
     primeEngine(): void;
 
@@ -385,7 +385,7 @@ declare module './index' {
      * console.log("Workload stats:", JSON.stringify(stats.workload, null, 2));
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/engine-priming | engine-priming snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/engine-priming | engine-priming snippet}
      */
     getStats(): string;
 
@@ -399,8 +399,8 @@ declare module './index' {
      * console.log("Reevaluation affected:", affected.length, "entities");
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/stewardship/force-resolve | force-resolve snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/stewardship/force-unresolve | force-unresolve snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/stewardship/force-resolve | force-resolve snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/stewardship/force-unresolve | force-unresolve snippet}
      */
     reevaluateEntity(entityId: number, flags?: bigint | undefined | null): string;
 
@@ -418,7 +418,7 @@ declare module './index' {
      * console.log("Path length:", path.ENTITIES.length);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/searching/search-records | search-records snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/searching/search-records | search-records snippet}
      */
     findPath(startEntityId: number, endEntityId: number, maxDegrees: number, avoidEntityIds?: Array<number> | undefined | null, requiredDataSources?: Array<string> | undefined | null, flags?: bigint | undefined | null): string;
 
@@ -435,7 +435,7 @@ declare module './index' {
      * console.log("Entities in network:", network.ENTITY_PATHS.length);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/searching/search-records | search-records snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/searching/search-records | search-records snippet}
      */
     findNetwork(entityIds: Array<number>, maxDegrees: number, buildOutDegree: number, maxEntities: number, flags?: bigint | undefined | null): string;
   }
@@ -452,8 +452,8 @@ declare module './index' {
      * console.log("Data sources:", config.G2_CONFIG.CFG_DSRC);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
      */
     createConfig(): string;
 
@@ -468,8 +468,8 @@ declare module './index' {
      * console.log("Active config ID:", configId);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
      */
     setDefaultConfig(configDefinition: string, configComment?: string | undefined | null): number;
 
@@ -484,7 +484,7 @@ declare module './index' {
      * console.log("Registered config ID:", configId);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
      */
     registerConfig(configDefinition: string, configComment?: string | undefined | null): number;
 
@@ -498,7 +498,7 @@ declare module './index' {
      * env.reinitialize(configId);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
      */
     setDefaultConfigId(configId: number): void;
 
@@ -514,7 +514,7 @@ declare module './index' {
      * configMgr.replaceDefaultConfigId(currentId, newId);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
      */
     replaceDefaultConfigId(currentDefaultConfigId: number, newDefaultConfigId: number): void;
 
@@ -528,7 +528,7 @@ declare module './index' {
      * console.log("Default config ID:", configId);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/init-default-config | init-default-config snippet}
      */
     getDefaultConfigId(): number;
 
@@ -544,7 +544,7 @@ declare module './index' {
      * }
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/configuration/register-data-sources | register-data-sources snippet}
      */
     getConfigRegistry(): string;
   }
@@ -560,7 +560,7 @@ declare module './index' {
      * console.log(`Senzing ${version.VERSION} (${version.BUILD_DATE})`);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/information/get-version | get-version snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/information/get-version | get-version snippet}
      */
     getVersion(): string;
 
@@ -575,7 +575,7 @@ declare module './index' {
      * console.log(`Expiration: ${license.expireDate}`);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/information/get-license | get-license snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/information/get-license | get-license snippet}
      */
     getLicense(): string;
   }
@@ -602,7 +602,7 @@ declare module './index' {
      * console.log("Operations/sec:", result.numRecordsInserted / 3);
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/information/check-datastore-performance | check-datastore-performance snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/information/check-datastore-performance | check-datastore-performance snippet}
      */
     checkRepositoryPerformance(secondsToRun: number): string;
 
@@ -616,7 +616,7 @@ declare module './index' {
      * console.log("Repository purged");
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/initialization/purge-repository | purge-repository snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/initialization/purge-repository | purge-repository snippet}
      */
     purgeRepository(): void;
 
@@ -630,7 +630,7 @@ declare module './index' {
      * console.log("Data sources:", JSON.stringify(info.dataStores, null, 2));
      * ```
      *
-     * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/information/check-datastore-performance | check-datastore-performance snippet}
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/information/check-datastore-performance | check-datastore-performance snippet}
      */
     getRepositoryInfo(): string;
   }

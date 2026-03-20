@@ -23,8 +23,8 @@ export interface SzErrorOptions {
  * }
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
  */
 export class SzError extends Error {
   readonly szCode: string;
@@ -72,8 +72,8 @@ export class SzBadInputError extends SzError {}
  * }
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
  */
 export class SzNotFoundError extends SzBadInputError {}
 
@@ -92,8 +92,8 @@ export class SzNotFoundError extends SzBadInputError {}
  * }
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
  */
 export class SzUnknownDataSourceError extends SzBadInputError {}
 
@@ -118,8 +118,8 @@ export class SzConfigurationError extends SzError {}
  * }
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
  */
 export class SzRetryableError extends SzError {}
 
@@ -162,8 +162,8 @@ export class SzUnhandledError extends SzUnrecoverableError {}
  * }
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
  */
 export class SzReplaceConflictError extends SzError {}
 
@@ -183,8 +183,8 @@ export class SzReplaceConflictError extends SzError {}
  * }
  * ```
  *
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
- * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/error-handling/error-inspection | error-inspection snippet}
+ * @see {@link https://github.com/brianmacy/sz-napi/tree/main/docs/guides/error-handling.md | Error Handling Guide}
  */
 export class SzEnvironmentDestroyedError extends SzError {}
 

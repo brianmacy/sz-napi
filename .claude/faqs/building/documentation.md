@@ -62,7 +62,7 @@ interface SzEngine {
    * // example code
    * ```
    *
-   * @see {@link https://github.com/senzing-garage/sz-napi/tree/main/code-snippets/... | snippet name}
+   * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/... | snippet name}
    */
   methodName(args): returnType;
 }
