@@ -18,24 +18,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           path: sz-napi
 
       - name: Checkout sz-rust-sdk
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: brianmacy/sz-rust-sdk
           path: sz-rust-sdk
 
       - name: Checkout sz-rust-sdk-configtool
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: brianmacy/sz-rust-sdk-configtool
           path: sz-rust-sdk-configtool
 
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           components: clippy, rustfmt
 
@@ -69,29 +69,29 @@ jobs:
             target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           path: sz-napi
 
       - name: Checkout sz-rust-sdk
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: brianmacy/sz-rust-sdk
           path: sz-rust-sdk
 
       - name: Checkout sz-rust-sdk-configtool
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: brianmacy/sz-rust-sdk-configtool
           path: sz-rust-sdk-configtool
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 20
 
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           targets: ${{ matrix.target }}
 
@@ -104,7 +104,7 @@ jobs:
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: configtool-${{ matrix.target }}
           path: sz-napi/packages/configtool/*.node
@@ -134,18 +134,18 @@ jobs:
             findutils xz sqlite-devel
 
       - name: Checkout sz-napi
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           path: sz-napi
 
       - name: Checkout sz-rust-sdk
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: brianmacy/sz-rust-sdk
           path: sz-rust-sdk
 
       - name: Checkout sz-rust-sdk-configtool
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           repository: brianmacy/sz-rust-sdk-configtool
           path: sz-rust-sdk-configtool
@@ -158,12 +158,12 @@ jobs:
           yum install -y senzingsdk-runtime
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 20
 
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
         with:
           targets: ${{ matrix.target }}
 
@@ -176,7 +176,7 @@ jobs:
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: sdk-${{ matrix.target }}
           path: sz-napi/packages/sdk/*.node
@@ -203,10 +203,10 @@ jobs:
             target: x86_64-pc-windows-msvc
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 20
 
@@ -214,7 +214,7 @@ jobs:
         run: npm install
 
       - name: Download configtool artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: configtool-${{ matrix.target }}
           path: packages/configtool/
@@ -247,10 +247,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sz-napi
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 20
 
@@ -279,10 +279,10 @@ jobs:
         run: yum install -y git tar gzip findutils sqlite
 
       - name: Checkout sz-napi
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 20
 
@@ -290,13 +290,13 @@ jobs:
         run: npm install
 
       - name: Download SDK artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: sdk-x86_64-unknown-linux-gnu
           path: packages/sdk/
 
       - name: Download configtool artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: configtool-x86_64-unknown-linux-gnu
           path: packages/configtool/
