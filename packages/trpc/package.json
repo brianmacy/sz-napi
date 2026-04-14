@@ -40,7 +40,7 @@
     "@senzing/sdk": "*",
     "@trpc/client": "^11",
     "tsup": "^8",
-    "typescript": "^5"
+    "typescript": "^6"
   },
   "files": [
     "dist"

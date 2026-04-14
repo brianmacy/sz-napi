@@ -33,9 +33,9 @@
     "@senzing/sdk": "file:../sdk",
     "@senzing/trpc": "file:../trpc",
     "@senzing/types": "file:../types",
-    "@types/node": "^22",
+    "@types/node": "^25",
     "electron": "^41",
-    "typescript": "^5",
+    "typescript": "^6",
     "vitest": "^4"
   },
   "files": [

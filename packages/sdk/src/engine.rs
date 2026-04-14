@@ -303,7 +303,7 @@ impl SzEngineWrapper {
         let required_set: Option<HashSet<String>> =
             required_data_sources.map(|ds| ds.into_iter().collect());
         self.inner
-            .find_path(
+            .find_path_by_entity_id(
                 start_entity_id,
                 end_entity_id,
                 max_degrees,
@@ -326,7 +326,7 @@ impl SzEngineWrapper {
     ) -> napi::Result<String> {
         let sz_flags = bigint_to_sz_flags(flags);
         self.inner
-            .find_network(
+            .find_network_by_entity_id(
                 &entity_ids,
                 max_degrees,
                 build_out_degree,
@@ -395,7 +395,7 @@ impl SzEngineWrapper {
     #[napi]
     pub fn close_export(&self, export_handle: i64) -> napi::Result<()> {
         self.inner
-            .close_export(export_handle)
+            .close_export_report(export_handle)
             .map_err(sz_error_to_napi)
     }
 }
