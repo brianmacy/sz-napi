@@ -1,16 +1,13 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "github-actions"
+      interval: "daily"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
+    open-pull-requests-limit: 10
+
