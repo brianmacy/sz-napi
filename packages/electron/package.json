@@ -34,7 +34,7 @@
     "@senzing/trpc": "file:../trpc",
     "@senzing/types": "file:../types",
     "@types/node": "^25",
-    "electron": "^42",
+    "electron": "^41",
     "typescript": "^6",
     "vitest": "^4"
   },
