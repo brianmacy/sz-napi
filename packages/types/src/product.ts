@@ -4,6 +4,6 @@
  * Implemented by all Senzing SDK transports (native, tRPC, Electron).
  */
 export interface SzProduct {
-  getVersion(): Promise<any>;
-  getLicense(): Promise<any>;
+  getVersion(): Promise<string>;
+  getLicense(): Promise<string>;
 }

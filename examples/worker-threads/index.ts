@@ -153,10 +153,10 @@ if (isMainThread) {
   // Detect platform paths
   const isMac = process.platform === "darwin";
   const senzingBase = isMac
-    ? "/opt/homebrew/opt/senzing/runtime/er"
+    ? "/opt/homebrew/opt/senzing/er"
     : "/opt/senzing/er";
   const supportPath = isMac
-    ? "/opt/homebrew/opt/senzing/runtime/data"
+    ? "/opt/homebrew/opt/senzing/data"
     : "/opt/senzing/data";
 
   const settings = JSON.stringify({
@@ -174,7 +174,7 @@ if (isMainThread) {
   const dbPath = "/tmp/senzing-worker-example.db";
   const schemaPath = `${senzingBase}/resources/schema/szcore-schema-sqlite-create.sql`;
   if (existsSync(dbPath)) unlinkSync(dbPath);
-  execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
+  execSync(`sqlite3 "${dbPath}" < "${schemaPath}"`);
 
   // Bootstrap: set up data sources before spawning the worker
   const { SzEnvironment } = await import("@senzing/sdk");

@@ -27,10 +27,10 @@ import { addDataSource } from "@senzing/configtool";
 // -- Platform detection -------------------------------------------------------
 const isMac = process.platform === "darwin";
 const senzingBase = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/er"
+  ? "/opt/homebrew/opt/senzing/er"
   : "/opt/senzing/er";
 const supportPath = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/data"
+  ? "/opt/homebrew/opt/senzing/data"
   : "/opt/senzing/data";
 
 // -- Configuration ------------------------------------------------------------
@@ -50,7 +50,7 @@ const settings = JSON.stringify({
 
 // -- Initialize SQLite database with schema -----------------------------------
 if (existsSync(dbPath)) unlinkSync(dbPath);
-execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
+execSync(`sqlite3 "${dbPath}" < "${schemaPath}"`);
 
 // -- Initialize the environment -----------------------------------------------
 const env = new SzEnvironment("basic-example", settings, false);

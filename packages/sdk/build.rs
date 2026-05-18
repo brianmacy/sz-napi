@@ -3,10 +3,24 @@ use std::env;
 fn main() {
     napi_build::setup();
 
-    // Embed rpath so the .node cdylib can find libSz at runtime without
-    // DYLD_LIBRARY_PATH (macOS SIP strips it) or LD_LIBRARY_PATH (Linux).
     let senzing_lib_path = detect_senzing_lib_path();
     println!("cargo:rustc-cdylib-link-arg=-Wl,-rpath,{senzing_lib_path}");
+
+    // The official Senzing cask (4.3+) is missing rpath entries for its
+    // OpenSSL and SQLite transitive dependencies.  Add Homebrew's lib dirs
+    // so dlopen() inside libSz can resolve them without DYLD_LIBRARY_PATH
+    // (which macOS SIP strips).
+    #[cfg(target_os = "macos")]
+    for candidate in [
+        "/opt/homebrew/lib",
+        "/usr/local/lib",
+        "/opt/homebrew/opt/openssl@3/lib",
+        "/opt/homebrew/opt/sqlite/lib",
+    ] {
+        if std::path::Path::new(candidate).exists() {
+            println!("cargo:rustc-cdylib-link-arg=-Wl,-rpath,{candidate}");
+        }
+    }
 }
 
 fn detect_senzing_lib_path() -> String {
@@ -17,13 +31,16 @@ fn detect_senzing_lib_path() -> String {
     #[cfg(target_os = "macos")]
     {
         use std::path::Path;
-        let homebrew_path = "/opt/homebrew/opt/senzing/runtime/er/lib";
-        if Path::new(homebrew_path).join("libSz.dylib").exists() {
-            return homebrew_path.to_string();
-        }
-        let intel_homebrew_path = "/usr/local/opt/senzing/runtime/er/lib";
-        if Path::new(intel_homebrew_path).join("libSz.dylib").exists() {
-            return intel_homebrew_path.to_string();
+        // Official Senzing cask (senzingsdk): er/lib
+        for prefix in [
+            "/opt/homebrew/opt/senzing/er/lib",
+            "/usr/local/opt/senzing/er/lib",
+        ] {
+            if Path::new(prefix).join("libSz.dylib").exists()
+                || Path::new(prefix).join("libSz.so").exists()
+            {
+                return prefix.to_string();
+            }
         }
     }
 

@@ -23,6 +23,11 @@
 import { TRPCError } from '@trpc/server';
 import { t } from './trpc.js';
 
+/** Context shape when HTTP headers have been forwarded into the tRPC context. */
+interface ContextWithHeaders {
+  __headers?: Record<string, string | string[] | undefined>;
+}
+
 /**
  * Creates a tRPC middleware that extracts a Bearer token from the
  * request headers and verifies it with the provided function.
@@ -31,7 +36,7 @@ import { t } from './trpc.js';
  */
 export function createAuthMiddleware(verify: (token: string) => Promise<boolean>) {
   return t.middleware(async ({ ctx, next }) => {
-    const headers = (ctx as any).__headers as Record<string, string | string[] | undefined> | undefined;
+    const headers = (ctx as ContextWithHeaders).__headers;
     const authHeader = headers?.authorization;
     const token = typeof authHeader === 'string'
       ? authHeader.replace(/^Bearer\s+/i, '')

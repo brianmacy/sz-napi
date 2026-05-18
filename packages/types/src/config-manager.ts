@@ -4,10 +4,10 @@
  * Implemented by all Senzing SDK transports (native, tRPC, Electron).
  */
 export interface SzConfigManager {
-  createConfig(): Promise<any>;
-  createConfigFromId(configId: number): Promise<any>;
-  createConfigFromDefinition(configDefinition: string): Promise<any>;
-  getConfigRegistry(): Promise<any>;
+  createConfig(): Promise<string>;
+  createConfigFromId(configId: number): Promise<string>;
+  createConfigFromDefinition(configDefinition: string): Promise<string>;
+  getConfigRegistry(): Promise<string>;
   getDefaultConfigId(): Promise<number>;
   registerConfig(configDefinition: string, configComment?: string | null): Promise<number>;
   replaceDefaultConfigId(currentDefaultConfigId: number, newDefaultConfigId: number): Promise<void>;

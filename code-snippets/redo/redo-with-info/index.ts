@@ -76,13 +76,7 @@ try {
   console.log("\nProcessing redo records with WITH_INFO...\n");
   let processed = 0;
 
-  while (true) {
-    const count = engine.countRedoRecords();
-    if (count === 0) break;
-
-    const redo = engine.getRedoRecord();
-    if (!redo) break;
-
+  for (let redo = engine.getRedoRecord(); redo; redo = engine.getRedoRecord()) {
     const infoJson = engine.processRedoRecord(redo, SzFlags.WITH_INFO);
     processed++;
 

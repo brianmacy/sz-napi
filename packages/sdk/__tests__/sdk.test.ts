@@ -26,14 +26,15 @@ function getTestConfig() {
     };
   }
 
-  const senzingBase = '/opt/homebrew/opt/senzing/runtime/er';
+  const senzingBase = '/opt/homebrew/opt/senzing/er';
+  const supportPath = '/opt/homebrew/opt/senzing/data';
   const dbPath = '/tmp/sz-napi-test.db';
   return {
     settings: JSON.stringify({
       PIPELINE: {
         CONFIGPATH: path.join(senzingBase, 'resources/templates'),
         RESOURCEPATH: path.join(senzingBase, 'resources'),
-        SUPPORTPATH: '/opt/homebrew/opt/senzing/runtime/data',
+        SUPPORTPATH: supportPath,
       },
       SQL: { CONNECTION: `sqlite3://na:na@${dbPath}` },
     }),

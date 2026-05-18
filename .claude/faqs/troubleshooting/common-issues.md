@@ -15,7 +15,7 @@ The build.rs auto-detects the Senzing lib path (Homebrew on macOS, `/opt/senzing
 SQLite database not initialized with Senzing schema. Run:
 
 ```bash
-sqlite3 /tmp/your-db.db < /opt/homebrew/opt/senzing/runtime/er/resources/schema/szcore-schema-sqlite-create.sql
+sqlite3 /tmp/your-db.db < /opt/homebrew/opt/senzing/er/resources/schema/szcore-schema-sqlite-create.sql
 ```
 
 ### "No engine configuration registered in datastore"
@@ -39,7 +39,7 @@ This is expected. The `index.js` is the auto-generated platform loader. The real
 
 ### Plugin initialization error / GNR data files failed to load
 
-Wrong SUPPORTPATH. Use `/opt/homebrew/opt/senzing/runtime/data`, NOT `.../er/resources`.
+Wrong SUPPORTPATH. Use `/opt/homebrew/opt/senzing/data`, NOT `.../er/resources`.
 
 ### Worker thread: "Cannot read properties of undefined (reading 'WITH_INFO')"
 

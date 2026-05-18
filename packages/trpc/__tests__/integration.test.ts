@@ -19,14 +19,16 @@ try {
   // SDK not available
 }
 
+function detectSenzingBase() {
+  if (process.platform !== 'darwin') return { base: '/opt/senzing/er', data: '/opt/senzing/data' };
+  return { base: '/opt/homebrew/opt/senzing/er', data: '/opt/homebrew/opt/senzing/data' };
+}
+
 const canRun = (() => {
   if (!sdk) return false;
   try {
-    // Check if Senzing runtime is available
-    const senzingBase = process.platform === 'darwin'
-      ? '/opt/homebrew/opt/senzing/runtime/er'
-      : '/opt/senzing/er';
-    return fs.existsSync(path.join(senzingBase, 'resources/templates'));
+    const { base } = detectSenzingBase();
+    return fs.existsSync(path.join(base, 'resources/templates'));
   } catch {
     return false;
   }
@@ -35,12 +37,7 @@ const canRun = (() => {
 const describeIfRuntime = canRun ? describe : describe.skip;
 
 function getTestConfig() {
-  const senzingBase = process.platform === 'darwin'
-    ? '/opt/homebrew/opt/senzing/runtime/er'
-    : '/opt/senzing/er';
-  const supportPath = process.platform === 'darwin'
-    ? '/opt/homebrew/opt/senzing/runtime/data'
-    : '/opt/senzing/data';
+  const { base: senzingBase, data: supportPath } = detectSenzingBase();
   const dbPath = '/tmp/sz-trpc-integration-test.db';
   return {
     settings: JSON.stringify({

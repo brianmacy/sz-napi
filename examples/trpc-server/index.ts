@@ -27,10 +27,10 @@ import { szRouter, SzTrpcEnvironment } from "@senzing/trpc";
 // -- Platform detection -------------------------------------------------------
 const isMac = process.platform === "darwin";
 const senzingBase = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/er"
+  ? "/opt/homebrew/opt/senzing/er"
   : "/opt/senzing/er";
 const supportPath = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/data"
+  ? "/opt/homebrew/opt/senzing/data"
   : "/opt/senzing/data";
 
 // -- Configuration ------------------------------------------------------------
@@ -51,7 +51,7 @@ const settings = JSON.stringify({
 
 // -- Initialize SQLite database with schema -----------------------------------
 if (existsSync(dbPath)) unlinkSync(dbPath);
-execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
+execSync(`sqlite3 "${dbPath}" < "${schemaPath}"`);
 
 // -- Initialize Senzing -------------------------------------------------------
 const env = new SzEnvironment("trpc-server-example", settings, false);

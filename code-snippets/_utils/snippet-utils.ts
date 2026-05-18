@@ -14,10 +14,10 @@ import { addDataSource } from "@senzing/configtool";
 // -- Platform detection -------------------------------------------------------
 const isMac = process.platform === "darwin";
 export const senzingDir = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/er"
+  ? "/opt/homebrew/opt/senzing/er"
   : "/opt/senzing/er";
 export const supportDir = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/data"
+  ? "/opt/homebrew/opt/senzing/data"
   : "/opt/senzing/data";
 export const schemaFile = `${senzingDir}/resources/schema/szcore-schema-sqlite-create.sql`;
 
@@ -54,7 +54,7 @@ export function initSnippetEnvironment(
 
   // Create fresh database
   if (existsSync(dbPath)) unlinkSync(dbPath);
-  execSync(`sqlite3 ${dbPath} < ${schemaFile}`);
+  execSync(`sqlite3 "${dbPath}" < "${schemaFile}"`);
 
   // Initialize environment
   const env = new SzEnvironment(name, settings, false);

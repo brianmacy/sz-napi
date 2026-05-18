@@ -9,6 +9,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   # ---------------------------------------------------------------------------
   # Cargo checks (fast validation, Linux only)
@@ -97,7 +100,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: sz-napi
-        run: npm install
+        run: npm ci
 
       - name: Build configtool
         working-directory: sz-napi/packages/configtool
@@ -169,7 +172,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: sz-napi
-        run: npm install
+        run: npm ci
 
       - name: Build SDK
         working-directory: sz-napi/packages/sdk
@@ -211,7 +214,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Download configtool artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -232,7 +235,7 @@ jobs:
       - name: Install code-snippets dependencies
         run: |
           cd code-snippets
-          npm install
+          npm ci
 
       - name: Run configtool code snippets
         run: |
@@ -255,7 +258,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tRPC unit tests
         working-directory: packages/trpc
@@ -287,7 +290,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Download SDK artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -343,7 +346,7 @@ jobs:
           LD_LIBRARY_PATH: /opt/senzing/er/lib
         run: |
           cd examples/basic-sdk-usage
-          npm install
+          npm ci
           npm start
 
       - name: Run config-management example
@@ -351,7 +354,7 @@ jobs:
           LD_LIBRARY_PATH: /opt/senzing/er/lib
         run: |
           cd examples/config-management
-          npm install
+          npm ci
           npm start
 
       - name: Run configtool-usage example
@@ -363,7 +366,7 @@ jobs:
       - name: Install code-snippets dependencies
         run: |
           cd code-snippets
-          npm install
+          npm ci
 
       - name: Run information code snippets
         env:

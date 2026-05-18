@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Redo code snippets: replaced `while(true) { countRedoRecords(); getRedoRecord(); }` pattern with idiomatic `for (let redo = engine.getRedoRecord(); redo; redo = engine.getRedoRecord())` loop, matching official Java/C#/Python/Rust SDK patterns
+
 ### Added
 
 - Interactive entity graph visualization example with D3.js force-directed layout (`examples/entity-graph`)

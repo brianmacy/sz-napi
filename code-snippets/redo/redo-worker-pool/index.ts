@@ -79,11 +79,7 @@ try {
 
   // -- Collect all redo records from the main thread --------------------------
   const redoRecords: string[] = [];
-  while (true) {
-    const count = engine.countRedoRecords();
-    if (count === 0) break;
-    const redo = engine.getRedoRecord();
-    if (!redo) break;
+  for (let redo = engine.getRedoRecord(); redo; redo = engine.getRedoRecord()) {
     redoRecords.push(redo);
   }
 

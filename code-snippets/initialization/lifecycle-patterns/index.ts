@@ -17,8 +17,8 @@ import { addDataSource } from "@senzing/configtool";
 
 // -- Platform detection -------------------------------------------------------
 const isMac = process.platform === "darwin";
-const senzingBase = isMac ? "/opt/homebrew/opt/senzing/runtime/er" : "/opt/senzing/er";
-const supportPath = isMac ? "/opt/homebrew/opt/senzing/runtime/data" : "/opt/senzing/data";
+const senzingBase = isMac ? "/opt/homebrew/opt/senzing/er" : "/opt/senzing/er";
+const supportPath = isMac ? "/opt/homebrew/opt/senzing/data" : "/opt/senzing/data";
 
 // -- Database setup -----------------------------------------------------------
 const dbPath = `/tmp/senzing-snippet-lifecycle-${process.pid}.db`;
@@ -36,7 +36,7 @@ const settings = JSON.stringify({
 });
 
 if (existsSync(dbPath)) unlinkSync(dbPath);
-execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
+execSync(`sqlite3 "${dbPath}" < "${schemaPath}"`);
 
 // -- Create the environment ---------------------------------------------------
 const env = new SzEnvironment("lifecycle-demo", settings, false);

@@ -32,7 +32,6 @@ packages/*/*.node
 
 
 # npm
-package-lock.json
 coverage/
 
 # TypeDoc generated docs

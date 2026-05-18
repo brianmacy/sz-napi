@@ -34,6 +34,25 @@ const STREAMING_METHODS = new Set([
   "exportCsvEntityReport",
 ]);
 
+/** Methods that must never be dispatched — Object.prototype and internal names. */
+const BLOCKED_METHODS = new Set([
+  "constructor",
+  "toString",
+  "valueOf",
+  "hasOwnProperty",
+  "isPrototypeOf",
+  "propertyIsEnumerable",
+  "toLocaleString",
+  "__defineGetter__",
+  "__defineSetter__",
+  "__lookupGetter__",
+  "__lookupSetter__",
+  "__proto__",
+]);
+
+/** Valid service names that the worker knows how to resolve. */
+const VALID_SERVICES = new Set(["engine", "product", "configManager", "diagnostic"]);
+
 parentPort.on("message", (req: any) => {
   const respond = (resp: any) => {
     parentPort!.postMessage({ id: req.id, ...resp });
@@ -74,9 +93,17 @@ parentPort.on("message", (req: any) => {
     }
 
     // --- SDK method dispatch ---
+    if (!VALID_SERVICES.has(req.service)) {
+      throw new Error(`Unknown service: ${req.service}`);
+    }
+
     const target = services[req.service];
     if (!target) {
       throw new Error(`Service "${req.service}" not available. Call initialize() first.`);
+    }
+
+    if (BLOCKED_METHODS.has(req.method) || req.method.startsWith("_")) {
+      throw new Error(`Blocked method: ${req.service}.${req.method}`);
     }
 
     const fn = target[req.method];

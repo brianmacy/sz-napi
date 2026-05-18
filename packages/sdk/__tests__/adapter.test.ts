@@ -25,11 +25,9 @@ const {
 
 function getTestConfig() {
   const senzingBase = process.platform === 'darwin'
-    ? '/opt/homebrew/opt/senzing/runtime/er'
-    : '/opt/senzing/er';
+    ? '/opt/homebrew/opt/senzing/er' : '/opt/senzing/er';
   const supportPath = process.platform === 'darwin'
-    ? '/opt/homebrew/opt/senzing/runtime/data'
-    : '/opt/senzing/data';
+    ? '/opt/homebrew/opt/senzing/data' : '/opt/senzing/data';
   const dbPath = '/tmp/sz-adapter-test.db';
   return {
     settings: JSON.stringify({

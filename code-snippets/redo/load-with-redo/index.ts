@@ -84,13 +84,7 @@ try {
   const pending = engine.countRedoRecords();
   console.log(`  Redo records pending: ${pending}`);
 
-  while (true) {
-    const count = engine.countRedoRecords();
-    if (count === 0) break;
-
-    const redo = engine.getRedoRecord();
-    if (!redo) break;
-
+  for (let redo = engine.getRedoRecord(); redo; redo = engine.getRedoRecord()) {
     engine.processRedoRecord(redo, SzFlags.NO_FLAGS);
     processed++;
   }

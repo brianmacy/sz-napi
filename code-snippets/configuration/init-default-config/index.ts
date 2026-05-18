@@ -18,10 +18,10 @@ import { SzEnvironment } from "@senzing/sdk";
 // -- Platform detection -------------------------------------------------------
 const isMac = process.platform === "darwin";
 const senzingBase = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/er"
+  ? "/opt/homebrew/opt/senzing/er"
   : "/opt/senzing/er";
 const supportPath = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/data"
+  ? "/opt/homebrew/opt/senzing/data"
   : "/opt/senzing/data";
 
 // -- Database setup -----------------------------------------------------------
@@ -41,7 +41,7 @@ const settings = JSON.stringify({
 
 // Create a fresh SQLite database from the Senzing schema
 if (existsSync(dbPath)) unlinkSync(dbPath);
-execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
+execSync(`sqlite3 "${dbPath}" < "${schemaPath}"`);
 
 const env = new SzEnvironment("InitDefaultConfig", settings);
 try {

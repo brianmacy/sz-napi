@@ -8,7 +8,7 @@
     "packages/electron"
   ],
   "scripts": {
-    "test": "vitest run",
+    "test": "test \"$(uname)\" = Darwin && export DYLD_LIBRARY_PATH=\"/opt/homebrew/opt/senzing/er/lib:/opt/homebrew/opt/sqlite/lib:/opt/homebrew/opt/openssl@3/lib:$DYLD_LIBRARY_PATH\"; node ./node_modules/.bin/vitest run",
     "docs": "typedoc"
   },
   "devDependencies": {

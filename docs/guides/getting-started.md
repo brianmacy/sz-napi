@@ -19,7 +19,7 @@ and configuration templates are distributed as a separate platform package.
 
 ```bash
 brew install senzingsdk-runtime-unofficial
-export DYLD_LIBRARY_PATH=/opt/homebrew/opt/senzing/runtime/er/lib
+export DYLD_LIBRARY_PATH=/opt/homebrew/opt/senzing/er/lib
 ```
 
 Add the `export` line to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.) so
@@ -90,7 +90,7 @@ Adjust paths for your platform:
 
 | Platform     | Typical base path                      |
 | ------------ | -------------------------------------- |
-| macOS (brew) | `/opt/homebrew/opt/senzing/runtime/er` |
+| macOS (brew) | `/opt/homebrew/opt/senzing/er` |
 | Linux        | `/opt/senzing/er`                      |
 | Windows      | `C:\ProgramData\Senzing\er`            |
 

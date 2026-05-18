@@ -24,10 +24,10 @@ import { addDataSource } from "@senzing/configtool";
 
 const isMac = process.platform === "darwin";
 const senzingBase = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/er"
+  ? "/opt/homebrew/opt/senzing/er"
   : "/opt/senzing/er";
 const supportPath = isMac
-  ? "/opt/homebrew/opt/senzing/runtime/data"
+  ? "/opt/homebrew/opt/senzing/data"
   : "/opt/senzing/data";
 
 // -- Configuration ------------------------------------------------------------
@@ -104,7 +104,7 @@ app.whenReady().then(async () => {
   try {
     // Initialize SQLite database
     if (existsSync(dbPath)) unlinkSync(dbPath);
-    execSync(`sqlite3 ${dbPath} < ${schemaPath}`);
+    execSync(`sqlite3 "${dbPath}" < "${schemaPath}"`);
 
     // Register IPC handlers and start SDK
     sz.setup();
