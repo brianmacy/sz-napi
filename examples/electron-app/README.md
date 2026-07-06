@@ -23,7 +23,7 @@ Worker Thread (worker.ts) — SzEnvironment, SzEngine, SzProduct
 ## Prerequisites
 
 - **Senzing runtime** installed:
-  - macOS: `brew install senzingsdk-runtime-unofficial`
+  - macOS: `brew install --cask senzing/senzingsdk/senzingsdk`
   - Linux: Install from Senzing packages
 - **Node.js** 18+
 - **sqlite3** CLI (for database initialization)

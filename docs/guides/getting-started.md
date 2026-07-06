@@ -18,7 +18,7 @@ and configuration templates are distributed as a separate platform package.
 **macOS (arm64):**
 
 ```bash
-brew install senzingsdk-runtime-unofficial
+brew install --cask senzing/senzingsdk/senzingsdk
 export DYLD_LIBRARY_PATH=/opt/homebrew/opt/senzing/er/lib
 ```
 
@@ -40,7 +40,8 @@ export LD_LIBRARY_PATH=/opt/senzing/er/lib
 **Windows (x64):**
 
 ```powershell
-scoop install senzingsdk-runtime-unofficial
+scoop bucket add senzingsdk https://github.com/Senzing/scoop-senzingsdk
+scoop install senzingsdk
 # The installer adds Sz.dll to your PATH automatically.
 ```
 

@@ -180,22 +180,22 @@ jobs:
       - name: Install Senzing runtime (macOS)
         if: runner.os == 'macOS'
         env:
-          HOMEBREW_SENZING_EULA_ACCEPTED: "yes"
-        run: brew install --cask brianmacy/senzingsdk-runtime-unofficial/senzingsdk-runtime-unofficial
+          HOMEBREW_SENZING_ACCEPT_EULA: "i_accept_the_senzing_eula"
+        run: brew install --cask senzing/senzingsdk/senzingsdk
 
       - name: Install Scoop and Senzing runtime (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          SENZING_EULA_ACCEPTED: "yes"
+          SENZING_ACCEPT_EULA: "I_ACCEPT_THE_SENZING_EULA"
         run: |
           Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
           $scoopInstaller = Join-Path $env:TEMP 'install-scoop.ps1'
           Invoke-RestMethod -Uri https://get.scoop.sh -OutFile $scoopInstaller
           Get-Content $scoopInstaller | Select-Object -First 5
           & $scoopInstaller -RunAsAdmin
-          scoop bucket add senzing https://github.com/brianmacy/scoop-senzingsdk-runtime-unofficial
-          scoop install senzingsdk-runtime-unofficial
+          scoop bucket add senzingsdk https://github.com/Senzing/scoop-senzingsdk
+          scoop install senzingsdk
 
       - name: Setup Node.js 20
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -219,7 +219,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $senzingLib = "$env:USERPROFILE\scoop\apps\senzingsdk-runtime-unofficial\current\er\lib"
+          $senzingLib = "$env:USERPROFILE\scoop\apps\senzingsdk\current\er\lib"
           # Helper function to generate .lib from .dll
           function New-ImportLib($dllPath, $libName) {
             $exports = & dumpbin /exports $dllPath |
@@ -246,7 +246,7 @@ jobs:
         working-directory: sz-napi/packages/sdk
         shell: pwsh
         run: |
-          $env:SENZING_LIB_PATH = "$env:USERPROFILE\scoop\apps\senzingsdk-runtime-unofficial\current\er\lib"
+          $env:SENZING_LIB_PATH = "$env:USERPROFILE\scoop\apps\senzingsdk\current\er\lib"
           npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact

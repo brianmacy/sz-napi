@@ -30,7 +30,7 @@ The `@senzing/sdk` package requires the Senzing runtime to be installed separate
 **macOS (arm64):**
 
 ```bash
-brew install senzingsdk-runtime-unofficial
+brew install --cask senzing/senzingsdk/senzingsdk
 ```
 
 **Linux (x64, arm64):**
@@ -46,7 +46,8 @@ yum install senzingsdk-runtime
 **Windows (x64):**
 
 ```bash
-scoop install senzingsdk-runtime-unofficial
+scoop bucket add senzingsdk https://github.com/Senzing/scoop-senzingsdk
+scoop install senzingsdk
 # Ensure Sz.dll is on your PATH
 ```
 

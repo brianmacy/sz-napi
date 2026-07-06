@@ -6,7 +6,7 @@
  * → reinitialize(). Then adds a record to verify the engine is operational.
  *
  * Prerequisites:
- *   - Senzing runtime installed (brew install senzingsdk-runtime-unofficial on macOS)
+ *   - Senzing runtime installed (brew install --cask senzing/senzingsdk/senzingsdk on macOS)
  *
  * Usage:
  *   npx tsx index.ts
