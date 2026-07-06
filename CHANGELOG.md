@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **BREAKING:** Renamed `SzEngine.closeExport()` → `closeExportReport()` to match the underlying C ABI (`Sz_closeExportReport`) and every other Senzing V4 SDK (Python `close_export_report`, Java `closeExportReport`, C# `CloseExportReport`, Rust `close_export_report`). (#49)
+- Migrated the Senzing runtime install from the deprecated unofficial Homebrew cask (`brianmacy/senzingsdk-runtime-unofficial`) and Scoop bucket to the **official** `senzing/senzingsdk/senzingsdk` cask and `Senzing/scoop-senzingsdk` bucket, across the release workflow, README, guides, and examples. The deprecated macOS cask now hard-errors, which was breaking the release build.
 - Redo code snippets: replaced `while(true) { countRedoRecords(); getRedoRecord(); }` pattern with idiomatic `for (let redo = engine.getRedoRecord(); redo; redo = engine.getRedoRecord())` loop, matching official Java/C#/Python/Rust SDK patterns
 
 ### Added
