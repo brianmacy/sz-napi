@@ -393,7 +393,7 @@ impl SzEngineWrapper {
 
     /// Closes an export operation and releases resources.
     #[napi]
-    pub fn close_export(&self, export_handle: i64) -> napi::Result<()> {
+    pub fn close_export_report(&self, export_handle: i64) -> napi::Result<()> {
         self.inner
             .close_export_report(export_handle)
             .map_err(sz_error_to_napi)

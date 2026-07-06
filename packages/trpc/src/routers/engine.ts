@@ -229,7 +229,7 @@ export const engineRouter = t.router({
 
   // ── Export (collected, not streamed) ────────────────────────────
   // The native export API is handle-based (exportJsonEntityReport →
-  // fetchNext → closeExport). We collect results server-side and
+  // fetchNext → closeExportReport). We collect results server-side and
   // return the full dataset. For large exports, consumers should
   // use the streaming variant or paginate via flags.
 

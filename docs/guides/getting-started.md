@@ -237,12 +237,12 @@ try {
   }
 } finally {
   // Always close the handle to free native resources
-  engine.closeExport(exportHandle);
+  engine.closeExportReport(exportHandle);
 }
 ```
 
 For a CSV export use `exportCsvEntityReport(columnList, flags)` with the same
-`fetchNext` / `closeExport` pattern.
+`fetchNext` / `closeExportReport` pattern.
 
 ## 9. Cleanup
 
@@ -330,7 +330,7 @@ try {
     while ((chunk = engine.fetchNext(handle)) !== "") count++;
     console.log("Total entities:", count);
   } finally {
-    engine.closeExport(handle);
+    engine.closeExportReport(handle);
   }
 } catch (e) {
   if (e instanceof SzError) console.error("Senzing error:", e.message);
