@@ -106,7 +106,7 @@ export declare class SzEngine {
   /** Fetches the next batch of export data. Returns empty string when complete. */
   fetchNext(exportHandle: number): string
   /** Closes an export operation and releases resources. */
-  closeExport(exportHandle: number): void
+  closeExportReport(exportHandle: number): void
 }
 export type SzEngineWrapper = SzEngine
 

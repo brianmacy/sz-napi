@@ -45,7 +45,7 @@ wrapClass(native.SzEngine, [
   'exportJsonEntityReport',
   'exportCsvEntityReport',
   'fetchNext',
-  'closeExport',
+  'closeExportReport',
 ]);
 
 wrapClass(native.SzConfigManager, [
@@ -92,7 +92,7 @@ class SzExportIterator {
   close() {
     if (!this._closed) {
       this._closed = true;
-      this._engine.closeExport(this._handle);
+      this._engine.closeExportReport(this._handle);
     }
   }
 
