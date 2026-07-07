@@ -99,10 +99,10 @@ export declare class SzEngine {
   countRedoRecords(): number
   /** Processes a redo record for deferred resolution. */
   processRedoRecord(redoRecord: string, flags?: bigint | undefined | null): string
-  /** Starts a JSON entity export. Returns an export handle. */
-  exportJsonEntityReport(flags?: bigint | undefined | null): number
-  /** Starts a CSV entity export. Returns an export handle. */
-  exportCsvEntityReport(csvColumnList: string, flags?: bigint | undefined | null): number
+  /** Starts a JSON entity export. Returns a raw native export handle. */
+  exportJsonEntityReportHandle(flags?: bigint | undefined | null): number
+  /** Starts a CSV entity export. Returns a raw native export handle. */
+  exportCsvEntityReportHandle(csvColumnList: string, flags?: bigint | undefined | null): number
   /** Fetches the next batch of export data. Returns empty string when complete. */
   fetchNext(exportHandle: number): string
   /** Closes an export operation and releases resources. */

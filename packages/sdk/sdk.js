@@ -42,8 +42,8 @@ wrapClass(native.SzEngine, [
   'getRedoRecord',
   'countRedoRecords',
   'processRedoRecord',
-  'exportJsonEntityReport',
-  'exportCsvEntityReport',
+  'exportJsonEntityReportHandle',
+  'exportCsvEntityReportHandle',
   'fetchNext',
   'closeExportReport',
 ]);
@@ -112,14 +112,18 @@ class SzExportIterator {
   }
 }
 
-// Override export methods to return SzExportIterator
-const _origExportJson = native.SzEngine.prototype.exportJsonEntityReport;
+// Define the public export methods on top of the native handle methods.
+// The native binding exposes `export{Json,Csv}EntityReportHandle` (returning a
+// numeric handle); the public `export{Json,Csv}EntityReport` wraps that handle
+// in an SzExportIterator. Keeping the names distinct avoids a return-type
+// collision (number vs SzExportIterator) in the generated types.
+const _origExportJson = native.SzEngine.prototype.exportJsonEntityReportHandle;
 native.SzEngine.prototype.exportJsonEntityReport = function (...args) {
   const handle = _origExportJson.apply(this, args);
   return new SzExportIterator(this, handle);
 };
 
-const _origExportCsv = native.SzEngine.prototype.exportCsvEntityReport;
+const _origExportCsv = native.SzEngine.prototype.exportCsvEntityReportHandle;
 native.SzEngine.prototype.exportCsvEntityReport = function (...args) {
   const handle = _origExportCsv.apply(this, args);
   return new SzExportIterator(this, handle);

@@ -361,8 +361,14 @@ impl SzEngineWrapper {
             .map_err(sz_error_to_napi)
     }
 
-    /// Starts a JSON entity export. Returns an export handle.
-    #[napi]
+    /// Starts a JSON entity export. Returns a raw native export handle.
+    ///
+    /// Exposed as `exportJsonEntityReportHandle` in JS: the ergonomic
+    /// `sdk.js` layer defines the public `exportJsonEntityReport()` on top of
+    /// this, wrapping the handle in an `SzExportIterator`. Renamed so the
+    /// wrapper's `SzExportIterator` return type does not collide with this
+    /// handle method's `number` return type in the generated `index.d.ts`.
+    #[napi(js_name = "exportJsonEntityReportHandle")]
     pub fn export_json_entity_report(&self, flags: Option<BigInt>) -> napi::Result<i64> {
         let sz_flags = bigint_to_sz_flags(flags);
         self.inner
@@ -370,8 +376,11 @@ impl SzEngineWrapper {
             .map_err(sz_error_to_napi)
     }
 
-    /// Starts a CSV entity export. Returns an export handle.
-    #[napi]
+    /// Starts a CSV entity export. Returns a raw native export handle.
+    ///
+    /// Exposed as `exportCsvEntityReportHandle` in JS; see
+    /// `export_json_entity_report` for why it is renamed.
+    #[napi(js_name = "exportCsvEntityReportHandle")]
     pub fn export_csv_entity_report(
         &self,
         csv_column_list: String,
