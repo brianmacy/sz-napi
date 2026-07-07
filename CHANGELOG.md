@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated the Senzing runtime install from the deprecated unofficial Homebrew cask (`brianmacy/senzingsdk-runtime-unofficial`) and Scoop bucket to the **official** `senzing/senzingsdk/senzingsdk` cask and `Senzing/scoop-senzingsdk` bucket, across the release workflow, README, guides, and examples. The deprecated macOS cask now hard-errors, which was breaking the release build.
 - Redo code snippets: replaced `while(true) { countRedoRecords(); getRedoRecord(); }` pattern with idiomatic `for (let redo = engine.getRedoRecord(); redo; redo = engine.getRedoRecord())` loop, matching official Java/C#/Python/Rust SDK patterns
 
+### Fixed
+
+- **`SzEngine.exportJsonEntityReport` / `exportCsvEntityReport` type collision.** The native binding returned a numeric export handle, so the generated `index.d.ts` typed these methods as `(): number`, while the ergonomic `sdk.d.ts` layer augmented the same class to return an `SzExportIterator`. The same method name carried two different return types across the shipped type surface (native re-export said `number`; `env.getEngine()` usage resolved to `SzExportIterator`), which was internally inconsistent and broke consumers that type-check with `skipLibCheck: false`. The native handle methods are now exposed as `exportJsonEntityReportHandle` / `exportCsvEntityReportHandle` (via `#[napi(js_name = …)]`), and the public `exportJsonEntityReport` / `exportCsvEntityReport` (returning `SzExportIterator`) are defined solely by the `sdk.js` wrapper — so there is exactly one public declaration per name. (#53)
+
 ### Added
 
 - Interactive entity graph visualization example with D3.js force-directed layout (`examples/entity-graph`)
