@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 [dependencies]
 napi = { version = "3", features = ["napi9"] }
 napi-derive = "3"
-sz-rust-sdk = { path = "../../../sz-rust-sdk" }
+sz-rust-sdk = { git = "https://github.com/brianmacy/sz-rust-sdk", rev = "61ec60c21bf2c6661933e97265f16aed1a4f4e45" }
 serde_json = "1.0"
 
 [build-dependencies]
