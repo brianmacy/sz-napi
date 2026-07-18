@@ -10,9 +10,15 @@
   },
   "typesVersions": {
     "*": {
-      ".": ["dist/main/index.d.ts"],
-      "preload": ["dist/preload/index.d.ts"],
-      "renderer": ["dist/renderer/types.d.ts"]
+      ".": [
+        "dist/main/index.d.ts"
+      ],
+      "preload": [
+        "dist/preload/index.d.ts"
+      ],
+      "renderer": [
+        "dist/renderer/types.d.ts"
+      ]
     }
   },
   "scripts": {
@@ -34,7 +40,7 @@
     "@senzing/trpc": "file:../trpc",
     "@senzing/types": "file:../types",
     "@types/node": "^26",
-    "electron": "^42",
+    "electron": "^42.5.0",
     "typescript": "^6",
     "vitest": "^4"
   },
