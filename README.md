@@ -5,13 +5,12 @@ Node.js/TypeScript SDK for Senzing v4 entity resolution, built with NAPI-RS.
 [![CI](https://github.com/brianmacy/sz-napi/actions/workflows/ci.yml/badge.svg)](https://github.com/brianmacy/sz-napi/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-> **Disclaimer — unofficial and experimental.** This is a personal, experimental
-> project. It is **not** an official Senzing product and is **not affiliated
-> with, endorsed by, or supported by Senzing**. It does **not** redistribute the
-> Senzing SDK or runtime — the Senzing runtime must be obtained and installed
-> separately by you, under Senzing's own license terms. The `@senzing/*` package
-> names are used only as internal identifiers within this monorepo; these
-> packages are **not published to npm** and there is no plan to publish them.
+> **Community-supported.** This is a community-supported, experimental project
+> licensed under [Apache-2.0](LICENSE). It is not (yet) an officially supported
+> Senzing product. It does **not** redistribute the Senzing SDK or runtime — the
+> Senzing runtime must be obtained and installed separately, under Senzing's own
+> license terms. The `@senzing/*` package names are internal identifiers within
+> this monorepo; these packages are not published to npm.
 
 ## Overview
 
