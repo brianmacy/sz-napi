@@ -5,9 +5,17 @@ Node.js/TypeScript SDK for Senzing v4 entity resolution, built with NAPI-RS.
 [![CI](https://github.com/brianmacy/sz-napi/actions/workflows/ci.yml/badge.svg)](https://github.com/brianmacy/sz-napi/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
+> **Disclaimer — unofficial and experimental.** This is a personal, experimental
+> project. It is **not** an official Senzing product and is **not affiliated
+> with, endorsed by, or supported by Senzing**. It does **not** redistribute the
+> Senzing SDK or runtime — the Senzing runtime must be obtained and installed
+> separately by you, under Senzing's own license terms. The `@senzing/*` package
+> names are used only as internal identifiers within this monorepo; these
+> packages are **not published to npm** and there is no plan to publish them.
+
 ## Overview
 
-This monorepo provides five npm packages:
+This monorepo provides five packages:
 
 - **`@senzing/types`** -- Shared TypeScript interfaces (`SzEngine`, `SzConfigManager`, `SzDiagnostic`, `SzProduct`, `SzEnvironment`) that define the canonical Senzing API contract. All transports implement these interfaces, enabling transport-agnostic consumer code.
 - **`@senzing/sdk`** -- Runtime bindings for the Senzing entity resolution engine. Add records, resolve entities, search by attributes, analyze relationships, and manage configurations. Includes `SzEngineNative` and other adapter classes that implement `@senzing/types` interfaces.
@@ -25,7 +33,7 @@ Node.js 18 or later.
 
 ### Senzing Runtime (for @senzing/sdk only)
 
-The `@senzing/sdk` package requires the Senzing runtime to be installed separately. The npm package contains only the NAPI bridge code (a few MB); the runtime libraries and support data are installed via platform package managers.
+The `@senzing/sdk` package requires the Senzing runtime to be installed separately. The package contains only the NAPI bridge code (a few MB); the runtime libraries and support data are installed via platform package managers.
 
 **macOS (arm64):**
 
@@ -55,12 +63,44 @@ scoop install senzingsdk
 
 ## Installation
 
+> These packages are **not published to any npm registry** — there is no
+> `npm install @senzing/<pkg>` step. Consume them by working inside this monorepo
+> or by referencing your local checkout with a `file:` dependency.
+
+### Inside this monorepo (npm workspaces)
+
+Clone the repo and install once at the root. npm workspaces link all five
+packages together automatically:
+
 ```bash
-npm install @senzing/sdk
-npm install @senzing/configtool
+git clone https://github.com/brianmacy/sz-napi.git
+cd sz-napi
+npm install
 ```
 
-Each package uses platform-specific optional dependencies so npm installs only the binary for your OS and architecture.
+Then build the native modules (see [Building from Source](#building-from-source)).
+The projects under `examples/` consume the packages via `file:` dependencies
+(for example `"@senzing/sdk": "file:../../packages/sdk"`), so they resolve
+directly from your working tree with no registry involved.
+
+### From a separate project
+
+Point a `file:` dependency at the package directories in your local sz-napi
+checkout, then build the native modules there first:
+
+```jsonc
+// your project's package.json
+{
+  "dependencies": {
+    "@senzing/sdk": "file:../sz-napi/packages/sdk",
+    "@senzing/configtool": "file:../sz-napi/packages/configtool"
+  }
+}
+```
+
+Each `@senzing/sdk` / `@senzing/configtool` package directory contains
+platform-specific prebuilt binaries under `npm/`, so only the binary for your
+OS and architecture is loaded at runtime.
 
 ## Quick Start
 
