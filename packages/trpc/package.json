@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@senzing/sdk": "*",
-    "@trpc/client": "^11",
+    "@trpc/client": "^11.18.0",
     "tsup": "^8",
     "typescript": "^6"
   },
