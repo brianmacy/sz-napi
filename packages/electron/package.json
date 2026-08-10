@@ -41,7 +41,7 @@
     "@senzing/types": "file:../types",
     "@types/node": "^26",
     "electron": "^42.5.0",
-    "typescript": "^6",
+    "typescript": "^7",
     "vitest": "^4"
   },
   "files": [
