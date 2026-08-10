@@ -237,9 +237,10 @@ async function main() {
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(result);
         } catch (e: unknown) {
-          const message = e instanceof Error ? e.message : String(e);
+          // Log full error details server-side only; do not leak them to clients.
+          console.error(`Failed to load entity ${entityId}:`, e);
           res.writeHead(404, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: message }));
+          res.end(JSON.stringify({ error: "Entity not found" }));
         }
         return;
       }
