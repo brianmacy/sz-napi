@@ -96,13 +96,15 @@ describeIfRuntime('tRPC integration tests', () => {
   });
 
   test('product.getVersion returns version info', async () => {
-    const version = await caller.product.getVersion();
+    const raw = await caller.product.getVersion();
+    expect(typeof raw).toBe('string');
+    const version = JSON.parse(raw);
     expect(version).toHaveProperty('VERSION');
     expect(version).toHaveProperty('BUILD_DATE');
   });
 
   test('product.getLicense returns license info', async () => {
-    const license = await caller.product.getLicense();
+    const license = JSON.parse(await caller.product.getLicense());
     expect(license).toHaveProperty('licenseType');
   });
 
@@ -117,21 +119,21 @@ describeIfRuntime('tRPC integration tests', () => {
       }),
       flags: 1n << 62n, // WITH_INFO
     });
-    expect(addResult).toHaveProperty('AFFECTED_ENTITIES');
+    expect(JSON.parse(addResult)).toHaveProperty('AFFECTED_ENTITIES');
 
     // Get record
-    const record = await caller.engine.getRecord({
+    const record = JSON.parse(await caller.engine.getRecord({
       dataSourceCode: 'TEST_DS',
       recordId: 'INTEG-1',
-    });
+    }));
     expect(record).toHaveProperty('DATA_SOURCE', 'TEST_DS');
     expect(record).toHaveProperty('RECORD_ID', 'INTEG-1');
 
     // Get entity by record
-    const entity = await caller.engine.getEntityByRecord({
+    const entity = JSON.parse(await caller.engine.getEntityByRecord({
       dataSourceCode: 'TEST_DS',
       recordId: 'INTEG-1',
-    });
+    }));
     expect(entity).toHaveProperty('RESOLVED_ENTITY');
     expect(entity.RESOLVED_ENTITY).toHaveProperty('ENTITY_ID');
 
@@ -141,7 +143,7 @@ describeIfRuntime('tRPC integration tests', () => {
       recordId: 'INTEG-1',
       flags: 1n << 62n,
     });
-    expect(deleteResult).toHaveProperty('AFFECTED_ENTITIES');
+    expect(JSON.parse(deleteResult)).toHaveProperty('AFFECTED_ENTITIES');
   });
 
   test('configManager.getDefaultConfigId returns a number', async () => {
@@ -151,18 +153,18 @@ describeIfRuntime('tRPC integration tests', () => {
   });
 
   test('configManager.createConfig returns config JSON', async () => {
-    const config = await caller.configManager.createConfig();
+    const config = JSON.parse(await caller.configManager.createConfig());
     expect(config).toHaveProperty('G2_CONFIG');
   });
 
   test('configManager.getConfigRegistry returns registry', async () => {
-    const registry = await caller.configManager.getConfigRegistry();
+    const registry = JSON.parse(await caller.configManager.getConfigRegistry());
     expect(registry).toHaveProperty('CONFIGS');
     expect(Array.isArray(registry.CONFIGS)).toBe(true);
   });
 
   test('diagnostic.getRepositoryInfo returns info', async () => {
-    const info = await caller.diagnostic.getRepositoryInfo();
+    const info = JSON.parse(await caller.diagnostic.getRepositoryInfo());
     expect(info).toHaveProperty('dataStores');
   });
 
@@ -177,7 +179,7 @@ describeIfRuntime('tRPC integration tests', () => {
   });
 
   test('engine.getStats returns stats', async () => {
-    const stats = await caller.engine.getStats();
+    const stats = JSON.parse(await caller.engine.getStats());
     expect(stats).toHaveProperty('workload');
   });
 

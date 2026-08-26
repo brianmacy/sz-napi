@@ -60,7 +60,7 @@ await investigate(window.senzing.engine);
 ## Design Principles
 
 - **Async throughout** — all methods return `Promise`. Native adapters wrap sync calls.
-- **Parsed returns** — methods return parsed objects (`Promise<any>`), not raw JSON strings.
+- **JSON string returns** — JSON-returning methods resolve the raw JSON string (`Promise<JsonString>`), exactly as the engine produced it; callers `JSON.parse` as needed. This matches the contract of every Senzing V4 binding (Rust's `JsonString`, Java/C#/Python string returns). `exportCsvEntityReport` resolves raw CSV text (`Promise<string>`).
 - **Collected exports** — export methods return complete results, not streaming iterators.
 - **Standardized nullability** — `flags?: bigint`, `searchProfile?: string | null`.
 

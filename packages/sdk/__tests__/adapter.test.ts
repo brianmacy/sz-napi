@@ -85,25 +85,26 @@ describeIfRuntime('Native SDK adapters', () => {
 
   // -- SzProductNative --------------------------------------------------------
 
-  test('product.getVersion returns parsed object', async () => {
+  test('product.getVersion returns JSON string', async () => {
     const version = await product.getVersion();
-    expect(typeof version).toBe('object');
-    expect(version).toHaveProperty('VERSION');
-    expect(version).toHaveProperty('BUILD_DATE');
+    expect(typeof version).toBe('string');
+    const parsed = JSON.parse(version);
+    expect(parsed).toHaveProperty('VERSION');
+    expect(parsed).toHaveProperty('BUILD_DATE');
   });
 
-  test('product.getLicense returns parsed object', async () => {
+  test('product.getLicense returns JSON string', async () => {
     const license = await product.getLicense();
-    expect(typeof license).toBe('object');
-    expect(license).toHaveProperty('licenseType');
+    expect(typeof license).toBe('string');
+    expect(JSON.parse(license)).toHaveProperty('licenseType');
   });
 
   // -- SzConfigManagerNative --------------------------------------------------
 
-  test('configManager.createConfig returns parsed object', async () => {
+  test('configManager.createConfig returns JSON string', async () => {
     const config = await configManager.createConfig();
-    expect(typeof config).toBe('object');
-    expect(config).toHaveProperty('G2_CONFIG');
+    expect(typeof config).toBe('string');
+    expect(JSON.parse(config)).toHaveProperty('G2_CONFIG');
   });
 
   test('configManager.getDefaultConfigId returns number', async () => {
@@ -112,18 +113,18 @@ describeIfRuntime('Native SDK adapters', () => {
     expect(id).toBeGreaterThan(0);
   });
 
-  test('configManager.getConfigRegistry returns parsed object', async () => {
+  test('configManager.getConfigRegistry returns JSON string', async () => {
     const registry = await configManager.getConfigRegistry();
-    expect(typeof registry).toBe('object');
-    expect(registry).toHaveProperty('CONFIGS');
+    expect(typeof registry).toBe('string');
+    expect(JSON.parse(registry)).toHaveProperty('CONFIGS');
   });
 
   // -- SzDiagnosticNative -----------------------------------------------------
 
-  test('diagnostic.getRepositoryInfo returns parsed object', async () => {
+  test('diagnostic.getRepositoryInfo returns JSON string', async () => {
     const info = await diagnostic.getRepositoryInfo();
-    expect(typeof info).toBe('object');
-    expect(info).toHaveProperty('dataStores');
+    expect(typeof info).toBe('string');
+    expect(JSON.parse(info)).toHaveProperty('dataStores');
   });
 
   // -- SzEnvironmentNative ----------------------------------------------------
@@ -142,42 +143,45 @@ describeIfRuntime('Native SDK adapters', () => {
 
   // -- SzEngineNative ---------------------------------------------------------
 
-  test('engine.addRecord returns parsed object with WITH_INFO', async () => {
+  test('engine.addRecord returns JSON string with WITH_INFO', async () => {
     const WITH_INFO = 1n << 62n;
     const result = await engine.addRecord(
       'TEST_DS', 'ADAPT-1',
       JSON.stringify({ NAME_FULL: 'Adapter Test', DATE_OF_BIRTH: '1990-01-01' }),
       WITH_INFO,
     );
-    expect(typeof result).toBe('object');
-    expect(result).toHaveProperty('AFFECTED_ENTITIES');
+    expect(typeof result).toBe('string');
+    expect(JSON.parse(result)).toHaveProperty('AFFECTED_ENTITIES');
   });
 
-  test('engine.getRecord returns parsed object', async () => {
+  test('engine.getRecord returns JSON string', async () => {
     const record = await engine.getRecord('TEST_DS', 'ADAPT-1');
-    expect(typeof record).toBe('object');
-    expect(record).toHaveProperty('DATA_SOURCE', 'TEST_DS');
-    expect(record).toHaveProperty('RECORD_ID', 'ADAPT-1');
+    expect(typeof record).toBe('string');
+    const parsed = JSON.parse(record);
+    expect(parsed).toHaveProperty('DATA_SOURCE', 'TEST_DS');
+    expect(parsed).toHaveProperty('RECORD_ID', 'ADAPT-1');
   });
 
-  test('engine.getEntityByRecord returns parsed object', async () => {
+  test('engine.getEntityByRecord returns JSON string', async () => {
     const entity = await engine.getEntityByRecord('TEST_DS', 'ADAPT-1');
-    expect(typeof entity).toBe('object');
-    expect(entity).toHaveProperty('RESOLVED_ENTITY');
-    expect(entity.RESOLVED_ENTITY).toHaveProperty('ENTITY_ID');
+    expect(typeof entity).toBe('string');
+    const parsed = JSON.parse(entity);
+    expect(parsed).toHaveProperty('RESOLVED_ENTITY');
+    expect(parsed.RESOLVED_ENTITY).toHaveProperty('ENTITY_ID');
   });
 
-  test('engine.getEntityById returns parsed object', async () => {
-    const entity = await engine.getEntityByRecord('TEST_DS', 'ADAPT-1');
+  test('engine.getEntityById returns JSON string', async () => {
+    const entity = JSON.parse(await engine.getEntityByRecord('TEST_DS', 'ADAPT-1'));
     const entityId = entity.RESOLVED_ENTITY.ENTITY_ID;
     const byId = await engine.getEntityById(entityId);
-    expect(byId).toHaveProperty('RESOLVED_ENTITY');
+    expect(typeof byId).toBe('string');
+    expect(JSON.parse(byId)).toHaveProperty('RESOLVED_ENTITY');
   });
 
-  test('engine.getStats returns parsed object', async () => {
+  test('engine.getStats returns JSON string', async () => {
     const stats = await engine.getStats();
-    expect(typeof stats).toBe('object');
-    expect(stats).toHaveProperty('workload');
+    expect(typeof stats).toBe('string');
+    expect(JSON.parse(stats)).toHaveProperty('workload');
   });
 
   test('engine.countRedoRecords returns number', async () => {
@@ -190,11 +194,11 @@ describeIfRuntime('Native SDK adapters', () => {
     expect(result).toBeUndefined();
   });
 
-  test('engine.deleteRecord returns parsed object with WITH_INFO', async () => {
+  test('engine.deleteRecord returns JSON string with WITH_INFO', async () => {
     const WITH_INFO = 1n << 62n;
     const result = await engine.deleteRecord('TEST_DS', 'ADAPT-1', WITH_INFO);
-    expect(typeof result).toBe('object');
-    expect(result).toHaveProperty('AFFECTED_ENTITIES');
+    expect(typeof result).toBe('string');
+    expect(JSON.parse(result)).toHaveProperty('AFFECTED_ENTITIES');
   });
 
   // -- All adapters return Promises -------------------------------------------

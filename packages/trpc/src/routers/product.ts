@@ -5,12 +5,12 @@ export const productRouter = t.router({
   getVersion: t.procedure
     .query(({ ctx }) => {
       const { product } = ctx;
-      return szCall(() => JSON.parse(product.getVersion()));
+      return szCall(() => product.getVersion());
     }),
 
   getLicense: t.procedure
     .query(({ ctx }) => {
       const { product } = ctx;
-      return szCall(() => JSON.parse(product.getLicense()));
+      return szCall(() => product.getLicense());
     }),
 });

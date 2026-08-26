@@ -9,16 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING:** JSON-returning SDK methods now resolve the **raw JSON string** across all transports (native adapter, tRPC, Electron), instead of a parsed object. This matches the long-declared `@senzing/types` contract and the return type of every Senzing V4 binding (Rust `JsonString`, Java/C#/Python strings, and sz-napi's own native surface). Previously the transports `JSON.parse`d and resolved objects while the interfaces still declared `Promise<string>` — an incoherent contradiction. **Consumers that relied on parsed objects must now `JSON.parse(...)` at the call site.** Read-shaped results are typed `Promise<JsonString>` (a zero-cost `string` alias); opaque round-trip values (`getRedoRecord`, `createConfig`/`createConfigFromId`/`createConfigFromDefinition`) stay `Promise<string>`; `exportCsvEntityReport` stays `Promise<string>` (CSV, not JSON). Returning the raw string also preserves exact entity IDs above 2^53 that a naive `JSON.parse` would silently round. (#89)
 - **BREAKING:** Renamed `SzEngine.closeExport()` → `closeExportReport()` to match the underlying C ABI (`Sz_closeExportReport`) and every other Senzing V4 SDK (Python `close_export_report`, Java `closeExportReport`, C# `CloseExportReport`, Rust `close_export_report`). (#49)
 - Migrated the Senzing runtime install from the deprecated unofficial Homebrew cask (`brianmacy/senzingsdk-runtime-unofficial`) and Scoop bucket to the **official** `senzing/senzingsdk/senzingsdk` cask and `Senzing/scoop-senzingsdk` bucket, across the release workflow, README, guides, and examples. The deprecated macOS cask now hard-errors, which was breaking the release build.
 - Redo code snippets: replaced `while(true) { countRedoRecords(); getRedoRecord(); }` pattern with idiomatic `for (let redo = engine.getRedoRecord(); redo; redo = engine.getRedoRecord())` loop, matching official Java/C#/Python/Rust SDK patterns
 
 ### Fixed
 
+- **tRPC routers no longer `JSON.parse` unconditionally.** `addRecord` / `deleteRecord` / `reevaluateRecord` / `reevaluateEntity` without `WITH_INFO` (and `getRedoRecord` on an empty queue) return `""`, which `JSON.parse("")` threw `SyntaxError: Unexpected end of JSON input` on over tRPC. The native adapter guarded this; the routers did not. Returning the raw string removes the crash. (#89)
 - **`SzEngine.exportJsonEntityReport` / `exportCsvEntityReport` type collision.** The native binding returned a numeric export handle, so the generated `index.d.ts` typed these methods as `(): number`, while the ergonomic `sdk.d.ts` layer augmented the same class to return an `SzExportIterator`. The same method name carried two different return types across the shipped type surface (native re-export said `number`; `env.getEngine()` usage resolved to `SzExportIterator`), which was internally inconsistent and broke consumers that type-check with `skipLibCheck: false`. The native handle methods are now exposed as `exportJsonEntityReportHandle` / `exportCsvEntityReportHandle` (via `#[napi(js_name = …)]`), and the public `exportJsonEntityReport` / `exportCsvEntityReport` (returning `SzExportIterator`) are defined solely by the `sdk.js` wrapper — so there is exactly one public declaration per name. (#53)
 
 ### Added
 
+- `JsonString` type alias in `@senzing/types` documenting the JSON-string return contract at every call site (a `string` alias today; the seam for a future typed-returns effort, `JsonString<T>`, without breaking consumers). (#89)
+- CI type-check gate (`build:check` across workspaces, now including `@senzing/types` `__tests__`) that fails the build on interface/implementation drift — the class of defect vitest and tsx miss because they transpile without type-checking. (#89)
 - Interactive entity graph visualization example with D3.js force-directed layout (`examples/entity-graph`)
 - Production documentation: getting-started, error-handling, config-management, and deployment guides
 - TypeDoc configuration for API reference generation (`typedoc.json`, `docs.yml` workflow)

@@ -26,12 +26,13 @@ describe('RecordKey', () => {
 
 describe('interface completeness', () => {
   // These tests verify that the interfaces have the expected method names
-  // by creating mock objects and checking they satisfy the types.
+  // by creating mock objects and checking they satisfy the types. JSON-returning
+  // methods resolve JSON strings, matching the SzEngine contract.
 
   test('SzProduct has getVersion and getLicense', () => {
     const mock: SzProduct = {
-      getVersion: async () => ({}),
-      getLicense: async () => ({}),
+      getVersion: async () => '{}',
+      getLicense: async () => '{}',
     };
     expect(typeof mock.getVersion).toBe('function');
     expect(typeof mock.getLicense).toBe('function');
@@ -39,9 +40,9 @@ describe('interface completeness', () => {
 
   test('SzDiagnostic has all 4 methods', () => {
     const mock: SzDiagnostic = {
-      checkRepositoryPerformance: async () => ({}),
-      getFeature: async () => ({}),
-      getRepositoryInfo: async () => ({}),
+      checkRepositoryPerformance: async () => '{}',
+      getFeature: async () => '{}',
+      getRepositoryInfo: async () => '{}',
       purgeRepository: async () => {},
     };
     expect(Object.keys(mock)).toHaveLength(4);
@@ -49,10 +50,10 @@ describe('interface completeness', () => {
 
   test('SzConfigManager has all 9 methods', () => {
     const mock: SzConfigManager = {
-      createConfig: async () => ({}),
-      createConfigFromId: async () => ({}),
-      createConfigFromDefinition: async () => ({}),
-      getConfigRegistry: async () => ({}),
+      createConfig: async () => '{}',
+      createConfigFromId: async () => '{}',
+      createConfigFromDefinition: async () => '{}',
+      getConfigRegistry: async () => '{}',
       getDefaultConfigId: async () => 1,
       registerConfig: async () => 1,
       replaceDefaultConfigId: async () => {},
@@ -97,13 +98,13 @@ describe('interface completeness', () => {
 describe('transport-agnostic usage', () => {
   test('function accepting SzProduct works with mock implementation', async () => {
     async function getVersionInfo(product: SzProduct): Promise<string> {
-      const version = await product.getVersion();
+      const version = JSON.parse(await product.getVersion());
       return version.VERSION;
     }
 
     const mock: SzProduct = {
-      getVersion: async () => ({ VERSION: '4.0.0', BUILD_DATE: '2024-01-01' }),
-      getLicense: async () => ({ licenseType: 'EVAL' }),
+      getVersion: async () => JSON.stringify({ VERSION: '4.0.0', BUILD_DATE: '2024-01-01' }),
+      getLicense: async () => JSON.stringify({ licenseType: 'EVAL' }),
     };
 
     const result = await getVersionInfo(mock);
@@ -111,41 +112,41 @@ describe('transport-agnostic usage', () => {
   });
 
   test('function accepting SzEngine works with mock implementation', async () => {
-    async function addAndGet(engine: SzEngine): Promise<any> {
+    async function addAndGet(engine: SzEngine): Promise<string> {
       await engine.addRecord('DS', '1', '{"NAME_FULL":"Test"}');
       return engine.getEntityByRecord('DS', '1');
     }
 
     const mock: SzEngine = {
-      addRecord: async () => ({ AFFECTED_ENTITIES: [{ ENTITY_ID: 1 }] }),
-      deleteRecord: async () => ({}),
-      getRecord: async () => ({}),
-      getRecordPreview: async () => ({}),
-      reevaluateRecord: async () => ({}),
-      reevaluateEntity: async () => ({}),
-      getEntityById: async () => ({}),
-      getEntityByRecord: async () => ({ RESOLVED_ENTITY: { ENTITY_ID: 1 } }),
-      searchByAttributes: async () => ({}),
-      whySearch: async () => ({}),
-      whyEntities: async () => ({}),
-      whyRecords: async () => ({}),
-      whyRecordInEntity: async () => ({}),
-      howEntity: async () => ({}),
-      getVirtualEntity: async () => ({}),
-      findInterestingEntitiesById: async () => ({}),
-      findInterestingEntitiesByRecord: async () => ({}),
-      findPath: async () => ({}),
-      findNetwork: async () => ({}),
-      getRedoRecord: async () => ({}),
+      addRecord: async () => JSON.stringify({ AFFECTED_ENTITIES: [{ ENTITY_ID: 1 }] }),
+      deleteRecord: async () => '{}',
+      getRecord: async () => '{}',
+      getRecordPreview: async () => '{}',
+      reevaluateRecord: async () => '{}',
+      reevaluateEntity: async () => '{}',
+      getEntityById: async () => '{}',
+      getEntityByRecord: async () => JSON.stringify({ RESOLVED_ENTITY: { ENTITY_ID: 1 } }),
+      searchByAttributes: async () => '{}',
+      whySearch: async () => '{}',
+      whyEntities: async () => '{}',
+      whyRecords: async () => '{}',
+      whyRecordInEntity: async () => '{}',
+      howEntity: async () => '{}',
+      getVirtualEntity: async () => '{}',
+      findInterestingEntitiesById: async () => '{}',
+      findInterestingEntitiesByRecord: async () => '{}',
+      findPath: async () => '{}',
+      findNetwork: async () => '{}',
+      getRedoRecord: async () => '{}',
       countRedoRecords: async () => 0,
-      processRedoRecord: async () => ({}),
+      processRedoRecord: async () => '{}',
       primeEngine: async () => {},
-      getStats: async () => ({}),
-      exportJsonEntityReport: async () => ({}),
+      getStats: async () => '{}',
+      exportJsonEntityReport: async () => '{}',
       exportCsvEntityReport: async () => '',
     };
 
-    const result = await addAndGet(mock);
+    const result = JSON.parse(await addAndGet(mock));
     expect(result.RESOLVED_ENTITY.ENTITY_ID).toBe(1);
   });
 });

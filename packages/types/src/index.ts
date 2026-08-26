@@ -14,7 +14,7 @@
  * }
  * ```
  */
-export type { RecordKey } from './common.js';
+export type { JsonString, RecordKey } from './common.js';
 export type { SzEngine } from './engine.js';
 export type { SzConfigManager } from './config-manager.js';
 export type { SzDiagnostic } from './diagnostic.js';

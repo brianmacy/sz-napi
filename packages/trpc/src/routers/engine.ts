@@ -10,7 +10,7 @@ export const engineRouter = t.router({
     .mutation(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.addRecord(input.dataSourceCode, input.recordId, input.recordDefinition, input.flags)),
+        engine.addRecord(input.dataSourceCode, input.recordId, input.recordDefinition, input.flags),
       );
     }),
 
@@ -19,7 +19,7 @@ export const engineRouter = t.router({
     .mutation(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.deleteRecord(input.dataSourceCode, input.recordId, input.flags)),
+        engine.deleteRecord(input.dataSourceCode, input.recordId, input.flags),
       );
     }),
 
@@ -28,7 +28,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.getRecord(input.dataSourceCode, input.recordId, input.flags)),
+        engine.getRecord(input.dataSourceCode, input.recordId, input.flags),
       );
     }),
 
@@ -37,7 +37,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.getRecordPreview(input.recordDefinition, input.flags)),
+        engine.getRecordPreview(input.recordDefinition, input.flags),
       );
     }),
 
@@ -46,7 +46,7 @@ export const engineRouter = t.router({
     .mutation(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.reevaluateRecord(input.dataSourceCode, input.recordId, input.flags)),
+        engine.reevaluateRecord(input.dataSourceCode, input.recordId, input.flags),
       );
     }),
 
@@ -55,7 +55,7 @@ export const engineRouter = t.router({
     .mutation(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.reevaluateEntity(input.entityId, input.flags)),
+        engine.reevaluateEntity(input.entityId, input.flags),
       );
     }),
 
@@ -66,7 +66,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.getEntityById(input.entityId, input.flags)),
+        engine.getEntityById(input.entityId, input.flags),
       );
     }),
 
@@ -75,7 +75,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.getEntityByRecord(input.dataSourceCode, input.recordId, input.flags)),
+        engine.getEntityByRecord(input.dataSourceCode, input.recordId, input.flags),
       );
     }),
 
@@ -84,7 +84,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.searchByAttributes(input.attributes, input.searchProfile, input.flags)),
+        engine.searchByAttributes(input.attributes, input.searchProfile, input.flags),
       );
     }),
 
@@ -95,7 +95,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.whySearch(input.attributes, input.entityId, input.searchProfile, input.flags)),
+        engine.whySearch(input.attributes, input.entityId, input.searchProfile, input.flags),
       );
     }),
 
@@ -104,7 +104,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.whyEntities(input.entityId1, input.entityId2, input.flags)),
+        engine.whyEntities(input.entityId1, input.entityId2, input.flags),
       );
     }),
 
@@ -113,7 +113,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.whyRecords(input.dsCode1, input.recId1, input.dsCode2, input.recId2, input.flags)),
+        engine.whyRecords(input.dsCode1, input.recId1, input.dsCode2, input.recId2, input.flags),
       );
     }),
 
@@ -122,7 +122,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.whyRecordInEntity(input.dataSourceCode, input.recordId, input.flags)),
+        engine.whyRecordInEntity(input.dataSourceCode, input.recordId, input.flags),
       );
     }),
 
@@ -131,7 +131,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.howEntity(input.entityId, input.flags)),
+        engine.howEntity(input.entityId, input.flags),
       );
     }),
 
@@ -140,7 +140,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.getVirtualEntity(input.recordKeys, input.flags)),
+        engine.getVirtualEntity(input.recordKeys, input.flags),
       );
     }),
 
@@ -151,7 +151,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.findInterestingEntitiesById(input.entityId, input.flags)),
+        engine.findInterestingEntitiesById(input.entityId, input.flags),
       );
     }),
 
@@ -160,7 +160,7 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.findInterestingEntitiesByRecord(input.dataSourceCode, input.recordId, input.flags)),
+        engine.findInterestingEntitiesByRecord(input.dataSourceCode, input.recordId, input.flags),
       );
     }),
 
@@ -171,10 +171,10 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.findPath(
+        engine.findPath(
           input.startEntityId, input.endEntityId, input.maxDegrees,
           input.avoidEntityIds, input.requiredDataSources, input.flags,
-        )),
+        ),
       );
     }),
 
@@ -183,10 +183,10 @@ export const engineRouter = t.router({
     .query(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.findNetwork(
+        engine.findNetwork(
           input.entityIds, input.maxDegrees, input.buildOutDegree,
           input.maxEntities, input.flags,
-        )),
+        ),
       );
     }),
 
@@ -195,7 +195,7 @@ export const engineRouter = t.router({
   getRedoRecord: t.procedure
     .query(({ ctx }) => {
       const { engine } = ctx;
-      return szCall(() => JSON.parse(engine.getRedoRecord()));
+      return szCall(() => engine.getRedoRecord());
     }),
 
   countRedoRecords: t.procedure
@@ -209,7 +209,7 @@ export const engineRouter = t.router({
     .mutation(({ input, ctx }) => {
       const { engine } = ctx;
       return szCall(() =>
-        JSON.parse(engine.processRedoRecord(input.redoRecord, input.flags)),
+        engine.processRedoRecord(input.redoRecord, input.flags),
       );
     }),
 
@@ -224,7 +224,7 @@ export const engineRouter = t.router({
   getStats: t.procedure
     .query(({ ctx }) => {
       const { engine } = ctx;
-      return szCall(() => JSON.parse(engine.getStats()));
+      return szCall(() => engine.getStats());
     }),
 
   // ── Export (collected, not streamed) ────────────────────────────
@@ -244,7 +244,7 @@ export const engineRouter = t.router({
         for (const chunk of iter) {
           chunks.push(chunk);
         }
-        return JSON.parse(chunks.join(''));
+        return chunks.join('');
       });
     }),
 
