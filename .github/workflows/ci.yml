@@ -267,7 +267,7 @@ jobs:
       # first so @senzing/trpc resolves its declarations from dist/.
       - name: Type check
         run: |
-          npm run build --workspace @senzing/types
+          (cd packages/types && npx tsc -p tsconfig.json --emitDeclarationOnly)
           npm run build:check --workspaces --if-present
 
       - name: Run tRPC unit tests

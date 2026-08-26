@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-26
+
 ### Changed
 
 - **BREAKING:** JSON-returning SDK methods now resolve the **raw JSON string** across all transports (native adapter, tRPC, Electron), instead of a parsed object. This matches the long-declared `@senzing/types` contract and the return type of every Senzing V4 binding (Rust `JsonString`, Java/C#/Python strings, and sz-napi's own native surface). Previously the transports `JSON.parse`d and resolved objects while the interfaces still declared `Promise<string>` — an incoherent contradiction. **Consumers that relied on parsed objects must now `JSON.parse(...)` at the call site.** Read-shaped results are typed `Promise<JsonString>` (a zero-cost `string` alias); opaque round-trip values (`getRedoRecord`, `createConfig`/`createConfigFromId`/`createConfigFromDefinition`) stay `Promise<string>`; `exportCsvEntityReport` stays `Promise<string>` (CSV, not JSON). Returning the raw string also preserves exact entity IDs above 2^53 that a naive `JSON.parse` would silently round. (#89)
@@ -118,5 +120,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config versioning support
 - Script processing support
 
-[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/brianmacy/sz-napi/compare/v0.1.0...v0.8.0
 [0.1.0]: https://github.com/brianmacy/sz-napi/releases/tag/v0.1.0
