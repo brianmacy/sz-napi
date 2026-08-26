@@ -2,6 +2,8 @@
 
 Node.js/TypeScript SDK for Senzing v4 entity resolution, built with NAPI-RS.
 
+**Looking for the combination of a robust Rust binary and a first-class TypeScript interface? Look no further.** `@senzing/sdk` and `@senzing/configtool` pair the speed and safety of native Rust with fully-typed TypeScript definitions generated from the Rust source — ideal for building applications and especially UIs. Combine it with the `@senzing/trpc` package to get the same typed API over HTTP for browser and remote clients, or `@senzing/electron` for desktop apps.
+
 [![CI](https://github.com/brianmacy/sz-napi/actions/workflows/ci.yml/badge.svg)](https://github.com/brianmacy/sz-napi/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
@@ -37,7 +39,9 @@ The `@senzing/sdk` package requires the Senzing runtime to be installed separate
 **macOS (arm64):**
 
 ```bash
-brew install --cask senzing/senzingsdk/senzingsdk
+brew tap senzing/senzingsdk https://github.com/Senzing/homebrew-senzingsdk
+brew trust senzing/senzingsdk   # required on Homebrew 6+; no-op on Homebrew 5
+brew install --cask senzingsdk
 ```
 
 **Linux (x64, arm64):**
@@ -54,7 +58,7 @@ yum install senzingsdk-runtime
 
 ```bash
 scoop bucket add senzingsdk https://github.com/Senzing/scoop-senzingsdk
-scoop install senzingsdk
+scoop install senzingsdk/senzingsdk
 # Ensure Sz.dll is on your PATH
 ```
 

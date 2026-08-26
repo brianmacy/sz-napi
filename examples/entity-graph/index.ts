@@ -5,7 +5,7 @@
  * and serves an interactive D3.js force-directed visualization.
  *
  * Prerequisites:
- *   - Senzing runtime installed (brew install --cask senzing/senzingsdk/senzingsdk on macOS)
+ *   - Senzing runtime installed (brew install --cask senzingsdk on macOS)
  *
  * Usage:
  *   npm install && npm start

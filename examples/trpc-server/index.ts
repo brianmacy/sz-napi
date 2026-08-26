@@ -9,7 +9,7 @@
  * - Gracefully shuts down on SIGINT/SIGTERM
  *
  * Prerequisites:
- *   - Senzing runtime installed (brew install --cask senzing/senzingsdk/senzingsdk on macOS)
+ *   - Senzing runtime installed (brew install --cask senzingsdk on macOS)
  *
  * Usage:
  *   npm start                          # Starts on port 3000

@@ -180,22 +180,24 @@ jobs:
       - name: Install Senzing runtime (macOS)
         if: runner.os == 'macOS'
         env:
-          HOMEBREW_SENZING_ACCEPT_EULA: "i_accept_the_senzing_eula"
-        run: brew install --cask senzing/senzingsdk/senzingsdk
+          HOMEBREW_SENZING_ACCEPT_EULA: i_accept_the_senzing_eula
+        run: |
+          brew tap senzing/senzingsdk https://github.com/Senzing/homebrew-senzingsdk
+          # Homebrew 6+ refuses to load casks from an untrusted tap; no-op on Homebrew 5.
+          brew trust senzing/senzingsdk
+          brew install --cask senzingsdk
 
       - name: Install Scoop and Senzing runtime (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          SENZING_ACCEPT_EULA: "I_ACCEPT_THE_SENZING_EULA"
+          SENZING_ACCEPT_EULA: I_ACCEPT_THE_SENZING_EULA
         run: |
-          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-          $scoopInstaller = Join-Path $env:TEMP 'install-scoop.ps1'
-          Invoke-RestMethod -Uri https://get.scoop.sh -OutFile $scoopInstaller
-          Get-Content $scoopInstaller | Select-Object -First 5
-          & $scoopInstaller -RunAsAdmin
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+          Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+          $env:PATH = "$HOME\scoop\shims;$env:PATH"
           scoop bucket add senzingsdk https://github.com/Senzing/scoop-senzingsdk
-          scoop install senzingsdk
+          scoop install senzingsdk/senzingsdk
 
       - name: Setup Node.js 20
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
@@ -219,7 +221,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $senzingLib = "$env:USERPROFILE\scoop\apps\senzingsdk\current\er\lib"
+          $senzingLib = "$(scoop prefix senzingsdk)\er\lib"
           # Helper function to generate .lib from .dll
           function New-ImportLib($dllPath, $libName) {
             $exports = & dumpbin /exports $dllPath |
@@ -246,7 +248,7 @@ jobs:
         working-directory: sz-napi/packages/sdk
         shell: pwsh
         run: |
-          $env:SENZING_LIB_PATH = "$env:USERPROFILE\scoop\apps\senzingsdk\current\er\lib"
+          $env:SENZING_LIB_PATH = "$(scoop prefix senzingsdk)\er\lib"
           npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
