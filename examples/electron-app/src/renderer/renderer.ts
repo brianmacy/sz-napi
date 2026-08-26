@@ -47,7 +47,8 @@ const searchResults = document.getElementById("search-results") as HTMLElement;
 
 async function loadVersion(): Promise<void> {
   try {
-    const version = await senzing.getVersion();
+    // JSON-returning methods resolve the raw JSON string — parse to read it.
+    const version = JSON.parse(await senzing.getVersion());
     versionDisplay.innerHTML =
       `<strong>Senzing SDK</strong> v${version.VERSION} ` +
       `<span class="muted">(build ${version.BUILD_DATE})</span>`;
@@ -129,8 +130,8 @@ searchForm.addEventListener("submit", async (e: Event) => {
   const attributes = JSON.stringify({ NAME_FULL: searchName });
 
   try {
-    const result = await senzing.searchByAttributes(attributes);
-    const entities = (result as any).RESOLVED_ENTITIES ?? [];
+    const result = JSON.parse(await senzing.searchByAttributes(attributes));
+    const entities = result.RESOLVED_ENTITIES ?? [];
 
     if (entities.length === 0) {
       searchResults.textContent = "No matching entities found.";

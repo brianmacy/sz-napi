@@ -19,13 +19,6 @@ for (const def of METHOD_REGISTRY) {
 // Lifecycle methods are Electron-specific (not in the tRPC registry)
 SERVICE_METHODS.lifecycle = ['initialize', 'destroy', 'reinitialize', 'getActiveConfigId'];
 
-function tryParseJson(val: unknown): unknown {
-  if (typeof val === "string" && val.length > 0 && (val[0] === "{" || val[0] === "[")) {
-    try { return JSON.parse(val); } catch { /* return as-is */ }
-  }
-  return val;
-}
-
 function makeMethod(service: string, method: string) {
   return async (...args: any[]) => {
     const envelope = await ipcRenderer.invoke("sz:call", service, method, args);
@@ -37,7 +30,9 @@ function makeMethod(service: string, method: string) {
       err.severity = envelope.severity;
       throw err;
     }
-    return tryParseJson(envelope.result);
+    // JSON-returning methods resolve the raw JSON string; the renderer parses
+    // as needed. Non-JSON results (numbers, void) pass through unchanged.
+    return envelope.result;
   };
 }
 

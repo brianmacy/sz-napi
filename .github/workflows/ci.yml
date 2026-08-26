@@ -260,6 +260,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Type-check gate: catches interface/implementation drift (e.g. return
+      # types diverging from what transports resolve) that vitest/tsx miss
+      # because they transpile without type-checking. Covers @senzing/types
+      # (including __tests__) and @senzing/trpc. @senzing/types must be built
+      # first so @senzing/trpc resolves its declarations from dist/.
+      - name: Type check
+        run: |
+          npm run build --workspace @senzing/types
+          npm run build:check --workspaces --if-present
+
       - name: Run tRPC unit tests
         working-directory: packages/trpc
         run: npx vitest run

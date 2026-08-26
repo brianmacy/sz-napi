@@ -7,20 +7,20 @@ export const diagnosticRouter = t.router({
     .input(s.checkRepositoryPerformance)
     .query(({ input, ctx }) => {
       const { diagnostic } = ctx;
-      return szCall(() => JSON.parse(diagnostic.checkRepositoryPerformance(input.secondsToRun)));
+      return szCall(() => diagnostic.checkRepositoryPerformance(input.secondsToRun));
     }),
 
   getFeature: t.procedure
     .input(s.getFeature)
     .query(({ input, ctx }) => {
       const { diagnostic } = ctx;
-      return szCall(() => JSON.parse(diagnostic.getFeature(input.featureId)));
+      return szCall(() => diagnostic.getFeature(input.featureId));
     }),
 
   getRepositoryInfo: t.procedure
     .query(({ ctx }) => {
       const { diagnostic } = ctx;
-      return szCall(() => JSON.parse(diagnostic.getRepositoryInfo()));
+      return szCall(() => diagnostic.getRepositoryInfo());
     }),
 
   purgeRepository: t.procedure

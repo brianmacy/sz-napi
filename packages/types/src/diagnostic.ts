@@ -3,9 +3,11 @@
  *
  * Implemented by all Senzing SDK transports (native, tRPC, Electron).
  */
+import type { JsonString } from './common.js';
+
 export interface SzDiagnostic {
-  checkRepositoryPerformance(secondsToRun: number): Promise<string>;
-  getFeature(featureId: number): Promise<string>;
-  getRepositoryInfo(): Promise<string>;
+  checkRepositoryPerformance(secondsToRun: number): Promise<JsonString>;
+  getFeature(featureId: number): Promise<JsonString>;
+  getRepositoryInfo(): Promise<JsonString>;
   purgeRepository(): Promise<void>;
 }

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "build:check": "tsc --noEmit",
+    "build:check": "tsc -p tsconfig.check.json",
     "test": "vitest run"
   },
   "devDependencies": {

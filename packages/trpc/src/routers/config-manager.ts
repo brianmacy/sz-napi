@@ -6,27 +6,27 @@ export const configManagerRouter = t.router({
   createConfig: t.procedure
     .query(({ ctx }) => {
       const { configManager } = ctx;
-      return szCall(() => JSON.parse(configManager.createConfig()));
+      return szCall(() => configManager.createConfig());
     }),
 
   createConfigFromId: t.procedure
     .input(s.createConfigFromId)
     .query(({ input, ctx }) => {
       const { configManager } = ctx;
-      return szCall(() => JSON.parse(configManager.createConfigFromId(input.configId)));
+      return szCall(() => configManager.createConfigFromId(input.configId));
     }),
 
   createConfigFromDefinition: t.procedure
     .input(s.createConfigFromDefinition)
     .query(({ input, ctx }) => {
       const { configManager } = ctx;
-      return szCall(() => JSON.parse(configManager.createConfigFromDefinition(input.configDefinition)));
+      return szCall(() => configManager.createConfigFromDefinition(input.configDefinition));
     }),
 
   getConfigRegistry: t.procedure
     .query(({ ctx }) => {
       const { configManager } = ctx;
-      return szCall(() => JSON.parse(configManager.getConfigRegistry()));
+      return szCall(() => configManager.getConfigRegistry());
     }),
 
   getDefaultConfigId: t.procedure
