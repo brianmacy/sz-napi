@@ -198,6 +198,10 @@ jobs:
           $env:PATH = "$HOME\scoop\shims;$env:PATH"
           scoop bucket add senzingsdk https://github.com/Senzing/scoop-senzingsdk
           scoop install senzingsdk/senzingsdk
+          # Resolve the lib dir now, while scoop is on PATH, and export it for
+          # later steps — they run in fresh shells where scoop is NOT on PATH
+          # (a per-step $env:PATH change does not persist across steps).
+          "SENZING_LIB_PATH=$(scoop prefix senzingsdk)\er\lib" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Setup Node.js 20
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -221,7 +225,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $senzingLib = "$(scoop prefix senzingsdk)\er\lib"
+          $senzingLib = $env:SENZING_LIB_PATH
           # Helper function to generate .lib from .dll
           function New-ImportLib($dllPath, $libName) {
             $exports = & dumpbin /exports $dllPath |
@@ -248,7 +252,7 @@ jobs:
         working-directory: sz-napi/packages/sdk
         shell: pwsh
         run: |
-          $env:SENZING_LIB_PATH = "$(scoop prefix senzingsdk)\er\lib"
+          # SENZING_LIB_PATH is exported via GITHUB_ENV in the install step.
           npx napi build --platform --release --target ${{ matrix.target }}
 
       - name: Upload artifact
