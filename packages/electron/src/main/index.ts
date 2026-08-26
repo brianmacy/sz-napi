@@ -163,7 +163,7 @@ export class SzElectronEnvironment {
           p.resolve({
             __szError: true,
             className: "SzError",
-            message: err.message,
+            message: err instanceof Error ? err.message : String(err),
             szCode: "SZ_UNHANDLED",
             category: "Unrecoverable",
             severity: "Critical",

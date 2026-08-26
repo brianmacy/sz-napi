@@ -99,9 +99,22 @@ export declare class SzEngine {
   countRedoRecords(): number
   /** Processes a redo record for deferred resolution. */
   processRedoRecord(redoRecord: string, flags?: bigint | undefined | null): string
-  /** Starts a JSON entity export. Returns a raw native export handle. */
+  /**
+   * Starts a JSON entity export. Returns a raw native export handle.
+   *
+   * Exposed as `exportJsonEntityReportHandle` in JS: the ergonomic
+   * `sdk.js` layer defines the public `exportJsonEntityReport()` on top of
+   * this, wrapping the handle in an `SzExportIterator`. Renamed so the
+   * wrapper's `SzExportIterator` return type does not collide with this
+   * handle method's `number` return type in the generated `index.d.ts`.
+   */
   exportJsonEntityReportHandle(flags?: bigint | undefined | null): number
-  /** Starts a CSV entity export. Returns a raw native export handle. */
+  /**
+   * Starts a CSV entity export. Returns a raw native export handle.
+   *
+   * Exposed as `exportCsvEntityReportHandle` in JS; see
+   * `export_json_entity_report` for why it is renamed.
+   */
   exportCsvEntityReportHandle(csvColumnList: string, flags?: bigint | undefined | null): number
   /** Fetches the next batch of export data. Returns empty string when complete. */
   fetchNext(exportHandle: number): string
