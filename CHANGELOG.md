@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-08-26
+
+### Fixed
+
+- **Windows release build.** The `v0.8.0` tag's release failed while generating import libraries: the step ran `scoop prefix senzingsdk`, but `scoop` is not on `PATH` in that step — the install step's `$env:PATH` change does not persist across steps. Now the Senzing lib path is resolved once during scoop install (where `scoop` is on `PATH`) and exported via `$GITHUB_ENV` for the import-library and napi-build steps. `v0.8.1` is the first successful release of the 0.8 line.
+
 ## [0.8.0] - 2026-08-26
 
 ### Changed
@@ -120,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config versioning support
 - Script processing support
 
-[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/brianmacy/sz-napi/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/brianmacy/sz-napi/compare/v0.1.0...v0.8.0
 [0.1.0]: https://github.com/brianmacy/sz-napi/releases/tag/v0.1.0
