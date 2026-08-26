@@ -18,8 +18,10 @@ and configuration templates are distributed as a separate platform package.
 **macOS (arm64):**
 
 ```bash
-brew install --cask senzing/senzingsdk/senzingsdk
-export DYLD_LIBRARY_PATH=/opt/homebrew/opt/senzing/er/lib
+brew tap senzing/senzingsdk https://github.com/Senzing/homebrew-senzingsdk
+brew trust senzing/senzingsdk   # required on Homebrew 6+; no-op on Homebrew 5
+brew install --cask senzingsdk
+export DYLD_LIBRARY_PATH="$(brew --prefix)/opt/senzing/er/lib"
 ```
 
 Add the `export` line to your shell profile (`~/.zshrc`, `~/.bashrc`, etc.) so
@@ -41,7 +43,7 @@ export LD_LIBRARY_PATH=/opt/senzing/er/lib
 
 ```powershell
 scoop bucket add senzingsdk https://github.com/Senzing/scoop-senzingsdk
-scoop install senzingsdk
+scoop install senzingsdk/senzingsdk
 # The installer adds Sz.dll to your PATH automatically.
 ```
 

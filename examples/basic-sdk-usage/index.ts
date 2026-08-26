@@ -10,7 +10,7 @@
  * - Cleaning up with destroy()
  *
  * Prerequisites:
- *   - Senzing runtime installed (brew install --cask senzing/senzingsdk/senzingsdk on macOS)
+ *   - Senzing runtime installed (brew install --cask senzingsdk on macOS)
  */
 
 import { execSync } from "node:child_process";
