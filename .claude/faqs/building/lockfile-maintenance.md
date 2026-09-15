@@ -59,8 +59,8 @@ contents are a function of the `@napi-rs/cli` version in the lockfile, so bumpin
 silently makes the committed copies stale — the next `npm run build` rewrites them and a
 clean tree goes dirty.
 
-Observed on `release/v0.9.0`: bumping `@napi-rs/cli` 3.8.5 → 3.10.0 makes `npm run build`
-produce a ~344-line diff across those four files (3.10.0 adds the `__napiBindingTarget`
+Observed while preparing v0.9.0 (landed in `10cad57`): bumping `@napi-rs/cli`
+3.8.5 → 3.10.0 makes `npm run build` produce a ~344-line diff across those four files (3.10.0 adds the `__napiBindingTarget`
 export; 3.8.5's templates have no such symbol). No CI job diffs these files, so CI stays
 green while the repo carries stale generated code.
 
