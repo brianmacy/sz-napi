@@ -1,0 +1,53 @@
+# cargo-deny policy for sz-napi.
+#
+# Without this file cargo-deny falls back to its built-in default policy, which
+# rejects even plain MIT and Apache-2.0 -- so `cargo deny check` failed on 47
+# crates and told you nothing useful. Keep this file in step with the license
+# set actually present in the graph (`cargo deny list --layout license`).
+
+[licenses]
+# The project ships under Apache-2.0 (see LICENSE). No GPL / LGPL / AGPL is
+# permitted anywhere in the graph; the allow-list below is exhaustive, so any
+# copyleft crate entering the tree fails the build rather than slipping in.
+#
+#   Apache-2.0  / MIT   the bulk of the graph
+#   Unicode-3.0         required by unicode-ident, which is
+#                       "(MIT OR Apache-2.0) AND Unicode-3.0" -- the AND makes
+#                       it mandatory, not a choice
+#   ISC                 libloading, reached only via napi-sys -> napi. ISC is
+#                       OSI-approved and functionally equivalent to MIT; it is
+#                       unavoidable without dropping the NAPI runtime itself.
+#
+# memchr is "Unlicense OR MIT", so allowing MIT covers it and Unlicense does not
+# need to be listed.
+allow = ["Apache-2.0", "MIT", "Unicode-3.0", "ISC"]
+confidence-threshold = 0.9
+
+[bans]
+# The workspace legitimately carries a few duplicate transitive versions; this
+# gate is about licensing and provenance, not deduplication.
+multiple-versions = "allow"
+# The two first-party git dependencies below are declared without a version
+# range (they are pinned by `rev`, which is the stronger guarantee), and
+# cargo-deny counts a version-less dep as a wildcard. Pinning is enforced by the
+# [sources] allow-git list instead.
+wildcards = "allow"
+
+[advisories]
+# RustSec advisories. Security fixes bypass the 21-day dependency cooldown
+# (see .github/dependabot.yml), so anything that lands here should be acted on
+# rather than ignored.
+yanked = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# First-party Senzing crates. Both are pinned by explicit `rev` in the consuming
+# Cargo.toml, so a moved branch or tag upstream cannot change what we build.
+# Adding a repo here is a deliberate supply-chain decision -- any other git
+# source fails the check.
+allow-git = [
+  "https://github.com/brianmacy/sz-rust-sdk",
+  "https://github.com/brianmacy/sz-rust-sdk-configtool",
+]

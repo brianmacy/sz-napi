@@ -10,7 +10,9 @@ import type {
   SzProduct,
   SzEnvironment,
   RecordKey,
+  SzFlagName,
 } from '../src/index.js';
+import { SzFlags } from '../src/index.js';
 
 // -- RecordKey type -----------------------------------------------------------
 
@@ -148,5 +150,47 @@ describe('transport-agnostic usage', () => {
 
     const result = JSON.parse(await addAndGet(mock));
     expect(result.RESOLVED_ENTITY.ENTITY_ID).toBe(1);
+  });
+});
+
+// -- SzFlags (generated from the native binding) ------------------------------
+
+describe('SzFlags', () => {
+  test('is exported as runtime data, not just a type', () => {
+    expect(typeof SzFlags).toBe('object');
+    expect(Object.keys(SzFlags).length).toBeGreaterThan(0);
+  });
+
+  test('is frozen so consumers cannot mutate shared flag values', () => {
+    expect(Object.isFrozen(SzFlags)).toBe(true);
+  });
+
+  test('every flag value is a bigint', () => {
+    for (const [name, value] of Object.entries(SzFlags)) {
+      expect(typeof value, `${name} should be bigint`).toBe('bigint');
+    }
+  });
+
+  test('WITH_INFO occupies bit 62, which is why the values are bigint', () => {
+    expect(SzFlags.WITH_INFO).toBe(1n << 62n);
+    expect(SzFlags.WITH_INFO).toBeGreaterThan(BigInt(Number.MAX_SAFE_INTEGER));
+  });
+
+  test('NO_FLAGS is zero', () => {
+    expect(SzFlags.NO_FLAGS).toBe(0n);
+  });
+
+  test('flags combine with bitwise OR', () => {
+    const combined = SzFlags.WITH_INFO | SzFlags.ENTITY_DEFAULT_FLAGS;
+    expect(combined & SzFlags.WITH_INFO).toBe(SzFlags.WITH_INFO);
+  });
+
+  test('includes HOW_ENTITY_DEFAULT_FLAGS, the flag that was missing in #50', () => {
+    expect(SzFlags.HOW_ENTITY_DEFAULT_FLAGS).toBeTypeOf('bigint');
+  });
+
+  test('SzFlagName is constrained to real flag names', () => {
+    const name: SzFlagName = 'ENTITY_DEFAULT_FLAGS';
+    expect(SzFlags[name]).toBeTypeOf('bigint');
   });
 });

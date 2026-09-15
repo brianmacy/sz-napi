@@ -119,6 +119,13 @@ mcp = FastMCP(
         "Senzing Node.js SDK project FAQ. Consult these tools BEFORE making decisions about "
         "NAPI-RS patterns, Senzing runtime paths, build/test procedures, platform targets, "
         "error handling, BigInt flags, or the two-package architecture. "
+        "Also covers the generated SzFlags table (scripts/codegen-flags.mjs, the "
+        "codegen:flags / codegen:flags:check npm scripts, and the CI drift gate) and "
+        "release packaging of the pure-JS @senzing/types and @senzing/trpc tarballs "
+        "(npm pack, --ignore-scripts, optional peer dependency, tsup DTS output). "
+        "Consult it before regenerating package-lock.json: a physical npm install "
+        "prunes cross-platform optional dependencies and breaks CI -- see "
+        "lockfile-maintenance. "
         "If FAQ search returns no useful results, TELL THE USER and recommend adding a FAQ."
     ),
 )

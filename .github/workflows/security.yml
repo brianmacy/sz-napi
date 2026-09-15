@@ -39,3 +39,16 @@ jobs:
     - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
     - run: cargo install cargo-vet --locked
     - run: cargo vet --locked
+
+  deny:
+    name: cargo deny
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+    - run: cargo install cargo-deny --locked
+    # Enforces deny.toml: the Apache-2.0/MIT/Unicode-3.0/ISC allow-list (so any
+    # GPL/LGPL/AGPL crate entering the graph fails the build), RustSec advisories,
+    # and the allow-git list that keeps the two rev-pinned first-party sources the
+    # only permitted git dependencies.
+    - run: cargo deny check
