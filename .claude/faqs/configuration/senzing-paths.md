@@ -20,9 +20,34 @@ brew install --cask senzingsdk
 
 The support/data path is `/opt/homebrew/opt/senzing/data`, NOT `.../er/resources`. Using `resources` causes: `Plugin initialization error LIBRARY[libg2ParseName.so] failed to initialize because [GNR data files failed to load]`.
 
-### Rpath — no DYLD_LIBRARY_PATH needed
+### Rpath — covers the `.node`, NOT the Rust test binary
 
-The SDK `build.rs` auto-detects the Senzing lib path and embeds it as an rpath in the `.node` binary at build time. It also adds rpath entries for OpenSSL and SQLite transitive dependencies. You do NOT need to set `DYLD_LIBRARY_PATH` or `LD_LIBRARY_PATH` to run tests or examples.
+The SDK `build.rs` auto-detects the Senzing lib path and embeds it as an rpath in the
+**`.node`** binary at build time. It also adds rpath entries for OpenSSL and SQLite
+transitive dependencies. So running the TS tests, the examples, and any consumer that loads
+the `.node` needs no `DYLD_LIBRARY_PATH` / `LD_LIBRARY_PATH` of its own.
+
+**`cargo test` is the exception and it is not optional.** The cdylib test harness
+(`target/debug/deps/senzing_sdk_napi-*`) is a *different* binary from the `.node` and carries
+no such rpath, so a bare `cargo test` aborts:
+
+```
+dyld[39335]: Library not loaded: @rpath/libSz.dylib
+  Referenced from: .../target/debug/deps/senzing_sdk_napi-f1623bec8ee0462d
+error: test failed ... (signal: 6, SIGABRT: process abort signal)
+```
+
+`npm test` exports the path itself (see the `test` script in the root `package.json`);
+`cargo` does not. Export it before any `cargo test`, `cargo run --example`, or
+`npm run codegen:flags` / `codegen:flags:check`:
+
+```bash
+export DYLD_LIBRARY_PATH="/opt/homebrew/opt/senzing/er/lib:/opt/homebrew/opt/sqlite/lib:/opt/homebrew/opt/openssl@3/lib:$DYLD_LIBRARY_PATH"
+```
+
+With it exported, `cargo test` exits 0. Note the Rust crates currently carry **no** unit
+tests (0 passed in both `senzing_sdk_napi` and `senzing_configtool_napi`) — the coverage is
+all on the TypeScript side — so the abort is purely the harness failing to launch.
 
 ### Setup script
 

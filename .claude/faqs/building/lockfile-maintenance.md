@@ -51,6 +51,28 @@ node -e "const l=require('./package-lock.json');console.log(l.packages['node_mod
 npm ci && npm audit && npm test    # expect 0 vulnerabilities, 192 tests pass
 ```
 
+### Bumping `@napi-rs/cli` also regenerates committed loader files
+
+`packages/sdk/index.js`, `packages/sdk/index.d.ts`, `packages/configtool/index.js` and
+`packages/configtool/index.d.ts` are **committed, auto-generated** NAPI-RS loaders. Their
+contents are a function of the `@napi-rs/cli` version in the lockfile, so bumping the CLI
+silently makes the committed copies stale — the next `npm run build` rewrites them and a
+clean tree goes dirty.
+
+Observed on `release/v0.9.0`: bumping `@napi-rs/cli` 3.8.5 → 3.10.0 makes `npm run build`
+produce a ~344-line diff across those four files (3.10.0 adds the `__napiBindingTarget`
+export; 3.8.5's templates have no such symbol). No CI job diffs these files, so CI stays
+green while the repo carries stale generated code.
+
+After any `@napi-rs/cli` bump:
+
+```bash
+npm run build --workspaces --if-present
+git status --porcelain packages/*/index.js packages/*/index.d.ts   # must be empty
+```
+
+If it is not empty, commit the regenerated loaders alongside the lockfile change.
+
 ### Related
 
 `.github/workflows/security.yml` uses `npm install --package-lock-only` for the same reason.
