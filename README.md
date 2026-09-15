@@ -105,6 +105,49 @@ Each `@senzing/sdk` / `@senzing/configtool` package directory contains
 platform-specific prebuilt binaries under `npm/`, so only the binary for your
 OS and architecture is loaded at runtime.
 
+### tRPC client only (no Senzing runtime required)
+
+A client that talks to a remote tRPC server needs neither the native module nor
+a local Senzing install — no Rust toolchain, no `libSz`, no `SENZING_PATH`.
+Download `senzing-types-<version>.tgz` and `senzing-trpc-<version>.tgz` from the
+[latest release](https://github.com/brianmacy/sz-napi/releases/latest) and
+install both together:
+
+```bash
+npm install ./senzing-types-0.9.0.tgz ./senzing-trpc-0.9.0.tgz
+```
+
+`@senzing/sdk` is an *optional* peer dependency of `@senzing/trpc`, so the
+native package is not pulled in. Install both tarballs in the same command —
+`@senzing/trpc` resolves `@senzing/types` from the local file rather than the
+registry.
+
+```ts
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import superjson from 'superjson';
+import { SzFlags } from '@senzing/types';
+import type { SzRouter } from '@senzing/trpc';
+import type { JsonString } from '@senzing/types';
+
+const sz = createTRPCClient<SzRouter>({
+  links: [httpBatchLink({ url: 'http://localhost:3000', transformer: superjson })],
+});
+
+const entity: JsonString = await sz.engine.getEntityById.query({
+  entityId: 1,
+  flags: SzFlags.ENTITY_DEFAULT_FLAGS,
+});
+console.log(JSON.parse(entity));
+```
+
+Note that `flags` is an optional `bigint` while `entityId` is a `number`, and
+that JSON-returning methods resolve the raw JSON string, so the caller does its
+own `JSON.parse`.
+
+`@senzing/types` exports the full `SzFlags` table as plain data, so flag
+constants are available without the native module. The values are generated from
+the native binding rather than hand-maintained — see [SzFlags](#szflags).
+
 ## Quick Start
 
 ### SDK: Add Records and Search
@@ -210,8 +253,17 @@ Full type definitions are in `packages/configtool/configtool.d.ts`.
 
 Flag constants are `bigint` values because the `WITH_INFO` flag occupies bit 62 (`1n << 62n`), which exceeds `Number.MAX_SAFE_INTEGER`. Using `bigint` uniformly avoids mixing numeric types and is future-proof for additional high-bit flags.
 
+`SzFlags` is available from two places with identical values: `@senzing/sdk`
+builds it at runtime from the native binding, and `@senzing/types` exports a
+generated copy so consumers without the native module (a tRPC-only client, for
+instance) can still name their flags. The generated table is emitted from the
+binding by `npm run codegen:flags` and CI fails if it drifts, so the native
+`flag!` list stays the single source.
+
 ```typescript
 import { SzFlags } from "@senzing/sdk";
+// or, without the native module:
+// import { SzFlags } from "@senzing/types";
 
 // Use a predefined composite flag
 engine.addRecord("DS", "1", record, SzFlags.ADD_RECORD_ALL_FLAGS);

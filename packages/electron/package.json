@@ -1,6 +1,6 @@
 {
   "name": "@senzing/electron",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "description": "Electron IPC bridge for @senzing/sdk — runs SDK in a worker thread, exposes via contextBridge",
   "main": "dist/main/index.js",
   "exports": {

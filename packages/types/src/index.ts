@@ -20,3 +20,8 @@ export type { SzConfigManager } from './config-manager.js';
 export type { SzDiagnostic } from './diagnostic.js';
 export type { SzProduct } from './product.js';
 export type { SzEnvironment } from './environment.js';
+
+// Runtime flag constants, generated from the native binding. Exported as values
+// (not types) so a consumer without @senzing/sdk can still name its flags.
+export { SzFlags } from './flags.generated.js';
+export type { SzFlagName } from './flags.generated.js';

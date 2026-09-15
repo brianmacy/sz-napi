@@ -342,6 +342,15 @@ jobs:
             }
         run: npx vitest run
 
+      # @senzing/types ships the flag constants as plain data so a consumer
+      # without the native module can name its flags. The values live only in the
+      # compiled binding, so this job -- which has both the built .node and the
+      # Senzing runtime -- is where the committed file can be proven current.
+      - name: Check generated SzFlags is up to date
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: npm run codegen:flags:check
+
       - name: Run tRPC integration tests
         working-directory: packages/trpc
         env:

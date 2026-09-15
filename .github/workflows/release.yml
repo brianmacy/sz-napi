@@ -291,6 +291,23 @@ jobs:
           done
           ls -la release-assets/
 
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+
+      # The two JS packages are pure TypeScript and need no native toolchain,
+      # so install scripts are skipped -- this job has no Senzing runtime or
+      # Rust available. @senzing/types must build before @senzing/trpc, which
+      # imports it.
+      - name: Build and pack the JS packages
+        run: |
+          npm ci --ignore-scripts
+          npm run build -w @senzing/types -w @senzing/trpc
+          npm pack -w @senzing/types -w @senzing/trpc \
+            --pack-destination release-assets
+          ls -la release-assets/
+
       - name: Create release
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:

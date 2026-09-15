@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-15
+
+### Added
+
+- **`SzFlags` is now exported from `@senzing/types`**, so a consumer without the native module can name its flags instead of hand-writing `bigint` literals. The values are *generated* from the native binding (`npm run codegen:flags` → `packages/types/src/flags.generated.ts`), not hand-maintained: the `flag!` list in `packages/sdk/src/flags.rs` remains the single source, and CI regenerates the file in the `test-sdk` job (which has both the built `.node` and the Senzing runtime) and fails on a diff. A parity test asserts the committed table matches the binding exactly, so a misspelled flag is now a compile error rather than an `undefined` that silently becomes `0n`. Note this guards drift between the native package and the types package; it does **not** catch the #50 class, where the `flag!` list itself diverges from upstream `sz_rust_sdk::flags::SzFlags` — that needs a separate check, tracked separately. (#99)
+- **`@senzing/types` and `@senzing/trpc` are now attached to the GitHub release as npm tarballs.** A Node.js client can consume the tRPC server with no Rust toolchain, no `libSz`, and no `SENZING_PATH` — `npm install ./senzing-types-0.9.0.tgz ./senzing-trpc-0.9.0.tgz` pulls 8 packages and reports 0 vulnerabilities. Because `@senzing/sdk` is an *optional* peer dependency of `@senzing/trpc`, the native package is not installed. The `release` job now sets up Node, runs `npm ci --ignore-scripts`, builds the two JS packages and `npm pack`s them into `release-assets/`, which the existing `files: release-assets/*` glob already publishes. (#99)
+
+### Fixed
+
+- **The DTS build was broken on TypeScript 6 — no `.d.ts` shipped.** `npm run build -w @senzing/types` exited 1 with `error TS5101: Option 'baseUrl' is deprecated and will stop functioning in TypeScript 7.0`. The CJS/ESM output still succeeded, so `dist/index.js` was written while `dist/index.d.ts` was not, which made the failure easy to miss; `@senzing/trpc` then failed with `TS7016: Could not find a declaration file for module '@senzing/types'`. The `baseUrl` is injected by `tsup`'s DTS pass (`node_modules/tsup/dist/rollup.js`), not by any tsconfig in this repo, and the resolved TypeScript is 6.0.3. Setting `"ignoreDeprecations": "6.0"` in the root `tsconfig.json` restores declaration output: `types` emits `index.d.ts` (6.09 KB), `trpc` emits `index.d.ts` (21.09 KB), `client.d.ts`, and `router-*.d.ts`. This is a live TypeScript 7 migration warning, not a lint nit — the option stops functioning in TS 7, and `@senzing/electron` already resolves `typescript@7.0.2`. (#99)
+
+### Changed
+
+- **Package versions now match the release tag.** All five workspace packages sat at `0.1.0` while the repo was tagged `v0.8.1`, so a tarball renamed to match the tag still reported `0.1.0` in `npm ls` and in a consumer's `package-lock.json` — the filename and the manifest disagreed. All packages are now `0.9.0`. (#99)
+- Consolidated dependency updates (supersedes #95, #96, #97, #98): `vitest` and `@vitest/coverage-v8` 4.1.10 → 4.1.11, `@napi-rs/cli` 3.8.5 → 3.10.0, `electron` 44.0.0 → 44.4.0, `zod` 4.4.3 → 4.6.5, `@types/node` 26.2.0 → 26.6.0, and `js-yaml` 4.3.1 → 5.4.2 transitively. This clears all four advisories that were failing the Security Audit workflow on `main`: `GHSA-2883-xcg3-v3hh` (js-yaml, high) and `GHSA-82fw-gwwq-j7x9` (`@vitest/mocker`, moderate, via `vitest` and `@vitest/coverage-v8`). `npm audit` now reports 0 vulnerabilities. Declared ranges in `package.json` are unchanged — the lockfile alone moved, and the `esbuild: 0.28.2` override is preserved.
+
+
 ## [0.8.1] - 2026-08-26
 
 ### Fixed
@@ -126,7 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config versioning support
 - Script processing support
 
-[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/brianmacy/sz-napi/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/brianmacy/sz-napi/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/brianmacy/sz-napi/compare/v0.1.0...v0.8.0
 [0.1.0]: https://github.com/brianmacy/sz-napi/releases/tag/v0.1.0

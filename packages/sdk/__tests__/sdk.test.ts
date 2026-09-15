@@ -413,3 +413,27 @@ describe('Senzing SDK Integration Tests', () => {
     });
   });
 });
+
+// ─── SzFlags parity with @senzing/types ──────────────────────────
+//
+// @senzing/types ships a generated copy of the flag table so consumers without
+// the native module can name their flags. The generator runs against this
+// binding, so the two must agree exactly -- if they ever diverge, consumers
+// building against the types package would compute different flag values than
+// the engine actually applies.
+
+describe('SzFlags parity with the generated table in @senzing/types', () => {
+  // Import the committed source, not the built dist -- the point is to guard the
+  // file that is actually in git, which a stale dist would otherwise mask.
+  test('exports exactly the same flag names', async () => {
+    const { SzFlags: generated } = await import('../../types/src/flags.generated.js');
+    expect(Object.keys(generated).sort()).toEqual(Object.keys(SzFlags).sort());
+  });
+
+  test('exports exactly the same flag values', async () => {
+    const { SzFlags: generated } = await import('../../types/src/flags.generated.js');
+    for (const [name, value] of Object.entries(SzFlags)) {
+      expect(generated[name as keyof typeof generated], `${name} differs`).toBe(value);
+    }
+  });
+});
