@@ -60,6 +60,12 @@ module.exports = {
   listFragments: wrapFunction(native.listFragments),
   setFragment: wrapFunction(native.setFragment),
 
+  // Search Profiles
+  addSearchProfile: wrapFunction(native.addSearchProfile),
+  getSearchProfile: wrapFunction(native.getSearchProfile),
+  listSearchProfiles: wrapFunction(native.listSearchProfiles),
+  deleteSearchProfile: wrapFunction(native.deleteSearchProfile),
+
   // Thresholds
   addComparisonThreshold: wrapFunction(native.addComparisonThreshold),
   deleteComparisonThreshold: wrapFunction(native.deleteComparisonThreshold),
@@ -128,7 +134,6 @@ module.exports = {
   getComparisonFunction: wrapFunction(native.getComparisonFunction),
   listComparisonFunctions: wrapFunction(native.listComparisonFunctions),
   setComparisonFunction: wrapFunction(native.setComparisonFunction),
-  addComparisonFuncReturnCode: wrapFunction(native.addComparisonFuncReturnCode),
 
   // Distinct Functions
   addDistinctFunction: wrapFunction(native.addDistinctFunction),

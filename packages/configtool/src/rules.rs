@@ -3,6 +3,7 @@ use napi_derive::napi;
 use sz_configtool_lib::rules;
 
 use crate::error::{config_error_to_napi, json_serialize_error};
+use crate::field_update;
 
 #[napi(object)]
 pub struct SetRuleOptions {
@@ -10,9 +11,12 @@ pub struct SetRuleOptions {
     pub resolve: Option<String>,
     pub relate: Option<String>,
     pub rtype_id: Option<i64>,
-    pub fragment: Option<String>,
-    pub disqualifier: Option<String>,
-    pub tier: Option<i64>,
+    /// QUAL_ERFRAG_CODE: undefined = leave unchanged, null = clear, string = set.
+    pub fragment: Option<Either<String, Null>>,
+    /// DISQ_ERFRAG_CODE: undefined = leave unchanged, null = clear, string = set.
+    pub disqualifier: Option<Either<String, Null>>,
+    /// ERRULE_TIER: undefined = leave unchanged, null = clear, number = set.
+    pub tier: Option<Either<i64, Null>>,
 }
 
 #[napi]
@@ -47,9 +51,9 @@ pub fn set_rule(config_json: String, options: SetRuleOptions) -> Result<String> 
         resolve: options.resolve.as_deref(),
         relate: options.relate.as_deref(),
         rtype_id: options.rtype_id,
-        fragment: options.fragment.as_deref(),
-        disqualifier: options.disqualifier.as_deref(),
-        tier: options.tier,
+        fragment: field_update::str_from_js(&options.fragment),
+        disqualifier: field_update::str_from_js(&options.disqualifier),
+        tier: field_update::from_js(options.tier),
     };
     rules::set_rule(&config_json, params).map_err(config_error_to_napi)
 }

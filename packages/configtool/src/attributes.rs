@@ -13,6 +13,8 @@ pub struct AddAttributeOptions {
     pub default_value: Option<String>,
     pub internal: Option<String>,
     pub required: Option<String>,
+    /// Explicit ATTR_ID; absent or <= 0 auto-assigns (seeded at 1000). A taken id is rejected.
+    pub id: Option<i64>,
 }
 
 #[napi(object)]
@@ -33,6 +35,7 @@ pub fn add_attribute(config_json: String, options: AddAttributeOptions) -> Resul
         default_value: options.default_value.as_deref(),
         internal: options.internal.as_deref(),
         required: options.required.as_deref(),
+        id: options.id,
     };
     let (config, _value) =
         attributes::add_attribute(&config_json, params).map_err(config_error_to_napi)?;

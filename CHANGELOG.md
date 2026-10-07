@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`@senzing/configtool` now builds against `sz_configtool_lib` v0.10.0 (was 0.3.2).** The JS API is kept source-compatible wherever the library allows; the library's own behaviour changes (0.4.0–0.10.0) flow through. Tested against the stock Senzing 4.4.2 template.
+
+### Added
+
+- `@senzing/configtool`: `addSearchProfile`, `getSearchProfile`, `listSearchProfiles`, `deleteSearchProfile` (CFG_SPROFILE; `INGEST`/`SEARCH` are protected from delete).
+- `@senzing/configtool`: optional `id` on `addDataSource`, `addAttribute`, `addElement`, `addFeature`, `addComparisonCall` options (absent auto-assigns; a taken id is rejected).
+- `@senzing/configtool`: `get{Standardize,Expression,Comparison,Distinct}Call` accept a feature code as well as a numeric call id.
+- `@senzing/configtool`: `deleteComparisonThreshold` takes an optional 4th `cfuncRtnval`. Without it the row must be unique for `(cfuncCode, ftypeCode)`, else `InvalidInput`.
+- `@senzing/configtool`: `delete{Expression,Comparison,Distinct}CallElement` accept `element` (FELEM_CODE) and `elementFeature`; the old `felemId`/`ftypeId` still work and are translated to codes. `execOrder` is ignored (the library derives it).
+- `@senzing/configtool`: `anonSupport` on `addDistinctFunction` / `setDistinctFunction`.
+- `@senzing/configtool`: tri-state `set*` fields — `setRule` `fragment`/`disqualifier`/`tier` and `set*Function` `connectStr` accept `null` to clear (`undefined` still leaves unchanged; `null` was previously rejected by the binding).
+- `@senzing/configtool`: `SzConfigError.errorType` gains `NotOnCall`, `NotInFeature`, `AlreadyPresent`, `ValidationErrors`; `ValidationErrors` also sets `error.failures` (`[{ field, reasonCode, offendingValue }]`).
+
+### Breaking (`@senzing/configtool`)
+
+- **Removed `addComparisonFuncReturnCode`.** The library removed it in 0.5.0 because it wrote a CFG_CFRTN shape that does not exist; use `addComparisonThreshold`.
+- **Deprecated, ignored fields:** `conversational`/`reliability` (data sources) and `tokenized` (elements) are still accepted but never written (not part of the Senzing v4 schema).
+- **Behaviour from the library:** new data source / attribute ids are seeded at 1000 (a first user data source is `1000`, not `3`); `setGenericThreshold` now matches the full `(plan, behavior, feature)` row and updates it in place, returning `NotFound` when no such row exists — the old binding rewrote another row's `FTYPE_ID`, leaving two rows for the same identity; `addGenericThreshold` reports behaviour / `sendToRedo` failures as `ValidationErrors` (was `InvalidInput`); a call-element delete of an element not on the call is `NotOnCall` and a duplicate call/element add is `AlreadyPresent` (both were `NotFound`/`AlreadyExists`); `add*CallElement` `execOrder` is optional and a taken value is rejected; list functions return SDK-sorted rows.
+
 ## [0.9.0] - 2026-09-15
 
 ### Added

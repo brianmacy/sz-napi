@@ -100,18 +100,16 @@ import {
 let config = addDataSource(configJson, { code: "CUSTOMERS" });
 config = addDataSource(config, { code: "WATCHLIST" });
 
-// Optional parameters control retention and reliability.
+// Optional parameters control retention and the id (user ids are seeded at 1000).
 config = addDataSource(config, {
   code: "ARCHIVE",
   retentionLevel: "Forget", // do not persist candidate keys
-  conversational: "No",
-  reliability: 10,
 });
 
 // List all registered data sources. Returns a JSON array.
 const sources = JSON.parse(listDataSources(config));
 // sources: [{ id: 1, dataSource: 'SYSTEM' }, { id: 2, dataSource: 'SEARCH' },
-//           { id: 3, dataSource: 'CUSTOMERS' }, ...]
+//           { id: 1000, dataSource: 'CUSTOMERS' }, ...]
 
 // Remove a data source (built-in sources SYSTEM and SEARCH cannot be deleted).
 config = deleteDataSource(config, "ARCHIVE");

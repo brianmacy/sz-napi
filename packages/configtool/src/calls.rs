@@ -1,8 +1,72 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use sz_configtool_lib::calls;
+use sz_configtool_lib::calls::{self, CallSelector};
+use sz_configtool_lib::error::SzConfigError;
 
 use crate::error::{config_error_to_napi, json_serialize_error};
+
+/// Map a JS `number | string` call address to the library's selector.
+fn selector(call: &Either<i64, String>) -> CallSelector<'_> {
+    match call {
+        Either::A(id) => CallSelector::Id(*id),
+        Either::B(feature) => CallSelector::Feature(feature.as_str()),
+    }
+}
+
+/// Look up `code_key` of the row in `section` whose `id_key` equals `id`.
+fn code_for_id(
+    config: &serde_json::Value,
+    section: &str,
+    id_key: &str,
+    code_key: &str,
+    id: i64,
+) -> std::result::Result<String, SzConfigError> {
+    config["G2_CONFIG"][section]
+        .as_array()
+        .ok_or_else(|| SzConfigError::MissingSection(section.to_string()))?
+        .iter()
+        .find(|row| row[id_key].as_i64() == Some(id))
+        .and_then(|row| row[code_key].as_str().map(str::to_string))
+        .ok_or_else(|| SzConfigError::NotFound(format!("{id_key} {id} does not exist")))
+}
+
+/// Resolve a call-element delete target to `(element code, element feature code)`.
+/// Codes win; the legacy numeric ids are translated to codes so the library
+/// performs the actual lookup and delete.
+fn resolve_element_target(
+    config_json: &str,
+    element: Option<String>,
+    element_feature: Option<String>,
+    felem_id: Option<i64>,
+    ftype_id: Option<i64>,
+) -> Result<(String, Option<String>)> {
+    let needs_lookup =
+        element.is_none() || (element_feature.is_none() && ftype_id.is_some_and(|id| id > 0));
+    let config: Option<serde_json::Value> = if needs_lookup {
+        Some(serde_json::from_str(config_json).map_err(json_serialize_error)?)
+    } else {
+        None
+    };
+    let element = match (element, felem_id, &config) {
+        (Some(code), _, _) => code,
+        (None, Some(id), Some(cfg)) => code_for_id(cfg, "CFG_FELEM", "FELEM_ID", "FELEM_CODE", id)
+            .map_err(config_error_to_napi)?,
+        _ => {
+            return Err(config_error_to_napi(SzConfigError::MissingField(
+                "element (or felemId)".to_string(),
+            )));
+        }
+    };
+    let element_feature = match (element_feature, ftype_id, &config) {
+        (Some(code), _, _) => Some(code),
+        (None, Some(id), Some(cfg)) if id > 0 => Some(
+            code_for_id(cfg, "CFG_FTYPE", "FTYPE_ID", "FTYPE_CODE", id)
+                .map_err(config_error_to_napi)?,
+        ),
+        _ => None,
+    };
+    Ok((element, element_feature))
+}
 
 // ============================================================================
 // Standardize Calls
@@ -66,10 +130,11 @@ pub fn delete_standardize_call(config_json: String, sfcall_id: i64) -> Result<St
     calls::delete_standardize_call(&config_json, sfcall_id).map_err(config_error_to_napi)
 }
 
+/// Get a standardize call by its numeric call id, or by the feature code it is bound to.
 #[napi(js_name = "getStandardizeCall")]
-pub fn get_standardize_call(config_json: String, sfcall_id: i64) -> Result<String> {
-    let value =
-        calls::get_standardize_call(&config_json, sfcall_id).map_err(config_error_to_napi)?;
+pub fn get_standardize_call(config_json: String, sfcall_id: Either<i64, String>) -> Result<String> {
+    let value = calls::get_standardize_call(&config_json, selector(&sfcall_id))
+        .map_err(config_error_to_napi)?;
     serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
@@ -169,16 +234,24 @@ pub struct AddExpressionCallElementOptions {
     pub efcall_id: i64,
     pub ftype_id: i64,
     pub felem_id: i64,
-    pub exec_order: i64,
+    /// Absent auto-allocates the next EXEC_ORDER on the call; a taken value is rejected.
+    pub exec_order: Option<i64>,
     pub felem_req: String,
 }
 
 #[napi(object)]
 pub struct DeleteExpressionCallElementOptions {
     pub efcall_id: i64,
-    pub ftype_id: i64,
-    pub felem_id: i64,
-    pub exec_order: i64,
+    /// FELEM_CODE of the element to remove (preferred).
+    pub element: Option<String>,
+    /// FTYPE_CODE that disambiguates an element appearing under several features on one call.
+    pub element_feature: Option<String>,
+    /// Legacy addressing: FELEM_ID, used when `element` is absent.
+    pub felem_id: Option<i64>,
+    /// Legacy addressing: FTYPE_ID, used as `elementFeature` when that is absent and the id is > 0.
+    pub ftype_id: Option<i64>,
+    /// @deprecated Ignored since 0.10.0: the library derives the BOM row's EXEC_ORDER itself.
+    pub exec_order: Option<i64>,
 }
 
 #[napi(object)]
@@ -219,10 +292,11 @@ pub fn delete_expression_call(config_json: String, efcall_id: i64) -> Result<Str
     calls::delete_expression_call(&config_json, efcall_id).map_err(config_error_to_napi)
 }
 
+/// Get an expression call by its numeric call id, or by the feature code it is bound to.
 #[napi(js_name = "getExpressionCall")]
-pub fn get_expression_call(config_json: String, efcall_id: i64) -> Result<String> {
-    let value =
-        calls::get_expression_call(&config_json, efcall_id).map_err(config_error_to_napi)?;
+pub fn get_expression_call(config_json: String, efcall_id: Either<i64, String>) -> Result<String> {
+    let value = calls::get_expression_call(&config_json, selector(&efcall_id))
+        .map_err(config_error_to_napi)?;
     serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
@@ -265,13 +339,20 @@ pub fn delete_expression_call_element(
     config_json: String,
     options: DeleteExpressionCallElementOptions,
 ) -> Result<String> {
-    let key = calls::expression::ExpressionCallElementKey {
-        ftype_id: options.ftype_id,
-        felem_id: options.felem_id,
-        exec_order: options.exec_order,
-    };
-    calls::delete_expression_call_element(&config_json, options.efcall_id, key)
-        .map_err(config_error_to_napi)
+    let (element, element_feature) = resolve_element_target(
+        &config_json,
+        options.element,
+        options.element_feature,
+        options.felem_id,
+        options.ftype_id,
+    )?;
+    calls::delete_expression_call_element(
+        &config_json,
+        CallSelector::Id(options.efcall_id),
+        &element,
+        element_feature.as_deref(),
+    )
+    .map_err(config_error_to_napi)
 }
 
 #[napi(js_name = "setExpressionCallElement")]
@@ -282,7 +363,7 @@ pub fn set_expression_call_element(
     let params = calls::expression::ExpressionCallElementParams {
         ftype_id: options.ftype_id,
         felem_id: options.felem_id,
-        exec_order: options.exec_order,
+        exec_order: Some(options.exec_order),
         felem_req: options.felem_req,
     };
     calls::set_expression_call_element(&config_json, params).map_err(config_error_to_napi)
@@ -297,6 +378,8 @@ pub struct AddComparisonCallOptions {
     pub ftype_code: String,
     pub cfunc_code: String,
     pub element_list: Vec<String>,
+    /// Explicit CFCALL_ID; absent or <= 0 auto-assigns. A taken id is rejected.
+    pub id: Option<i64>,
 }
 
 #[napi(object)]
@@ -310,15 +393,23 @@ pub struct AddComparisonCallElementOptions {
     pub cfcall_id: i64,
     pub ftype_id: i64,
     pub felem_id: i64,
-    pub exec_order: i64,
+    /// Absent auto-allocates the next EXEC_ORDER on the call; a taken value is rejected.
+    pub exec_order: Option<i64>,
 }
 
 #[napi(object)]
 pub struct DeleteComparisonCallElementOptions {
     pub cfcall_id: i64,
-    pub ftype_id: i64,
-    pub felem_id: i64,
-    pub exec_order: i64,
+    /// FELEM_CODE of the element to remove (preferred).
+    pub element: Option<String>,
+    /// FTYPE_CODE that disambiguates an element appearing under several features on one call.
+    pub element_feature: Option<String>,
+    /// Legacy addressing: FELEM_ID, used when `element` is absent.
+    pub felem_id: Option<i64>,
+    /// Legacy addressing: FTYPE_ID, used as `elementFeature` when that is absent and the id is > 0.
+    pub ftype_id: Option<i64>,
+    /// @deprecated Ignored since 0.10.0: the library derives the BOM row's EXEC_ORDER itself.
+    pub exec_order: Option<i64>,
 }
 
 #[napi(object)]
@@ -339,6 +430,7 @@ pub fn add_comparison_call(
         ftype_code: options.ftype_code,
         cfunc_code: options.cfunc_code,
         element_list: options.element_list,
+        id: options.id,
     };
     let (modified, _) =
         calls::add_comparison_call(&config_json, params).map_err(config_error_to_napi)?;
@@ -350,10 +442,11 @@ pub fn delete_comparison_call(config_json: String, cfcall_id: i64) -> Result<Str
     calls::delete_comparison_call(&config_json, cfcall_id).map_err(config_error_to_napi)
 }
 
+/// Get a comparison call by its numeric call id, or by the feature code it is bound to.
 #[napi(js_name = "getComparisonCall")]
-pub fn get_comparison_call(config_json: String, cfcall_id: i64) -> Result<String> {
-    let value =
-        calls::get_comparison_call(&config_json, cfcall_id).map_err(config_error_to_napi)?;
+pub fn get_comparison_call(config_json: String, cfcall_id: Either<i64, String>) -> Result<String> {
+    let value = calls::get_comparison_call(&config_json, selector(&cfcall_id))
+        .map_err(config_error_to_napi)?;
     serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
@@ -396,13 +489,20 @@ pub fn delete_comparison_call_element(
     config_json: String,
     options: DeleteComparisonCallElementOptions,
 ) -> Result<String> {
-    let params = calls::comparison::DeleteComparisonCallElementParams {
-        ftype_id: options.ftype_id,
-        felem_id: options.felem_id,
-        exec_order: options.exec_order,
-    };
-    calls::delete_comparison_call_element(&config_json, options.cfcall_id, params)
-        .map_err(config_error_to_napi)
+    let (element, element_feature) = resolve_element_target(
+        &config_json,
+        options.element,
+        options.element_feature,
+        options.felem_id,
+        options.ftype_id,
+    )?;
+    calls::delete_comparison_call_element(
+        &config_json,
+        CallSelector::Id(options.cfcall_id),
+        &element,
+        element_feature.as_deref(),
+    )
+    .map_err(config_error_to_napi)
 }
 
 #[napi(js_name = "setComparisonCallElement")]
@@ -444,15 +544,23 @@ pub struct AddDistinctCallElementOptions {
     pub dfcall_id: i64,
     pub ftype_id: i64,
     pub felem_id: i64,
-    pub exec_order: i64,
+    /// Absent auto-allocates the next EXEC_ORDER on the call; a taken value is rejected.
+    pub exec_order: Option<i64>,
 }
 
 #[napi(object)]
 pub struct DeleteDistinctCallElementOptions {
     pub dfcall_id: i64,
-    pub ftype_id: i64,
-    pub felem_id: i64,
-    pub exec_order: i64,
+    /// FELEM_CODE of the element to remove (preferred).
+    pub element: Option<String>,
+    /// FTYPE_CODE that disambiguates an element appearing under several features on one call.
+    pub element_feature: Option<String>,
+    /// Legacy addressing: FELEM_ID, used when `element` is absent.
+    pub felem_id: Option<i64>,
+    /// Legacy addressing: FTYPE_ID, used as `elementFeature` when that is absent and the id is > 0.
+    pub ftype_id: Option<i64>,
+    /// @deprecated Ignored since 0.10.0: the library derives the BOM row's EXEC_ORDER itself.
+    pub exec_order: Option<i64>,
 }
 
 #[napi(object)]
@@ -481,9 +589,11 @@ pub fn delete_distinct_call(config_json: String, dfcall_id: i64) -> Result<Strin
     calls::delete_distinct_call(&config_json, dfcall_id).map_err(config_error_to_napi)
 }
 
+/// Get a distinct call by its numeric call id, or by the feature code it is bound to.
 #[napi(js_name = "getDistinctCall")]
-pub fn get_distinct_call(config_json: String, dfcall_id: i64) -> Result<String> {
-    let value = calls::get_distinct_call(&config_json, dfcall_id).map_err(config_error_to_napi)?;
+pub fn get_distinct_call(config_json: String, dfcall_id: Either<i64, String>) -> Result<String> {
+    let value = calls::get_distinct_call(&config_json, selector(&dfcall_id))
+        .map_err(config_error_to_napi)?;
     serde_json::to_string(&value).map_err(json_serialize_error)
 }
 
@@ -523,13 +633,20 @@ pub fn delete_distinct_call_element(
     config_json: String,
     options: DeleteDistinctCallElementOptions,
 ) -> Result<String> {
-    let params = calls::distinct::DeleteDistinctCallElementParams {
-        dfcall_id: options.dfcall_id,
-        ftype_id: options.ftype_id,
-        felem_id: options.felem_id,
-        exec_order: options.exec_order,
-    };
-    calls::delete_distinct_call_element(&config_json, params).map_err(config_error_to_napi)
+    let (element, element_feature) = resolve_element_target(
+        &config_json,
+        options.element,
+        options.element_feature,
+        options.felem_id,
+        options.ftype_id,
+    )?;
+    calls::delete_distinct_call_element(
+        &config_json,
+        CallSelector::Id(options.dfcall_id),
+        &element,
+        element_feature.as_deref(),
+    )
+    .map_err(config_error_to_napi)
 }
 
 #[napi(js_name = "setDistinctCallElement")]

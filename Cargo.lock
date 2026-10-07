@@ -377,8 +377,8 @@ dependencies = [
 
 [[package]]
 name = "sz_configtool_lib"
-version = "0.3.2"
-source = "git+https://github.com/brianmacy/sz-rust-sdk-configtool?rev=e1d2ad06f1cb3599afb753e9c57b507914a2389a#e1d2ad06f1cb3599afb753e9c57b507914a2389a"
+version = "0.10.0"
+source = "git+https://github.com/brianmacy/sz-rust-sdk-configtool?rev=da61e10317ddc81d0a7a5e39e3e50575e55df985#da61e10317ddc81d0a7a5e39e3e50575e55df985"
 dependencies = [
  "anyhow",
  "serde",

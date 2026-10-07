@@ -3,6 +3,7 @@ use napi_derive::napi;
 use sz_configtool_lib::functions;
 
 use crate::error::{config_error_to_napi, json_serialize_error};
+use crate::field_update;
 
 // ============================================================================
 // Standardize Functions
@@ -17,7 +18,8 @@ pub struct AddStandardizeFunctionOptions {
 
 #[napi(object)]
 pub struct SetStandardizeFunctionOptions {
-    pub connect_str: Option<String>,
+    /// CONNECT_STR: undefined = leave unchanged, null = clear, string = set.
+    pub connect_str: Option<Either<String, Null>>,
     pub description: Option<String>,
     pub language: Option<String>,
 }
@@ -29,7 +31,7 @@ pub fn add_standardize_function(
     options: AddStandardizeFunctionOptions,
 ) -> Result<String> {
     let params = functions::standardize::AddStandardizeFunctionParams {
-        connect_str: &options.connect_str,
+        connect_str: Some(&options.connect_str),
         description: options.description.as_deref(),
         language: options.language.as_deref(),
     };
@@ -66,7 +68,7 @@ pub fn set_standardize_function(
     options: SetStandardizeFunctionOptions,
 ) -> Result<String> {
     let params = functions::standardize::SetStandardizeFunctionParams {
-        connect_str: options.connect_str.as_deref(),
+        connect_str: field_update::str_from_js(&options.connect_str),
         description: options.description.as_deref(),
         language: options.language.as_deref(),
     };
@@ -88,7 +90,8 @@ pub struct AddExpressionFunctionOptions {
 
 #[napi(object)]
 pub struct SetExpressionFunctionOptions {
-    pub connect_str: Option<String>,
+    /// CONNECT_STR: undefined = leave unchanged, null = clear, string = set.
+    pub connect_str: Option<Either<String, Null>>,
     pub description: Option<String>,
     pub language: Option<String>,
 }
@@ -100,7 +103,7 @@ pub fn add_expression_function(
     options: AddExpressionFunctionOptions,
 ) -> Result<String> {
     let params = functions::expression::AddExpressionFunctionParams {
-        connect_str: &options.connect_str,
+        connect_str: Some(&options.connect_str),
         description: options.description.as_deref(),
         language: options.language.as_deref(),
     };
@@ -137,7 +140,7 @@ pub fn set_expression_function(
     options: SetExpressionFunctionOptions,
 ) -> Result<String> {
     let params = functions::expression::SetExpressionFunctionParams {
-        connect_str: options.connect_str.as_deref(),
+        connect_str: field_update::str_from_js(&options.connect_str),
         description: options.description.as_deref(),
         language: options.language.as_deref(),
     };
@@ -160,7 +163,8 @@ pub struct AddComparisonFunctionOptions {
 
 #[napi(object)]
 pub struct SetComparisonFunctionOptions {
-    pub connect_str: Option<String>,
+    /// CONNECT_STR: undefined = leave unchanged, null = clear, string = set.
+    pub connect_str: Option<Either<String, Null>>,
     pub description: Option<String>,
     pub language: Option<String>,
     pub anon_support: Option<String>,
@@ -173,7 +177,7 @@ pub fn add_comparison_function(
     options: AddComparisonFunctionOptions,
 ) -> Result<String> {
     let params = functions::comparison::AddComparisonFunctionParams {
-        connect_str: &options.connect_str,
+        connect_str: Some(&options.connect_str),
         description: options.description.as_deref(),
         language: options.language.as_deref(),
         anon_support: options.anon_support.as_deref(),
@@ -211,30 +215,13 @@ pub fn set_comparison_function(
     options: SetComparisonFunctionOptions,
 ) -> Result<String> {
     let params = functions::comparison::SetComparisonFunctionParams {
-        connect_str: options.connect_str.as_deref(),
+        connect_str: field_update::str_from_js(&options.connect_str),
         description: options.description.as_deref(),
         language: options.language.as_deref(),
         anon_support: options.anon_support.as_deref(),
     };
     let (modified, _) = functions::set_comparison_function(&config_json, &cfunc_code, params)
         .map_err(config_error_to_napi)?;
-    Ok(modified)
-}
-
-#[napi(js_name = "addComparisonFuncReturnCode")]
-pub fn add_comparison_func_return_code(
-    config_json: String,
-    cfunc_code: String,
-    cfrtn_code: String,
-    cfrtn_desc: Option<String>,
-) -> Result<String> {
-    let (modified, _) = functions::add_comparison_func_return_code(
-        &config_json,
-        &cfunc_code,
-        &cfrtn_code,
-        cfrtn_desc.as_deref(),
-    )
-    .map_err(config_error_to_napi)?;
     Ok(modified)
 }
 
@@ -247,13 +234,18 @@ pub struct AddDistinctFunctionOptions {
     pub connect_str: String,
     pub description: Option<String>,
     pub language: Option<String>,
+    /// ANON_SUPPORT: `Yes` or `No` (default `No` on add)
+    pub anon_support: Option<String>,
 }
 
 #[napi(object)]
 pub struct SetDistinctFunctionOptions {
-    pub connect_str: Option<String>,
+    /// CONNECT_STR: undefined = leave unchanged, null = clear, string = set.
+    pub connect_str: Option<Either<String, Null>>,
     pub description: Option<String>,
     pub language: Option<String>,
+    /// ANON_SUPPORT: `Yes` or `No` (default `No` on add)
+    pub anon_support: Option<String>,
 }
 
 #[napi(js_name = "addDistinctFunction")]
@@ -263,9 +255,10 @@ pub fn add_distinct_function(
     options: AddDistinctFunctionOptions,
 ) -> Result<String> {
     let params = functions::distinct::AddDistinctFunctionParams {
-        connect_str: &options.connect_str,
+        connect_str: Some(&options.connect_str),
         description: options.description.as_deref(),
         language: options.language.as_deref(),
+        anon_support: options.anon_support.as_deref(),
     };
     let (modified, _) = functions::add_distinct_function(&config_json, &dfunc_code, params)
         .map_err(config_error_to_napi)?;
@@ -299,9 +292,10 @@ pub fn set_distinct_function(
     options: SetDistinctFunctionOptions,
 ) -> Result<String> {
     let params = functions::distinct::SetDistinctFunctionParams {
-        connect_str: options.connect_str.as_deref(),
+        connect_str: field_update::str_from_js(&options.connect_str),
         description: options.description.as_deref(),
         language: options.language.as_deref(),
+        anon_support: options.anon_support.as_deref(),
     };
     let (modified, _) = functions::set_distinct_function(&config_json, &dfunc_code, params)
         .map_err(config_error_to_napi)?;

@@ -8,14 +8,20 @@ use crate::error::{config_error_to_napi, json_serialize_error};
 pub struct AddDataSourceOptions {
     pub code: String,
     pub retention_level: Option<String>,
+    /// @deprecated Ignored since 0.10.0: no longer part of the Senzing data source schema; never written.
     pub conversational: Option<String>,
+    /// @deprecated Ignored since 0.10.0: no longer part of the Senzing data source schema; never written.
     pub reliability: Option<i64>,
+    /// Explicit DSRC_ID; absent or <= 0 auto-assigns (seeded at 1000). A taken id is rejected.
+    pub id: Option<i64>,
 }
 
 #[napi(object)]
 pub struct SetDataSourceOptions {
     pub retention_level: Option<String>,
+    /// @deprecated Ignored since 0.10.0: no longer part of the Senzing data source schema; never written.
     pub conversational: Option<String>,
+    /// @deprecated Ignored since 0.10.0: no longer part of the Senzing data source schema; never written.
     pub reliability: Option<i64>,
 }
 
@@ -24,8 +30,7 @@ pub fn add_data_source(config_json: String, options: AddDataSourceOptions) -> Re
     let params = datasources::AddDataSourceParams {
         code: &options.code,
         retention_level: options.retention_level.as_deref(),
-        conversational: options.conversational.as_deref(),
-        reliability: options.reliability,
+        id: options.id,
     };
     datasources::add_data_source(&config_json, params).map_err(config_error_to_napi)
 }
@@ -39,8 +44,6 @@ pub fn set_data_source(
     let params = datasources::SetDataSourceParams {
         code: &code,
         retention_level: options.retention_level.as_deref(),
-        conversational: options.conversational.as_deref(),
-        reliability: options.reliability,
     };
     datasources::set_data_source(&config_json, params).map_err(config_error_to_napi)
 }

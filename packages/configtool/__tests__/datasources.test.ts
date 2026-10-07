@@ -40,13 +40,23 @@ describe('datasources', () => {
     expect(codes).toContain('LOWERCASE_SRC');
   });
 
-  test('addDataSource assigns next sequential ID', () => {
-    const modified = configtool.addDataSource(fixtureConfig, { code: 'NEW_SRC' });
-    const result = JSON.parse(configtool.listDataSources(modified));
-    const newSrc = result.find((ds: { dataSource: string }) => ds.dataSource === 'NEW_SRC');
-    expect(newSrc.id).toBe(3);
+  // Since sz_configtool_lib 0.6.0 user data source ids are seeded at 1000.
+  test('addDataSource assigns ids seeded at 1000, then sequential', () => {
+    const one = configtool.addDataSource(fixtureConfig, { code: 'NEW_SRC' });
+    const two = configtool.addDataSource(one, { code: 'NEXT_SRC' });
+    const result = JSON.parse(configtool.listDataSources(two));
+    const byCode = (c: string) => result.find((ds: { dataSource: string }) => ds.dataSource === c);
+    expect(byCode('NEW_SRC').id).toBe(1000);
+    expect(byCode('NEXT_SRC').id).toBe(1001);
   });
 
+  test('addDataSource honours an explicit id and rejects a taken one', () => {
+    const modified = configtool.addDataSource(fixtureConfig, { code: 'EXPLICIT', id: 4242 });
+    expect(JSON.parse(configtool.getDataSource(modified, 'EXPLICIT')).DSRC_ID).toBe(4242);
+    expect(() => configtool.addDataSource(modified, { code: 'CLASH', id: 4242 })).toThrow();
+  });
+
+  // conversational / reliability are deprecated: accepted for compatibility, never written.
   test('addDataSource with optional parameters', () => {
     const modified = configtool.addDataSource(fixtureConfig, {
       code: 'CUSTOM',
@@ -56,17 +66,17 @@ describe('datasources', () => {
     });
     const dsrc = JSON.parse(configtool.getDataSource(modified, 'CUSTOM'));
     expect(dsrc.RETENTION_LEVEL).toBe('Forget');
-    expect(dsrc.CONVERSATIONAL).toBe('Yes');
-    expect(dsrc.DSRC_RELY).toBe(5);
+    expect(dsrc).not.toHaveProperty('CONVERSATIONAL');
+    expect(dsrc).not.toHaveProperty('DSRC_RELY');
   });
 
   test('getDataSource returns the correct source', () => {
     const modified = configtool.addDataSource(fixtureConfig, { code: 'TESTGET' });
     const dsrc = JSON.parse(configtool.getDataSource(modified, 'TESTGET'));
     expect(dsrc.DSRC_CODE).toBe('TESTGET');
-    expect(dsrc.DSRC_ID).toBe(3);
+    expect(dsrc.DSRC_ID).toBe(1000);
     expect(dsrc.RETENTION_LEVEL).toBe('Remember');
-    expect(dsrc.CONVERSATIONAL).toBe('No');
+    expect(dsrc).not.toHaveProperty('CONVERSATIONAL');
   });
 
   test('getDataSource is case-insensitive', () => {
@@ -84,8 +94,8 @@ describe('datasources', () => {
     });
     const dsrc = JSON.parse(configtool.getDataSource(updated, 'MODIFIABLE'));
     expect(dsrc.RETENTION_LEVEL).toBe('Forget');
-    expect(dsrc.CONVERSATIONAL).toBe('Yes');
-    expect(dsrc.DSRC_RELY).toBe(10);
+    expect(dsrc).not.toHaveProperty('CONVERSATIONAL');
+    expect(dsrc).not.toHaveProperty('DSRC_RELY');
   });
 
   test('deleteDataSource removes a user-created source', () => {
