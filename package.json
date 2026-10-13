@@ -14,7 +14,7 @@
     "codegen:flags:check": "node scripts/codegen-flags.mjs --check"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
+    "@types/node": "^26.6.2",
     "@vitest/coverage-v8": "^4",
     "typedoc": "^0.28",
     "vitest": "^4"
