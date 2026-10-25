@@ -347,3 +347,100 @@ pub fn bigint_to_sz_flags(flags: Option<BigInt>) -> Option<SzFlags> {
         SzFlags::from_bits_truncate(value)
     })
 }
+
+#[cfg(test)]
+mod tests {
+    //! Guards against list drift (#101): every flag constant defined upstream in
+    //! `sz_rust_sdk::flags` must be exported by the `flag!` list above.
+    //!
+    //! Upstream flags live in two places: the `bitflags!` block and a plain
+    //! `impl SzFlags { pub const ... }` block. Only the former is enumerable at
+    //! runtime, so the check reads the upstream module source located through
+    //! `cargo metadata` and compares constant names.
+
+    use super::get_all_flags;
+    use std::collections::BTreeSet;
+    use std::path::PathBuf;
+    use std::process::Command;
+
+    const UPSTREAM_PACKAGE: &str = "sz-rust-sdk";
+
+    /// Path of the upstream `flags` module, resolved from the lib target of the
+    /// `sz-rust-sdk` package that this crate actually builds against.
+    fn upstream_flags_source() -> PathBuf {
+        let output = Command::new(env!("CARGO"))
+            .args([
+                "metadata",
+                "--format-version",
+                "1",
+                "--locked",
+                "--manifest-path",
+            ])
+            .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml"))
+            .output()
+            .expect("failed to run cargo metadata");
+        assert!(
+            output.status.success(),
+            "cargo metadata failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let metadata: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("cargo metadata emitted invalid JSON");
+        let lib_src = metadata["packages"]
+            .as_array()
+            .expect("cargo metadata has no packages array")
+            .iter()
+            .filter(|p| p["name"] == UPSTREAM_PACKAGE)
+            .flat_map(|p| p["targets"].as_array().cloned().unwrap_or_default())
+            .find(|t| {
+                t["kind"]
+                    .as_array()
+                    .is_some_and(|k| k.iter().any(|v| v == "lib" || v == "rlib"))
+            })
+            .and_then(|t| t["src_path"].as_str().map(PathBuf::from))
+            .unwrap_or_else(|| panic!("{UPSTREAM_PACKAGE} lib target not found in cargo metadata"));
+        lib_src.with_file_name("flags.rs")
+    }
+
+    /// Names of every `const NAME` / `pub const NAME` declared in the upstream module.
+    fn upstream_flag_names() -> BTreeSet<String> {
+        let path = upstream_flags_source();
+        let source = std::fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+        source
+            .lines()
+            .filter_map(|line| {
+                let line = line.trim_start();
+                line.strip_prefix("pub const ")
+                    .or_else(|| line.strip_prefix("const "))
+            })
+            .map(|rest| {
+                rest.chars()
+                    .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+                    .collect::<String>()
+            })
+            .filter(|name| !name.is_empty())
+            .collect()
+    }
+
+    #[test]
+    fn test_flag_list_matches_upstream_szflags() {
+        let exported: BTreeSet<String> = get_all_flags().into_iter().map(|f| f.name).collect();
+        let upstream = upstream_flag_names();
+        assert!(!upstream.is_empty(), "parsed no flags from upstream source");
+
+        let missing: Vec<_> = upstream.difference(&exported).collect();
+        let unknown: Vec<_> = exported.difference(&upstream).collect();
+        assert!(
+            missing.is_empty() && unknown.is_empty(),
+            "flag! list drift vs sz_rust_sdk::flags::SzFlags\n  missing from flag! list: {missing:?}\n  not defined upstream: {unknown:?}"
+        );
+    }
+
+    #[test]
+    fn test_flag_list_has_no_duplicates() {
+        let flags = get_all_flags();
+        let unique: BTreeSet<&str> = flags.iter().map(|f| f.name.as_str()).collect();
+        assert_eq!(unique.len(), flags.len(), "duplicate name in flag! list");
+    }
+}

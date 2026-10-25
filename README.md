@@ -262,7 +262,10 @@ builds it at runtime from the native binding, and `@senzing/types` exports a
 generated copy so consumers without the native module (a tRPC-only client, for
 instance) can still name their flags. The generated table is emitted from the
 binding by `npm run codegen:flags` and CI fails if it drifts, so the native
-`flag!` list stays the single source.
+`flag!` list stays the single source. That list is in turn checked against
+upstream `sz_rust_sdk::flags::SzFlags` by a Rust unit test
+(`cargo test -p senzing-sdk-napi`), which fails if upstream defines a flag the
+list is missing.
 
 ```typescript
 import { SzFlags } from "@senzing/sdk";

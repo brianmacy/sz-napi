@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@senzing/configtool`: tri-state `set*` fields — `setRule` `fragment`/`disqualifier`/`tier` and `set*Function` `connectStr` accept `null` to clear (`undefined` still leaves unchanged; `null` was previously rejected by the binding).
 - `@senzing/configtool`: `SzConfigError.errorType` gains `NotOnCall`, `NotInFeature`, `AlreadyPresent`, `ValidationErrors`; `ValidationErrors` also sets `error.failures` (`[{ field, reasonCode, offendingValue }]`).
 
+- `@senzing/sdk`: Rust unit test fails when upstream `sz_rust_sdk::flags::SzFlags` defines a flag missing from the `flag!` export list (or vice versa); runs in the CI `build-sdk` job ([#101](https://github.com/brianmacy/sz-napi/issues/101)).
+
+### Dependencies
+
+- `napi` 3.15.0, `napi-derive` 3.6.13, `napi-build` 2.6.0 (`napi-derive` 3.6.9 alone does not compile: its `syn` 2 conflicts with `napi-derive-backend` 6.1.6's `syn` 3); `vitest` / `@vitest/coverage-v8` 5, `@napi-rs/cli` 3.10.5, `@trpc/client` 11.19.0, `@types/node` 26.6.2; `npm audit fix` for electron, undici, zod, markdown-it, vite, source-map-js advisories.
+
 ### Breaking (`@senzing/configtool`)
 
 - **Removed `addComparisonFuncReturnCode`.** The library removed it in 0.5.0 because it wrote a CFG_CFRTN shape that does not exist; use `addComparisonThreshold`.
