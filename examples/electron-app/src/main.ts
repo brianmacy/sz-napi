@@ -165,11 +165,13 @@ async function bootstrapDatabase(): Promise<void> {
 
 // -- IPC handlers -------------------------------------------------------------
 
+// JSON-returning SDK methods resolve the raw JSON string (the transport
+// contract); it is relayed unchanged and the renderer parses it.
 function registerIpcHandlers(): void {
   ipcMain.handle("senzing:getVersion", async () => {
     const result = await sendToWorker({ type: "get-version" });
     if (result.success) {
-      return JSON.parse(result.data!);
+      return result.data!;
     }
     throw new Error(result.error);
   });
@@ -189,7 +191,7 @@ function registerIpcHandlers(): void {
         recordDefinition,
       });
       if (result.success) {
-        return result.data ? JSON.parse(result.data) : null;
+        return result.data || null;
       }
       throw new Error(result.error);
     }
@@ -203,7 +205,7 @@ function registerIpcHandlers(): void {
         attributes,
       });
       if (result.success) {
-        return JSON.parse(result.data!);
+        return result.data!;
       }
       throw new Error(result.error);
     }

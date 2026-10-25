@@ -28,6 +28,11 @@ jobs:
       - name: Run npm audit
         run: npm audit --audit-level=high
 
+      # The Electron example has its own lockfile outside the workspaces.
+      - name: Run npm audit (examples/electron-app)
+        working-directory: examples/electron-app
+        run: npm audit --audit-level=high
+
   vet:
     runs-on: ubuntu-latest
     steps:

@@ -410,6 +410,14 @@ jobs:
           npm install
           npm start -- ../../packages/configtool/__tests__/fixtures/test-config.json
 
+      # Typecheck + compile only: launching Electron needs a display. Install
+      # scripts are skipped so the Electron binary is not downloaded.
+      - name: Build electron-app example
+        run: |
+          cd examples/electron-app
+          npm ci --ignore-scripts
+          npm run build
+
       - name: Install code-snippets dependencies
         run: |
           cd code-snippets
