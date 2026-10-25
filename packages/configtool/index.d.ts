@@ -9,6 +9,18 @@
  */
 export declare const __napiBindingTarget: 'native' | 'wasm32-wasi' | 'wasm32-wasip1'
 
+/**
+ * Add a new attribute (CFG_ATTR row) mapping an attribute code to a feature element.
+ * Codes are uppercased; the feature and element must already exist. `class` must be one of
+ * NAME, ATTRIBUTE, IDENTIFIER, ADDRESS, PHONE, RELATIONSHIP, OTHER (else `InvalidInput`);
+ * `required` defaults to No (Yes/No/Any/Desired) and `internal` to No (Yes/No).
+ * Throws `AlreadyExists` if the attribute code or an explicit `id` is taken.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - Attribute code, feature, element, class, and optional
+ *   defaultValue/internal/required/id (absent or <= 0 auto-assigns from 1000).
+ * @returns The updated configuration JSON string.
+ */
 export declare function addAttribute(configJson: string, options: AddAttributeOptions): string
 
 export interface AddAttributeOptions {
@@ -23,12 +35,54 @@ export interface AddAttributeOptions {
   id?: number
 }
 
+/**
+ * Adds a feature behavior override to CFG_FBOVR for a feature and usage type.
+ * The behavior code (e.g. `F1E`) is split into FTYPE_FREQ/FTYPE_EXCL/FTYPE_STAB. Throws
+ * NotFound for an unknown feature, AlreadyExists if an override exists for the pair, and
+ * InvalidInput for an invalid behavior code.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCode - FTYPE_CODE of the feature (case-insensitive).
+ * @param usageType - UTYPE_CODE, e.g. `BUSINESS` (uppercased).
+ * @param behavior - Behavior code: frequency plus optional `E`/`S` suffixes, e.g. `F1ES`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addBehaviorOverride(configJson: string, featureCode: string, usageType: string, behavior: string): string
 
+/**
+ * Placeholder for adding a candidate function to a CFG_RTYPE entry; not yet implemented.
+ * Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @param candidateFunc - The candidate function code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function addCandidateFunction(configJson: string, rtypeCode: string, candidateFunc: string): string
 
+/**
+ * Add a comparison call (CFG_CFCALL row) for a feature plus one CFG_CFBOM row per
+ * `elementList` code (EXEC_ORDER 1..n). Only one comparison call is allowed per feature
+ * (AlreadyPresent). `id` sets CFCALL_ID explicitly (a taken id throws AlreadyExists);
+ * absent or <= 0 auto-assigns from 1000. An empty or blank element list throws
+ * InvalidInput; unknown codes throw NotFound.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `ftypeCode`, `cfuncCode`, `elementList` (FELEM_CODEs), and optional `id`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addComparisonCall(configJson: string, options: AddComparisonCallOptions): string
 
+/**
+ * Add an element to an existing comparison call as a new CFG_CFBOM row.
+ * EXEC_ORDER is auto-allocated per call when omitted; a taken value throws AlreadyExists.
+ * Throws AlreadyPresent if the feature/element is already on the call; a negative
+ * `ftypeId` throws InvalidInput.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `cfcallId`, `ftypeId`, `felemId`, and optional `execOrder`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addComparisonCallElement(configJson: string, options: AddComparisonCallElementOptions): string
 
 export interface AddComparisonCallElementOptions {
@@ -47,6 +101,19 @@ export interface AddComparisonCallOptions {
   id?: number
 }
 
+/**
+ * Adds a comparison function row to CFG_CFUNC.
+ * The code is uppercased and CFUNC_ID is auto-assigned as the current maximum plus one.
+ * Throws SzConfigError (errorType InvalidInput) if the code already exists.
+ * `anonSupport` must be `Yes` or `No` (case-insensitive, default `No`); any
+ * other value throws InvalidInput.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param cfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @param options - `connectStr` (required), plus optional `description` (CFUNC_DESC),
+ *   `language` and `anonSupport`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addComparisonFunction(configJson: string, cfuncCode: string, options: AddComparisonFunctionOptions): string
 
 export interface AddComparisonFunctionOptions {
@@ -56,6 +123,18 @@ export interface AddComparisonFunctionOptions {
   anonSupport?: string
 }
 
+/**
+ * Add a comparison threshold (CFG_CFRTN row) giving the score bands for one comparison
+ * function return value, optionally scoped to a feature. `cfuncCode`, `ftypeCode` (or `all`
+ * for every feature), and `cfuncRtnval` are required (else `MissingField`); `cfuncRtnval` is
+ * uppercased. EXEC_ORDER reuses the matching all-features row's order when one exists, else
+ * honors `execOrder` or allocates the next. Throws `AlreadyExists` for a duplicate row.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - cfuncCode, ftypeCode, cfuncRtnval, and optional execOrder plus
+ *   sameScore/closeScore/likelyScore/plausibleScore/unLikelyScore (unset scores are null).
+ * @returns The updated configuration JSON string.
+ */
 export declare function addComparisonThreshold(configJson: string, options: AddComparisonThresholdOptions): string
 
 export interface AddComparisonThresholdOptions {
@@ -70,10 +149,39 @@ export interface AddComparisonThresholdOptions {
   unLikelyScore?: number
 }
 
+/**
+ * Adds a new, empty top-level section (an empty array) under G2_CONFIG.
+ * The name is uppercased. Throws AlreadyExists if the section exists.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sectionName - Name of the section, e.g. `CFG_CUSTOM`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addConfigSection(configJson: string, sectionName: string): string
 
+/**
+ * Adds a field to every row of a G2_CONFIG array section.
+ * Section and field names are uppercased; rows that already have the field are left unchanged.
+ * Throws NotFound if the section does not exist or is not an array.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sectionName - Name of the section.
+ * @param fieldName - Name of the field to add.
+ * @param fieldValue - The field's value as JSON text (e.g. `"\"x\""`, `0`, `null`).
+ * @returns The updated configuration JSON string.
+ */
 export declare function addConfigSectionField(configJson: string, sectionName: string, fieldName: string, fieldValue: string): string
 
+/**
+ * Adds a data source row to CFG_DSRC.
+ * The code is uppercased and also used as DSRC_DESC. `retentionLevel` must be `Remember` or
+ * `Forget` (case-insensitive; default `Remember`). `id` absent or <= 0 auto-assigns the next
+ * DSRC_ID (seeded at 1000). Throws AlreadyExists if the code or requested id is taken.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - Data source options: `code` (required), `retentionLevel`, `id`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addDataSource(configJson: string, options: AddDataSourceOptions): string
 
 export interface AddDataSourceOptions {
@@ -87,8 +195,27 @@ export interface AddDataSourceOptions {
   id?: number
 }
 
+/**
+ * Add a distinct call (CFG_DFCALL row) for a feature plus one CFG_DFBOM row per
+ * `elementList` code (EXEC_ORDER 1..n). DFCALL_ID is auto-assigned (from 1000). Only one
+ * distinct call is allowed per feature (AlreadyPresent). An empty or blank element list
+ * throws InvalidInput; unknown codes throw NotFound.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `ftypeCode`, `dfuncCode`, and `elementList` (FELEM_CODEs).
+ * @returns The updated configuration JSON string.
+ */
 export declare function addDistinctCall(configJson: string, options: AddDistinctCallOptions): string
 
+/**
+ * Add an element to an existing distinct call as a new CFG_DFBOM row.
+ * EXEC_ORDER is auto-allocated per call when omitted; a taken value throws AlreadyExists.
+ * Throws AlreadyPresent if the feature/element is already on the call.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `dfcallId`, `ftypeId`, `felemId`, and optional `execOrder`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addDistinctCallElement(configJson: string, options: AddDistinctCallElementOptions): string
 
 export interface AddDistinctCallElementOptions {
@@ -105,6 +232,19 @@ export interface AddDistinctCallOptions {
   elementList: Array<string>
 }
 
+/**
+ * Adds a distinct function row to CFG_DFUNC.
+ * The code is uppercased and DFUNC_ID is auto-assigned as the current maximum plus one.
+ * Throws SzConfigError (errorType InvalidInput) if the code already exists.
+ * `anonSupport` must be `Yes` or `No` (case-insensitive, default `No`); any
+ * other value throws InvalidInput.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param dfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @param options - `connectStr` (required), plus optional `description` (DFUNC_DESC),
+ *   `language` and `anonSupport`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addDistinctFunction(configJson: string, dfuncCode: string, options: AddDistinctFunctionOptions): string
 
 export interface AddDistinctFunctionOptions {
@@ -115,6 +255,17 @@ export interface AddDistinctFunctionOptions {
   anonSupport?: string
 }
 
+/**
+ * Add a new feature element (CFG_FELEM row). The code is uppercased; `dataType` defaults to
+ * `string` and must be one of string, number, date, datetime, json (else `InvalidInput`);
+ * `description` defaults to the code. The deprecated `tokenized` option is ignored.
+ * Throws `AlreadyExists` if the element code or an explicit `id` is taken.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - Element code plus optional id (absent or <= 0 auto-assigns from 1000),
+ *   description, and dataType.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addElement(configJson: string, options: AddElementOptions): string
 
 export interface AddElementOptions {
@@ -127,8 +278,30 @@ export interface AddElementOptions {
   tokenized?: string
 }
 
+/**
+ * Add an expression call (CFG_EFCALL row) plus one CFG_EFBOM row per `elementList` item.
+ * Exactly one of `ftypeCode` (other than ALL) or `felemCode` (other than N/A) must be
+ * given, else InvalidInput. EFCALL_ID is auto-assigned (from 1000); EXEC_ORDER is
+ * auto-allocated per feature/element when omitted, and a taken value throws AlreadyExists.
+ * `isVirtual` defaults to "No". Unknown codes throw NotFound.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `efuncCode`, `elementList` (`{ element, required, feature? }` items),
+ *   `ftypeCode` or `felemCode`, and optional `execOrder`, `expressionFeature`, `isVirtual`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addExpressionCall(configJson: string, options: AddExpressionCallOptions): string
 
+/**
+ * Add an element to an existing expression call as a new CFG_EFBOM row.
+ * EXEC_ORDER is auto-allocated per call when omitted; a taken value throws AlreadyExists.
+ * Throws AlreadyPresent if the feature/element is already on the call; a negative
+ * `ftypeId` throws InvalidInput.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `efcallId`, `ftypeId`, `felemId`, `felemReq`, and optional `execOrder`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addExpressionCallElement(configJson: string, options: AddExpressionCallElementOptions): string
 
 export interface AddExpressionCallElementOptions {
@@ -150,6 +323,17 @@ export interface AddExpressionCallOptions {
   isVirtual?: string
 }
 
+/**
+ * Adds a expression function row to CFG_EFUNC.
+ * The code is uppercased and EFUNC_ID is auto-assigned as the current maximum plus one.
+ * Throws SzConfigError (errorType InvalidInput) if the code already exists.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param efuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @param options - `connectStr` (required), plus optional `description` (EFUNC_DESC)
+ *   and `language`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addExpressionFunction(configJson: string, efuncCode: string, options: AddExpressionFunctionOptions): string
 
 export interface AddExpressionFunctionOptions {
@@ -158,10 +342,44 @@ export interface AddExpressionFunctionOptions {
   language?: string
 }
 
+/**
+ * Add a new feature type (CFG_FTYPE row) with its element mappings (CFG_FBOM), creating any
+ * element not already in CFG_FELEM. Defaults: class OTHER, behavior FM, candidates/anonymize/
+ * derived No, history Yes, matchkey Yes when a comparison function is given (else No).
+ * Optional standardize/expression/comparison function codes also add the matching call rows.
+ * Throws `AlreadyExists` if the feature code or an explicit `id` is taken, `InvalidInput` for
+ * an empty/invalid elementList or out-of-domain value, `NotFound` for an unknown class.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - Feature code and `elementList` (a JSON array string whose items are element
+ *   codes or objects with `element`, `expressed`, `compared`, `display`/`displayLevel`,
+ *   `displayDelim`, `derived`), plus optional attributes; `id` absent or <= 0 auto-assigns.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addFeature(configJson: string, options: AddFeatureOptions): string
 
+/**
+ * Add a feature-to-element mapping (CFG_FBOM row) for an existing feature and element.
+ * EXEC_ORDER honors `execOrder` (rejected if taken) or takes the next free value across
+ * CFG_FBOM; unset displayLevel/displayDelim/derived are stored as null. Throws `NotFound` for
+ * an unknown feature or element and `AlreadyExists` if the mapping exists.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - featureCode, elementCode, and optional execOrder, displayLevel,
+ *   displayDelim, and derived.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addFeatureComparison(configJson: string, options: AddFeatureComparisonOptions): string
 
+/**
+ * Alias of `addFeatureComparison`: adds a feature-to-element mapping (CFG_FBOM row).
+ * Throws `NotFound` for an unknown feature or element and `AlreadyExists` if it exists.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - featureCode, elementCode, and optional execOrder, displayLevel,
+ *   displayDelim, and derived.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addFeatureComparisonElement(configJson: string, options: AddFeatureComparisonOptions): string
 
 export interface AddFeatureComparisonOptions {
@@ -173,6 +391,16 @@ export interface AddFeatureComparisonOptions {
   derived?: string
 }
 
+/**
+ * Add a distinct call (CFG_DFCALL row) linking a feature to a distinct function; DFCALL_ID
+ * is auto-assigned from 1000. `elementCode` is only validated (must exist) and `execOrder` is
+ * not stored, as CFG_DFCALL has no element or order column. Throws `NotFound` for an unknown
+ * feature, function, or element and `AlreadyExists` if the feature/function pair exists.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - featureCode, distinctFuncCode, and optional elementCode and execOrder.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addFeatureDistinctCallElement(configJson: string, options: AddFeatureDistinctCallElementOptions): string
 
 export interface AddFeatureDistinctCallElementOptions {
@@ -201,8 +429,31 @@ export interface AddFeatureOptions {
   id?: number
 }
 
+/**
+ * Adds a fragment row to CFG_ERFRAG.
+ * `fragmentConfig` must contain ERFRAG_CODE and ERFRAG_SOURCE; the code is uppercased and used
+ * as ERFRAG_DESC. FRAGMENT references in the source are validated and stored as ERFRAG_DEPENDS.
+ * An ERFRAG_ID > 0 is honoured, otherwise the next id is assigned. Throws AlreadyExists if the
+ * code (or requested id) is taken, InvalidInput for an unknown fragment reference.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param fragmentConfig - JSON object string with ERFRAG_CODE, ERFRAG_SOURCE, optional ERFRAG_ID.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addFragment(configJson: string, fragmentConfig: string): string
 
+/**
+ * Add a generic threshold (CFG_GENERIC_THRESHOLD row) setting candidate/scoring caps for a
+ * generic plan and behavior, optionally per feature (default `all`). plan, behavior,
+ * scoringCap, candidateCap, and sendToRedo are required (one `MissingField` lists all absent).
+ * Throws `NotFound` for an unknown plan or feature, `AlreadyExists` for a duplicate
+ * (plan, behavior, feature), and `ValidationErrors` for an unknown behavior or a sendToRedo
+ * other than Yes/No.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - plan, behavior, scoringCap, candidateCap, sendToRedo, and optional feature.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addGenericThreshold(configJson: string, options: AddGenericThresholdOptions): string
 
 export interface AddGenericThresholdOptions {
@@ -214,12 +465,53 @@ export interface AddGenericThresholdOptions {
   feature?: string
 }
 
+/**
+ * Placeholder for adding a matching function to a CFG_RTYPE entry; not yet implemented.
+ * Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @param matchingFunc - The matching function code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function addMatchingFunction(configJson: string, rtypeCode: string, matchingFunc: string): string
 
+/**
+ * Adds a rule row to CFG_ERRULE.
+ * `ruleConfig` must contain ERRULE_CODE (uppercased) and QUAL_ERFRAG_CODE; RESOLVE/RELATE
+ * default to `No`, RTYPE_ID to 1. The row is validated: fragment/disqualifier must exist,
+ * resolve and relate are exclusive, RESOLVE=Yes needs a non-zero ERRULE_TIER. Throws
+ * AlreadyExists for a taken code or id.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param id - Desired ERRULE_ID; 0 or less auto-assigns the next id (seeded at 1000).
+ * @param ruleConfig - JSON object string of CFG_ERRULE columns.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addRule(configJson: string, id: number, ruleConfig: string): string
 
+/**
+ * Placeholder for adding a scoring function to a CFG_RTYPE entry; not yet implemented.
+ * Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @param scoringFunc - The scoring function code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function addScoringFunction(configJson: string, rtypeCode: string, scoringFunc: string): string
 
+/**
+ * Adds a search profile row to CFG_SPROFILE, creating the section if absent.
+ * The code is uppercased; the generic plan and element features are resolved to ids and the
+ * next SPROFILE_ID is assigned. Throws AlreadyExists for a taken code, NotFound for an unknown
+ * plan or feature, and ValidationErrors for a bad `candidates`/flag value or repeated feature.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - Profile code, generic plan code, and optional candidates, description,
+ *   and per-feature overrides.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addSearchProfile(configJson: string, options: AddSearchProfileOptions): string
 
 export interface AddSearchProfileOptions {
@@ -234,8 +526,30 @@ export interface AddSearchProfileOptions {
   elements?: Array<SearchProfileElement>
 }
 
+/**
+ * Add a standardize call (CFG_SFCALL row) binding a standardize function to a feature
+ * or an element. Exactly one of `ftypeCode` (other than ALL) or `felemCode` (other than
+ * N/A) must be given, else InvalidInput. SFCALL_ID is auto-assigned (from 1000);
+ * EXEC_ORDER is auto-allocated per feature/element when omitted, and a taken value
+ * throws AlreadyExists. Unknown codes throw NotFound.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `sfuncCode` (SFUNC_CODE), `ftypeCode` or `felemCode`, and optional
+ *   `execOrder`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addStandardizeCall(configJson: string, options: AddStandardizeCallOptions): string
 
+/**
+ * Add a standardize call element as a new CFG_SFCALL row (SFCALL_ID auto-assigned from
+ * 1000). `felemId` defaults to -1. EXEC_ORDER is auto-allocated per feature/element when
+ * omitted; a taken value throws AlreadyExists. Throws AlreadyPresent if a row with the
+ * same feature, function, and element already exists.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `ftypeId`, `sfuncId`, optional `felemId`, and optional `execOrder`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addStandardizeCallElement(configJson: string, options: AddStandardizeCallElementOptions): string
 
 export interface AddStandardizeCallElementOptions {
@@ -252,6 +566,17 @@ export interface AddStandardizeCallOptions {
   execOrder?: number
 }
 
+/**
+ * Adds a standardize function row to CFG_SFUNC.
+ * The code is uppercased and SFUNC_ID is auto-assigned as the current maximum plus one.
+ * Throws SzConfigError (errorType InvalidInput) if the code already exists.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @param options - `connectStr` (required), plus optional `description` (SFUNC_DESC)
+ *   and `language`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addStandardizeFunction(configJson: string, sfuncCode: string, options: AddStandardizeFunctionOptions): string
 
 export interface AddStandardizeFunctionOptions {
@@ -260,25 +585,109 @@ export interface AddStandardizeFunctionOptions {
   language?: string
 }
 
+/**
+ * Adds a value to the SYS_OOM NAME_HASH array (created if absent).
+ * Matching is exact (case-sensitive). Throws AlreadyExists if present, NotFound if SYS_OOM is
+ * missing.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param name - The value to add.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addToNameHash(configJson: string, name: string): string
 
+/**
+ * Adds a value to the SYS_OOM SSN_LAST4_HASH array (created if absent).
+ * Matching is exact (case-sensitive). Throws AlreadyExists if present, NotFound if SYS_OOM is
+ * missing.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param name - The value to add.
+ * @returns The updated configuration JSON string.
+ */
 export declare function addToSsnLast4Hash(configJson: string, name: string): string
 
+/**
+ * Placeholder for adding a validation function to a CFG_ATTR entry; not yet implemented.
+ * Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param attrCode - The CFG_ATTR attribute code (currently unused).
+ * @param validationFunc - The validation function code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function addValidationFunction(configJson: string, attrCode: string, validationFunc: string): string
 
 /** Returns the version of the NAPI configtool bridge. */
 export declare function bridgeVersion(): string
 
+/**
+ * Clones a generic plan in CFG_GPLAN, copying all of its CFG_GENERIC_THRESHOLD rows.
+ * Codes are uppercased; the new GPLAN_ID is max + 1. Throws NotFound if the source plan does
+ * not exist and AlreadyExists if the new code is taken.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sourceGplanCode - GPLAN_CODE of the plan to copy.
+ * @param newGplanCode - GPLAN_CODE for the new plan.
+ * @param newGplanDesc - GPLAN_DESC for the new plan; defaults to the new code.
+ * @returns The updated configuration JSON string.
+ */
 export declare function cloneGenericPlan(configJson: string, sourceGplanCode: string, newGplanCode: string, newGplanDesc?: string | undefined | null): string
 
+/**
+ * Delete an attribute (CFG_ATTR row) by its code (case-insensitive).
+ * Throws `NotFound` if no attribute has that code.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param code - The attribute code (ATTR_CODE) to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteAttribute(configJson: string, code: string): string
 
+/**
+ * Deletes the CFG_FBOVR override for a feature and usage type.
+ * Throws NotFound if the feature or override does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCode - FTYPE_CODE of the feature (case-insensitive).
+ * @param usageType - UTYPE_CODE of the override (case-insensitive).
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteBehaviorOverride(configJson: string, featureCode: string, usageType: string): string
 
+/**
+ * Placeholder for deleting a candidate function from a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function deleteCandidateFunction(configJson: string, rtypeCode: string): string
 
+/**
+ * Delete a comparison call (CFG_CFCALL row) by id, along with its CFG_CFBOM element rows.
+ * Throws NotFound if the call id does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param cfcallId - The CFCALL_ID of the call to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteComparisonCall(configJson: string, cfcallId: number): string
 
+/**
+ * Remove one element from a comparison call by deleting its CFG_CFBOM row.
+ * Address the element by `element` (FELEM_CODE), optionally with `elementFeature`
+ * (FTYPE_CODE) to disambiguate; legacy `felemId`/`ftypeId` are translated to codes.
+ * Throws NotFound if the call or codes do not exist, NotOnCall if the element is not on
+ * the call, InvalidInput if the element matches several rows, NotInFeature if the
+ * element is not a member of `elementFeature`.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `cfcallId` (CFCALL_ID), the element address, and the ignored
+ *   deprecated `execOrder`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteComparisonCallElement(configJson: string, options: DeleteComparisonCallElementOptions): string
 
 export interface DeleteComparisonCallElementOptions {
@@ -295,6 +704,15 @@ export interface DeleteComparisonCallElementOptions {
   execOrder?: number
 }
 
+/**
+ * Deletes a comparison function row from CFG_CFUNC by code.
+ * Only the function row is removed; calls that reference it are not deleted. Throws
+ * SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param cfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteComparisonFunction(configJson: string, cfuncCode: string): string
 
 /**
@@ -307,10 +725,39 @@ export declare function deleteComparisonFunction(configJson: string, cfuncCode: 
  */
 export declare function deleteComparisonThreshold(configJson: string, cfuncCode: string, ftypeCode: string, cfuncRtnval?: string | undefined | null): string
 
+/**
+ * Deletes a data source from CFG_DSRC by code (case-insensitive).
+ * Throws NotFound if it does not exist and InvalidInput for system data sources (DSRC_ID <= 2).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param code - DSRC_CODE of the data source to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteDataSource(configJson: string, code: string): string
 
+/**
+ * Delete a distinct call (CFG_DFCALL row) by id, along with its CFG_DFBOM element rows.
+ * Throws NotFound if the call id does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param dfcallId - The DFCALL_ID of the call to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteDistinctCall(configJson: string, dfcallId: number): string
 
+/**
+ * Remove one element from a distinct call by deleting its CFG_DFBOM row.
+ * Address the element by `element` (FELEM_CODE), optionally with `elementFeature`
+ * (FTYPE_CODE) to disambiguate; legacy `felemId`/`ftypeId` are translated to codes.
+ * Throws NotFound if the call or codes do not exist, NotOnCall if the element is not on
+ * the call, InvalidInput if the element matches several rows, NotInFeature if the
+ * element is not a member of `elementFeature`.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `dfcallId` (DFCALL_ID), the element address, and the ignored
+ *   deprecated `execOrder`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteDistinctCallElement(configJson: string, options: DeleteDistinctCallElementOptions): string
 
 export interface DeleteDistinctCallElementOptions {
@@ -327,12 +774,51 @@ export interface DeleteDistinctCallElementOptions {
   execOrder?: number
 }
 
+/**
+ * Deletes a distinct function row from CFG_DFUNC by code.
+ * Only the function row is removed; calls that reference it are not deleted. Throws
+ * SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param dfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteDistinctFunction(configJson: string, dfuncCode: string): string
 
+/**
+ * Delete a feature element (CFG_FELEM row) by code (case-insensitive).
+ * Throws `NotFound` if it does not exist and `InvalidInput` if any feature still uses it
+ * (CFG_FBOM linkage).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param code - The element code (FELEM_CODE) to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteElement(configJson: string, code: string): string
 
+/**
+ * Delete an expression call (CFG_EFCALL row) by id, along with its CFG_EFBOM element rows.
+ * Throws NotFound if the call id does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param efcallId - The EFCALL_ID of the call to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteExpressionCall(configJson: string, efcallId: number): string
 
+/**
+ * Remove one element from an expression call by deleting its CFG_EFBOM row.
+ * Address the element by `element` (FELEM_CODE), optionally with `elementFeature`
+ * (FTYPE_CODE) to disambiguate; legacy `felemId`/`ftypeId` are translated to codes.
+ * Throws NotFound if the call or codes do not exist, NotOnCall if the element is not on
+ * the call, InvalidInput if the element matches several rows, NotInFeature if the
+ * element is not a member of `elementFeature`.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `efcallId` (EFCALL_ID), the element address, and the ignored
+ *   deprecated `execOrder`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteExpressionCallElement(configJson: string, options: DeleteExpressionCallElementOptions): string
 
 export interface DeleteExpressionCallElementOptions {
@@ -349,22 +835,101 @@ export interface DeleteExpressionCallElementOptions {
   execOrder?: number
 }
 
+/**
+ * Deletes a expression function row from CFG_EFUNC by code.
+ * Only the function row is removed; calls that reference it are not deleted. Throws
+ * SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param efuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteExpressionFunction(configJson: string, efuncCode: string): string
 
+/**
+ * Delete a feature type (CFG_FTYPE row) and everything tied to it: its CFG_FBOM and CFG_ATTR
+ * rows and its standardize, expression, comparison, and distinct calls (with their BOM rows).
+ * Throws `NotFound` if it does not exist and `InvalidInput` for the protected features NAME,
+ * ADDRESS, PHONE, DOB, REL_LINK, REL_ANCHOR, REL_POINTER.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCodeOrId - The feature code, or its numeric FTYPE_ID as a string.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteFeature(configJson: string, featureCodeOrId: string): string
 
+/**
+ * Delete a feature-to-element mapping (CFG_FBOM row).
+ * Throws `NotFound` if the feature, element, or mapping does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCode - The feature code.
+ * @param elementCode - The element code.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteFeatureComparison(configJson: string, featureCode: string, elementCode: string): string
 
+/**
+ * Alias of `deleteFeatureComparison`: deletes a feature-to-element mapping (CFG_FBOM row).
+ * Throws `NotFound` if the feature, element, or mapping does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCode - The feature code.
+ * @param elementCode - The element code.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteFeatureComparisonElement(configJson: string, featureCode: string, elementCode: string): string
 
+/**
+ * Deletes a fragment from CFG_ERFRAG by code (case-insensitive).
+ * Throws NotFound if the fragment does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param fragmentCode - ERFRAG_CODE of the fragment to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteFragment(configJson: string, fragmentCode: string): string
 
+/**
+ * Removes a value from the SYS_OOM NAME_HASH array (exact, case-sensitive match).
+ * Throws NotFound if the value is not present.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param name - The value to remove.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteFromNameHash(configJson: string, name: string): string
 
+/**
+ * Removes a value from the SYS_OOM SSN_LAST4_HASH array (exact, case-sensitive match).
+ * Throws NotFound if the value, the array or SYS_OOM is missing.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param name - The value to remove.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteFromSsnLast4Hash(configJson: string, name: string): string
 
+/**
+ * Deletes a generic plan from CFG_GPLAN and its CFG_GENERIC_THRESHOLD rows, by code
+ * (case-insensitive). Throws NotFound if it does not exist and InvalidInput for system plans
+ * (GPLAN_ID <= 2).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param gplanCode - GPLAN_CODE of the plan to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteGenericPlan(configJson: string, gplanCode: string): string
 
+/**
+ * Delete a generic threshold (CFG_GENERIC_THRESHOLD row) identified by plan, behavior, and
+ * feature (default `all`). plan and behavior are required (else `MissingField`).
+ * Throws `NotFound` if the plan, feature, or row does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - plan, behavior, and optional feature identifying the row.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteGenericThreshold(configJson: string, options: DeleteGenericThresholdOptions): string
 
 export interface DeleteGenericThresholdOptions {
@@ -373,16 +938,65 @@ export interface DeleteGenericThresholdOptions {
   feature?: string
 }
 
+/**
+ * Placeholder for deleting a matching function from a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function deleteMatchingFunction(configJson: string, rtypeCode: string): string
 
+/**
+ * Deletes a rule from CFG_ERRULE by code (case-insensitive).
+ * Throws NotFound if the rule does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param ruleCode - ERRULE_CODE of the rule to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteRule(configJson: string, ruleCode: string): string
 
+/**
+ * Placeholder for deleting a scoring function from a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function deleteScoringFunction(configJson: string, rtypeCode: string): string
 
+/**
+ * Deletes a search profile from CFG_SPROFILE, matched by code (case-insensitive) or id.
+ * Throws NotFound if nothing matches and InvalidInput for the reserved `INGEST`/`SEARCH`
+ * profiles.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param searchValue - SPROFILE_CODE, or SPROFILE_ID as a string.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteSearchProfile(configJson: string, searchValue: string): string
 
+/**
+ * Delete a standardize call (CFG_SFCALL row) by id.
+ * Throws NotFound if the call id does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sfcallId - The SFCALL_ID of the call to delete.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteStandardizeCall(configJson: string, sfcallId: number): string
 
+/**
+ * Delete the CFG_SFCALL row matching the given feature, function, and element ids
+ * (`felemId` defaults to -1). Throws NotFound if no such row exists.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `ftypeId`, `sfuncId`, and optional `felemId`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteStandardizeCallElement(configJson: string, options: DeleteStandardizeCallElementOptions): string
 
 export interface DeleteStandardizeCallElementOptions {
@@ -391,8 +1005,25 @@ export interface DeleteStandardizeCallElementOptions {
   felemId?: number
 }
 
+/**
+ * Deletes a standardize function row from CFG_SFUNC by code.
+ * Only the function row is removed; calls that reference it are not deleted. Throws
+ * SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @returns The updated configuration JSON string.
+ */
 export declare function deleteStandardizeFunction(configJson: string, sfuncCode: string): string
 
+/**
+ * Placeholder for deleting a validation function from a CFG_ATTR entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param attrCode - The CFG_ATTR attribute code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function deleteValidationFunction(configJson: string, attrCode: string): string
 
 export interface ExpressionCallElementListItem {
@@ -401,39 +1032,183 @@ export interface ExpressionCallElementListItem {
   feature?: string
 }
 
+/**
+ * Get one attribute (CFG_ATTR row) by its code (case-insensitive).
+ * Throws `NotFound` if no attribute has that code.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param code - The attribute code (ATTR_CODE) to look up.
+ * @returns A JSON object string of the raw CFG_ATTR row (ATTR_ID, ATTR_CODE, ATTR_CLASS,
+ *   FTYPE_CODE, FELEM_CODE, FELEM_REQ, DEFAULT_VALUE, INTERNAL).
+ */
 export declare function getAttribute(configJson: string, code: string): string
 
+/**
+ * Gets the CFG_FBOVR override for a feature and usage type.
+ * Throws NotFound if the feature or override does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCode - FTYPE_CODE of the feature (case-insensitive).
+ * @param usageType - UTYPE_CODE of the override (case-insensitive).
+ * @returns JSON string of the raw CFG_FBOVR row (FTYPE_ID, UTYPE_CODE, FTYPE_FREQ, FTYPE_EXCL,
+ *   FTYPE_STAB).
+ */
 export declare function getBehaviorOverride(configJson: string, featureCode: string, usageType: string): string
 
+/**
+ * Placeholder for getting the candidate function of a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function getCandidateFunction(configJson: string, rtypeCode: string): string
 
-/** Get a comparison call by its numeric call id, or by the feature code it is bound to. */
+/**
+ * Get a comparison call by its numeric call id, or by the feature code it is bound to.
+ *
+ * A feature code that matches more than one comparison call throws InvalidInput; an unknown
+ * id or code throws NotFound.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param cfcallId - The numeric CFG_CFCALL id, or the FTYPE_CODE of the feature the call is
+ *   bound to.
+ * @returns A JSON object string: the raw CFG_CFCALL row.
+ */
 export declare function getComparisonCall(configJson: string, cfcallId: number | string): string
 
+/**
+ * Gets a single comparison function row from CFG_CFUNC by code.
+ * Throws SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param cfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @returns A JSON object string of the stored CFG_CFUNC row with its raw keys
+ *   (CFUNC_ID, CFUNC_CODE, CFUNC_DESC, CONNECT_STR, LANGUAGE, ANON_SUPPORT).
+ */
 export declare function getComparisonFunction(configJson: string, cfuncCode: string): string
 
+/**
+ * Gets the compatibility version from CONFIG_BASE_VERSION.COMPATIBILITY_VERSION.CONFIG_VERSION.
+ * Throws NotFound if it is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns The CONFIG_VERSION string, e.g. `11`.
+ */
 export declare function getCompatibilityVersion(configJson: string): string
 
+/**
+ * Gets the rows of a top-level G2_CONFIG section.
+ * The name is matched exactly (not uppercased). Throws NotFound if the section does not exist.
+ * A non-array section is returned as a single-element array.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sectionName - Name of the section, e.g. `CFG_ATTR`.
+ * @param filter - Optional case-insensitive substring matched against each row's JSON.
+ * @returns JSON string of an array of the section's raw rows (empty if none match).
+ */
 export declare function getConfigSection(configJson: string, sectionName: string, filter?: string | undefined | null): string
 
+/**
+ * Gets one data source from CFG_DSRC by code (case-insensitive).
+ * Throws NotFound if the data source does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param code - DSRC_CODE of the data source.
+ * @returns JSON string of the raw CFG_DSRC row (DSRC_ID, DSRC_CODE, DSRC_DESC, RETENTION_LEVEL).
+ */
 export declare function getDataSource(configJson: string, code: string): string
 
-/** Get a distinct call by its numeric call id, or by the feature code it is bound to. */
+/**
+ * Get a distinct call by its numeric call id, or by the feature code it is bound to.
+ *
+ * A feature code that matches more than one distinct call throws InvalidInput; an unknown
+ * id or code throws NotFound.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param dfcallId - The numeric CFG_DFCALL id, or the FTYPE_CODE of the feature the call is
+ *   bound to.
+ * @returns A JSON object string: the raw CFG_DFCALL row.
+ */
 export declare function getDistinctCall(configJson: string, dfcallId: number | string): string
 
+/**
+ * Gets a single distinct function row from CFG_DFUNC by code.
+ * Throws SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param dfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @returns A JSON object string of the stored CFG_DFUNC row with its raw keys
+ *   (DFUNC_ID, DFUNC_CODE, DFUNC_DESC, CONNECT_STR, LANGUAGE, ANON_SUPPORT).
+ */
 export declare function getDistinctFunction(configJson: string, dfuncCode: string): string
 
+/**
+ * Get one feature element (CFG_FELEM row) by code (case-insensitive).
+ * Throws `NotFound` if it does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param code - The element code (FELEM_CODE) to look up.
+ * @returns A JSON object string with keys `id`, `element`, and `datatype`.
+ */
 export declare function getElement(configJson: string, code: string): string
 
-/** Get an expression call by its numeric call id, or by the feature code it is bound to. */
+/**
+ * Get an expression call by its numeric call id, or by the feature code it is bound to.
+ *
+ * A feature code that matches more than one expression call throws InvalidInput; an unknown
+ * id or code throws NotFound.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param efcallId - The numeric CFG_EFCALL id, or the FTYPE_CODE of the feature the call is
+ *   bound to.
+ * @returns A JSON object string: the raw CFG_EFCALL row.
+ */
 export declare function getExpressionCall(configJson: string, efcallId: number | string): string
 
+/**
+ * Gets a single expression function row from CFG_EFUNC by code.
+ * Throws SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param efuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @returns A JSON object string of the stored CFG_EFUNC row with its raw keys
+ *   (EFUNC_ID, EFUNC_CODE, EFUNC_DESC, CONNECT_STR, LANGUAGE).
+ */
 export declare function getExpressionFunction(configJson: string, efuncCode: string): string
 
+/**
+ * Get one feature type (CFG_FTYPE) by code (case-insensitive) or numeric id, with its
+ * resolved class, behavior, functions, and elements. Throws `NotFound` if it does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCodeOrId - The feature code, or its numeric FTYPE_ID as a string.
+ * @returns A JSON object string with keys `id`, `feature`, `class`, `behavior`, `anonymize`,
+ *   `candidates`, `standardize`, `expression`, `comparison`, `matchKey`, `version`, and
+ *   `elementList` (objects with `element`, `expressed`, `compared`, `derived`, `display`).
+ */
 export declare function getFeature(configJson: string, featureCodeOrId: string): string
 
+/**
+ * Get one feature class (CFG_FCLASS row) by numeric id or code (case-insensitive).
+ * Throws `NotFound` if it does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param fclassIdOrCode - The FCLASS_ID as a numeric string, or the FCLASS_CODE.
+ * @returns A JSON object string of the raw CFG_FCLASS row.
+ */
 export declare function getFeatureClass(configJson: string, fclassIdOrCode: string): string
 
+/**
+ * Get one feature-to-element mapping (CFG_FBOM row).
+ * Throws `NotFound` if the feature, element, or mapping does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - featureCode and elementCode identifying the mapping.
+ * @returns A JSON object string of the raw CFG_FBOM row (FTYPE_ID, FELEM_ID, EXEC_ORDER,
+ *   DISPLAY_LEVEL, DISPLAY_DELIM, DERIVED).
+ */
 export declare function getFeatureComparison(configJson: string, options: GetFeatureComparisonOptions): string
 
 export interface GetFeatureComparisonOptions {
@@ -441,95 +1216,440 @@ export interface GetFeatureComparisonOptions {
   elementCode: string
 }
 
+/**
+ * Gets one fragment from CFG_ERFRAG, matched by ERFRAG_CODE (case-insensitive) first, then by
+ * ERFRAG_ID. Throws NotFound if neither matches.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param codeOrId - Fragment code, or its numeric id as a string.
+ * @returns JSON string of `{ id, fragment, source, depends }` (source/depends may be null).
+ */
 export declare function getFragment(configJson: string, codeOrId: string): string
 
+/**
+ * Placeholder for getting the matching function of a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function getMatchingFunction(configJson: string, rtypeCode: string): string
 
+/**
+ * Gets one rule from CFG_ERRULE, matched by ERRULE_CODE (case-insensitive) first, then by
+ * ERRULE_ID. Throws NotFound if neither matches.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param codeOrId - Rule code, or its numeric id as a string.
+ * @returns JSON string of `{ id, rule, resolve, relate, rtype_id, fragment, disqualifier, tier }`;
+ *   `tier` is null unless RESOLVE is `Yes`.
+ */
 export declare function getRule(configJson: string, codeOrId: string): string
 
+/**
+ * Placeholder for getting the scoring function of a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function getScoringFunction(configJson: string, rtypeCode: string): string
 
+/**
+ * Gets one search profile from CFG_SPROFILE by code (case-insensitive).
+ * Throws NotFound if it does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param code - SPROFILE_CODE of the profile.
+ * @returns JSON string of the raw CFG_SPROFILE row as stored.
+ */
 export declare function getSearchProfile(configJson: string, code: string): string
 
-/** Get a standardize call by its numeric call id, or by the feature code it is bound to. */
+/**
+ * Get a standardize call by its numeric call id, or by the feature code it is bound to.
+ *
+ * A feature code that matches more than one standardize call throws InvalidInput; an unknown
+ * id or code throws NotFound.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sfcallId - The numeric CFG_SFCALL id, or the FTYPE_CODE of the feature the call is
+ *   bound to.
+ * @returns A JSON object string: the raw CFG_SFCALL row.
+ */
 export declare function getStandardizeCall(configJson: string, sfcallId: number | string): string
 
+/**
+ * Gets a single standardize function row from CFG_SFUNC by code.
+ * Throws SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @returns A JSON object string of the stored CFG_SFUNC row with its raw keys
+ *   (SFUNC_ID, SFUNC_CODE, SFUNC_DESC, CONNECT_STR, LANGUAGE).
+ */
 export declare function getStandardizeFunction(configJson: string, sfuncCode: string): string
 
+/**
+ * Not implemented: the underlying library is a placeholder and always throws `InvalidInput`
+ * ("get_threshold not yet implemented").
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param thresholdId - Threshold id (unused).
+ * @returns Never returns; always throws.
+ */
 export declare function getThreshold(configJson: string, thresholdId: number): string
 
+/**
+ * Placeholder for getting the validation function of a CFG_ATTR entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param attrCode - The CFG_ATTR attribute code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function getValidationFunction(configJson: string, attrCode: string): string
 
+/**
+ * Gets the configuration version from CONFIG_BASE_VERSION.VERSION.
+ * Throws NotFound if it is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns The VERSION string, e.g. `4.0.0`.
+ */
 export declare function getVersion(configJson: string): string
 
+/**
+ * List all attributes in CFG_ATTR.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of objects with keys `id`, `attribute`, `class`, `feature`,
+ *   `element`, `required`, `default`, `internal`.
+ */
 export declare function listAttributes(configJson: string): string
 
+/**
+ * Lists all behavior overrides in CFG_FBOVR, sorted by FTYPE_ID.
+ * Throws MissingSection if CFG_FBOVR is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns JSON string of an array of raw CFG_FBOVR rows.
+ */
 export declare function listBehaviorOverrides(configJson: string): string
 
+/**
+ * Placeholder for listing candidate functions in CFG_RTYPE; not yet implemented.
+ * Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns Never returns; the call always throws.
+ */
 export declare function listCandidateFunctions(configJson: string): string
 
+/**
+ * List all comparison calls (CFG_CFCALL), sorted by feature id then CFCALL_ID.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of `{ id, feature, function, elementList }` objects with codes
+ *   resolved; `elementList` holds the call's element codes from CFG_CFBOM in EXEC_ORDER.
+ */
 export declare function listComparisonCalls(configJson: string): string
 
+/**
+ * Lists all comparison functions in CFG_CFUNC.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of objects with keys
+ *   `id`, `function`, `description`, `connectStr`, `anonSupport`, `language`;
+ *   empty when CFG_CFUNC is absent. Nullable stored values are returned as `null`.
+ */
 export declare function listComparisonFunctions(configJson: string): string
 
+/**
+ * List all comparison thresholds (CFG_CFRTN) with function and feature codes resolved,
+ * sorted by CFUNC_ID then CFRTN_ID. A FTYPE_ID of 0 is reported as feature `all`.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of objects with keys `id`, `function`, `returnOrder`,
+ *   `scoreName`, `feature`, `sameScore`, `closeScore`, `likelyScore`, `plausibleScore`,
+ *   `unlikelyScore` (missing scores reported as 0).
+ */
 export declare function listComparisonThresholds(configJson: string): string
 
+/**
+ * Lists the names of all top-level sections under G2_CONFIG.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns JSON string of an array of section name strings.
+ */
 export declare function listConfigSections(configJson: string): string
 
+/**
+ * Lists all data sources in CFG_DSRC.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns JSON string of an array of `{ id, dataSource }` objects (DSRC_ID, DSRC_CODE).
+ */
 export declare function listDataSources(configJson: string): string
 
+/**
+ * List all distinct calls (CFG_DFCALL), sorted by feature id then DFCALL_ID.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of `{ id, feature, function, execOrder, elementList }`
+ *   objects with codes resolved; `elementList` holds the call's element codes from
+ *   CFG_DFBOM in EXEC_ORDER.
+ */
 export declare function listDistinctCalls(configJson: string): string
 
+/**
+ * Lists all distinct functions in CFG_DFUNC.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of objects with keys
+ *   `id`, `function`, `connectStr`, `anonSupport`, `language`;
+ *   empty when CFG_DFUNC is absent. Nullable stored values are returned as `null`.
+ */
 export declare function listDistinctFunctions(configJson: string): string
 
+/**
+ * List all feature elements in CFG_FELEM, sorted by element code.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of objects with keys `id`, `element`, and `datatype`.
+ */
 export declare function listElements(configJson: string): string
 
+/**
+ * List all expression calls (CFG_EFCALL), sorted by feature id, element id, then
+ * EXEC_ORDER.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of `{ id, feature, element, execOrder, function, isVirtual,
+ *   expressionFeature, elementList }` objects with codes resolved; `elementList` holds the
+ *   call's element codes from CFG_EFBOM in EXEC_ORDER.
+ */
 export declare function listExpressionCalls(configJson: string): string
 
+/**
+ * Lists all expression functions in CFG_EFUNC.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of objects with keys
+ *   `id`, `function`, `connectStr`, `language`;
+ *   empty when CFG_EFUNC is absent. Nullable stored values are returned as `null`.
+ */
 export declare function listExpressionFunctions(configJson: string): string
 
+/**
+ * List all feature classes (CFG_FCLASS rows), sorted by FCLASS_ID.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of raw CFG_FCLASS row objects.
+ */
 export declare function listFeatureClasses(configJson: string): string
 
+/**
+ * List all feature-to-element mappings (CFG_FBOM rows), sorted by FTYPE_ID then EXEC_ORDER.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of raw CFG_FBOM row objects.
+ */
 export declare function listFeatureComparisons(configJson: string): string
 
+/**
+ * List all feature types (CFG_FTYPE), sorted by FTYPE_ID.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of feature objects, each shaped as returned by `getFeature`.
+ */
 export declare function listFeatures(configJson: string): string
 
+/**
+ * Lists all fragments in CFG_ERFRAG. Returns an empty array if the section is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns JSON string of an array of `{ id, fragment, source, depends }` objects.
+ */
 export declare function listFragments(configJson: string): string
 
+/**
+ * Lists generic plans in CFG_GPLAN, sorted by id.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param filter - Optional case-insensitive substring matched against each raw row's JSON.
+ * @returns JSON string of an array of `{ id, plan, description }` objects.
+ */
 export declare function listGenericPlans(configJson: string, filter?: string | undefined | null): string
 
+/**
+ * List all generic thresholds (CFG_GENERIC_THRESHOLD) with plan and feature codes resolved,
+ * sorted by GPLAN_ID then canonical behavior order. A FTYPE_ID of 0 is reported as `all`.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of objects with keys `id` (the GPLAN_ID), `plan`, `behavior`,
+ *   `feature`, `candidateCap`, `scoringCap`, `sendToRedo`.
+ */
 export declare function listGenericThresholds(configJson: string): string
 
+/**
+ * Placeholder for listing matching functions in CFG_RTYPE; not yet implemented.
+ * Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns Never returns; the call always throws.
+ */
 export declare function listMatchingFunctions(configJson: string): string
 
+/**
+ * Lists all rules in CFG_ERRULE, sorted by id. Returns an empty array if the section is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns JSON string of an array of
+ *   `{ id, rule, resolve, relate, rtype_id, fragment, disqualifier, tier }` objects.
+ */
 export declare function listRules(configJson: string): string
 
+/**
+ * Placeholder for listing scoring functions in CFG_RTYPE; not yet implemented.
+ * Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns Never returns; the call always throws.
+ */
 export declare function listScoringFunctions(configJson: string): string
 
+/**
+ * Lists search profiles in CFG_SPROFILE, sorted by id, with ids resolved to codes.
+ * Returns an empty array if the section is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param filter - Optional case-insensitive substring matched against each raw row's JSON.
+ * @returns JSON string of an array of objects with `id`, `profile`, `description`,
+ *   `genericPlan`, `candidates`, `overrides` (`[{ feature, flag }]`) and `overridesRaw`.
+ */
 export declare function listSearchProfiles(configJson: string, filter?: string | undefined | null): string
 
+/**
+ * List all standardize calls (CFG_SFCALL), sorted by feature id then EXEC_ORDER.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of `{ id, feature, element, execOrder, function }` objects,
+ *   with codes resolved (`feature` is "all" and `element` is "n/a" when unset).
+ */
 export declare function listStandardizeCalls(configJson: string): string
 
+/**
+ * Lists all standardize functions in CFG_SFUNC.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns A JSON array string of objects with keys
+ *   `id`, `function`, `connectStr`, `language`;
+ *   empty when CFG_SFUNC is absent. Nullable stored values are returned as `null`.
+ */
 export declare function listStandardizeFunctions(configJson: string): string
 
+/**
+ * Lists system parameters. Currently only `relationshipsBreakMatches`, read from BREAK_RES of
+ * the CFG_RTYPE row with RCLASS_ID 2; omitted if that row or value is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns JSON string of an object mapping parameter name to its value as a string.
+ */
 export declare function listSystemParameters(configJson: string): string
 
+/**
+ * Placeholder for listing validation functions in CFG_ATTR; not yet implemented.
+ * Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @returns Never returns; the call always throws.
+ */
 export declare function listValidationFunctions(configJson: string): string
 
+/**
+ * Reads a configuration command script (.gtc) from disk and runs it like `processScript`.
+ * Throws InvalidConfig if the file cannot be read or any line fails.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param filePath - Path to the script file.
+ * @returns The configuration JSON string after all commands have been applied.
+ */
 export declare function processFile(configJson: string, filePath: string): string
 
+/**
+ * Runs a configuration command script (.gtc format) against the configuration.
+ * Each non-blank line not starting with `#` is `commandName {json params}`; `save` is a
+ * no-op. Execution stops at the first failing line, which throws InvalidConfig naming the
+ * line number and underlying error.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param script - The script text.
+ * @returns The configuration JSON string after all commands have been applied.
+ */
 export declare function processScript(configJson: string, script: string): string
 
+/**
+ * Placeholder for removing the candidate function from a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function removeCandidateFunction(configJson: string, rtypeCode: string): string
 
+/**
+ * Removes a top-level section from G2_CONFIG. The name is uppercased.
+ * Throws NotFound if the section does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sectionName - Name of the section to remove.
+ * @returns The updated configuration JSON string.
+ */
 export declare function removeConfigSection(configJson: string, sectionName: string): string
 
+/**
+ * Removes a field from every row of a G2_CONFIG array section.
+ * Section and field names are uppercased. Throws NotFound if the section does not exist or is
+ * not an array.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sectionName - Name of the section.
+ * @param fieldName - Name of the field to remove.
+ * @returns The updated configuration JSON string.
+ */
 export declare function removeConfigSectionField(configJson: string, sectionName: string, fieldName: string): string
 
+/**
+ * Placeholder for removing the matching function from a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function removeMatchingFunction(configJson: string, rtypeCode: string): string
 
+/**
+ * Placeholder for removing the scoring function from a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function removeScoringFunction(configJson: string, rtypeCode: string): string
 
+/**
+ * Placeholder for removing the validation function from a CFG_ATTR entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param attrCode - The CFG_ATTR attribute code (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function removeValidationFunction(configJson: string, attrCode: string): string
 
 /** One per-feature override of a search profile: `flag` is `Yes` (force the feature on as a candidate builder) or `No` (force it off). */
@@ -538,6 +1658,15 @@ export interface SearchProfileElement {
   flag: string
 }
 
+/**
+ * Update an existing attribute (CFG_ATTR row) in place; only provided fields change.
+ * `internal` must be Yes/No and `required` Yes/No/Any/Desired (case-insensitive, else
+ * `InvalidInput`). Throws `NotFound` if the attribute code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - The attribute code plus optional internal, required, and defaultValue.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setAttribute(configJson: string, options: SetAttributeOptions): string
 
 export interface SetAttributeOptions {
@@ -547,10 +1676,37 @@ export interface SetAttributeOptions {
   defaultValue?: string
 }
 
+/**
+ * Placeholder for setting the candidate function of a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @param candidateFunc - The candidate function code, or null (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function setCandidateFunction(configJson: string, rtypeCode: string, candidateFunc?: string | undefined | null): string
 
+/**
+ * Update a comparison call (CFG_CFCALL). Currently a no-op in sz_configtool_lib: the
+ * configuration is returned unchanged.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `cfcallId` (CFCALL_ID) and optional `execOrder`; both are
+ *   currently ignored.
+ * @returns The configuration JSON string, unchanged.
+ */
 export declare function setComparisonCall(configJson: string, options: SetComparisonCallOptions): string
 
+/**
+ * Update a comparison call element (CFG_CFBOM row). Currently a no-op in sz_configtool_lib: the
+ * configuration is returned unchanged (after `updates` is parsed as JSON, if present).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `cfcallId`, `ftypeId`, `felemId`, `execOrder`, and `updates` (JSON string);
+ *   all currently ignored.
+ * @returns The configuration JSON string, unchanged.
+ */
 export declare function setComparisonCallElement(configJson: string, options: SetComparisonCallElementOptions): string
 
 export interface SetComparisonCallElementOptions {
@@ -566,6 +1722,19 @@ export interface SetComparisonCallOptions {
   execOrder?: number
 }
 
+/**
+ * Updates an existing comparison function row in CFG_CFUNC by code.
+ * `connectStr`: undefined leaves it unchanged, `null` clears it, a string sets it. Other
+ * provided options overwrite their fields; omitted ones are left unchanged.
+ * Unlike add, `anonSupport` is stored as given (not validated).
+ * Throws SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param cfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @param options - Optional `connectStr`, `description` (CFUNC_DESC), `language`
+ *   and `anonSupport`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setComparisonFunction(configJson: string, cfuncCode: string, options: SetComparisonFunctionOptions): string
 
 export interface SetComparisonFunctionOptions {
@@ -576,6 +1745,16 @@ export interface SetComparisonFunctionOptions {
   anonSupport?: string
 }
 
+/**
+ * Update an existing comparison threshold (CFG_CFRTN row) in place; only provided fields
+ * change. The row is found by `(cfuncCode, ftypeCode, cfuncRtnval)`, all required; `ftypeCode`
+ * may be `all` and `cfuncRtnval` matches case-insensitively. Throws `NotFound` if no row matches.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - cfuncCode, ftypeCode, cfuncRtnval identifying the row, plus optional
+ *   execOrder and sameScore/closeScore/likelyScore/plausibleScore/unLikelyScore.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setComparisonThreshold(configJson: string, options: SetComparisonThresholdOptions): string
 
 export interface SetComparisonThresholdOptions {
@@ -590,6 +1769,16 @@ export interface SetComparisonThresholdOptions {
   unLikelyScore?: number
 }
 
+/**
+ * Updates an existing CFG_DSRC row, matched by uppercased code.
+ * Only `retentionLevel` is written when provided; other columns are left unchanged.
+ * Throws NotFound if the data source does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param code - DSRC_CODE of the data source to update (case-insensitive).
+ * @param options - Fields to update; only `retentionLevel` is applied.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setDataSource(configJson: string, code: string, options: SetDataSourceOptions): string
 
 export interface SetDataSourceOptions {
@@ -600,8 +1789,26 @@ export interface SetDataSourceOptions {
   reliability?: number
 }
 
+/**
+ * Update a distinct call (CFG_DFCALL). Currently a no-op in sz_configtool_lib: the
+ * configuration is returned unchanged.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `dfcallId` (DFCALL_ID) and optional `execOrder`; both are
+ *   currently ignored.
+ * @returns The configuration JSON string, unchanged.
+ */
 export declare function setDistinctCall(configJson: string, options: SetDistinctCallOptions): string
 
+/**
+ * Update a distinct call element (CFG_DFBOM row). Currently a no-op in sz_configtool_lib: the
+ * configuration is returned unchanged (after `updates` is parsed as JSON, if present).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `dfcallId`, `ftypeId`, `felemId`, `execOrder`, and `updates` (JSON string);
+ *   all currently ignored.
+ * @returns The configuration JSON string, unchanged.
+ */
 export declare function setDistinctCallElement(configJson: string, options: SetDistinctCallElementOptions): string
 
 export interface SetDistinctCallElementOptions {
@@ -617,6 +1824,19 @@ export interface SetDistinctCallOptions {
   execOrder?: number
 }
 
+/**
+ * Updates an existing distinct function row in CFG_DFUNC by code.
+ * `connectStr`: undefined leaves it unchanged, `null` clears it, a string sets it. Other
+ * provided options overwrite their fields; omitted ones are left unchanged.
+ * Unlike add, `anonSupport` is stored as given (not validated).
+ * Throws SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param dfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @param options - Optional `connectStr`, `description` (DFUNC_DESC), `language`
+ *   and `anonSupport`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setDistinctFunction(configJson: string, dfuncCode: string, options: SetDistinctFunctionOptions): string
 
 export interface SetDistinctFunctionOptions {
@@ -628,6 +1848,15 @@ export interface SetDistinctFunctionOptions {
   anonSupport?: string
 }
 
+/**
+ * Update an existing feature element (CFG_FELEM row) in place; only provided fields change.
+ * `dataType` is written as given (not validated here). The deprecated `tokenized` option is
+ * ignored. Throws `NotFound` if the element code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - The element code plus optional description and dataType.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setElement(configJson: string, options: SetElementOptions): string
 
 export interface SetElementOptions {
@@ -638,8 +1867,25 @@ export interface SetElementOptions {
   tokenized?: string
 }
 
+/**
+ * Update an expression call (CFG_EFCALL). Currently a no-op in sz_configtool_lib: the
+ * configuration is returned unchanged.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `efcallId` (EFCALL_ID) and optional `execOrder`; both are
+ *   currently ignored.
+ * @returns The configuration JSON string, unchanged.
+ */
 export declare function setExpressionCall(configJson: string, options: SetExpressionCallOptions): string
 
+/**
+ * Update an expression call element (CFG_EFBOM row). Currently a no-op in sz_configtool_lib: the
+ * configuration is returned unchanged (after `updates` is parsed as JSON, if present).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `ftypeId`, `felemId`, `execOrder`, and `felemReq`; all currently ignored.
+ * @returns The configuration JSON string, unchanged.
+ */
 export declare function setExpressionCallElement(configJson: string, options: SetExpressionCallElementOptions): string
 
 export interface SetExpressionCallElementOptions {
@@ -654,6 +1900,17 @@ export interface SetExpressionCallOptions {
   execOrder?: number
 }
 
+/**
+ * Updates an existing expression function row in CFG_EFUNC by code.
+ * `connectStr`: undefined leaves it unchanged, `null` clears it, a string sets it. Other
+ * provided options overwrite their fields; omitted ones are left unchanged.
+ * Throws SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param efuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @param options - Optional `connectStr`, `description` (EFUNC_DESC) and `language`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setExpressionFunction(configJson: string, efuncCode: string, options: SetExpressionFunctionOptions): string
 
 export interface SetExpressionFunctionOptions {
@@ -663,12 +1920,55 @@ export interface SetExpressionFunctionOptions {
   language?: string
 }
 
+/**
+ * Update an existing feature type (CFG_FTYPE row) in place; only provided fields change.
+ * `candidates` must be Yes/No, `matchkey` Yes/No/Confirm/Denial, and `behavior` a valid
+ * behavior code; `anonymize`, `derived`, and `history` are written as given. Throws `NotFound`
+ * for an unknown feature or class, and `InvalidInput` if no field actually changes.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `feature` (code or numeric id) plus optional candidates, anonymize,
+ *   derived, history, matchkey, behavior, class, version, and rtypeId.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setFeature(configJson: string, options: SetFeatureOptions): string
 
+/**
+ * Update an existing feature-to-element mapping (CFG_FBOM row) in place; only provided
+ * fields change. `displayLevel` must be non-negative and `derived` Yes/No (else
+ * `InvalidInput`). Throws `NotFound` if the feature, element, or mapping does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - featureCode and elementCode identifying the row, plus optional
+ *   execOrder, displayLevel, displayDelim, and derived.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setFeatureElement(configJson: string, options: SetFeatureElementOptions): string
 
+/**
+ * Set the DERIVED flag on an existing feature-to-element mapping (CFG_FBOM row).
+ * Equivalent to `setFeatureElement` with only `derived`; a value other than Yes/No
+ * (case-insensitive) throws `InvalidInput` and a missing mapping throws `NotFound`.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCode - The feature code (e.g. NAME).
+ * @param elementCode - The element code (e.g. FIRST_NAME).
+ * @param derived - `Yes` or `No`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setFeatureElementDerived(configJson: string, featureCode: string, elementCode: string, derived: string): string
 
+/**
+ * Set DISPLAY_LEVEL on an existing feature-to-element mapping (CFG_FBOM row).
+ * Equivalent to `setFeatureElement` with only `displayLevel`; a negative value throws
+ * `InvalidInput` and a missing feature, element, or mapping throws `NotFound`.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param featureCode - The feature code (e.g. NAME).
+ * @param elementCode - The element code (e.g. FIRST_NAME).
+ * @param displayLevel - The non-negative display level to store.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setFeatureElementDisplayLevel(configJson: string, featureCode: string, elementCode: string, displayLevel: number): string
 
 export interface SetFeatureElementOptions {
@@ -693,10 +1993,42 @@ export interface SetFeatureOptions {
   rtypeId?: number
 }
 
+/**
+ * Updates an existing CFG_ERFRAG row, matched by code (case-insensitive).
+ * Each key of `fragmentConfig` is tri-state: absent leaves the value, null clears it, a string
+ * sets it. Setting the source re-validates it and recomputes ERFRAG_DEPENDS; clearing it also
+ * clears ERFRAG_DEPENDS. Throws NotFound if the fragment does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param fragmentCode - ERFRAG_CODE of the fragment to update.
+ * @param fragmentConfig - JSON object string with `ERFRAG_SOURCE`/`source` and/or
+ *   `ERFRAG_DESC`/`description`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setFragment(configJson: string, fragmentCode: string, fragmentConfig: string): string
 
+/**
+ * Creates or updates a generic plan in CFG_GPLAN, matched by code (case-insensitive).
+ * An existing plan gets the new GPLAN_DESC; otherwise a new plan is added with GPLAN_ID max + 1.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param gplanCode - GPLAN_CODE of the plan.
+ * @param gplanDesc - GPLAN_DESC to write.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setGenericPlan(configJson: string, gplanCode: string, gplanDesc: string): string
 
+/**
+ * Update an existing generic threshold (CFG_GENERIC_THRESHOLD row) in place; only provided
+ * caps/flags change. The row is found by plan, behavior, and feature (default `all`; used only
+ * as a lookup key). Throws `MissingField` without plan/behavior, `NotFound` if no row matches,
+ * and `ValidationErrors` for a sendToRedo other than Yes/No.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - plan, behavior, optional feature, plus optional candidateCap, scoringCap,
+ *   and sendToRedo.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setGenericThreshold(configJson: string, options: SetGenericThresholdOptions): string
 
 export interface SetGenericThresholdOptions {
@@ -708,8 +2040,27 @@ export interface SetGenericThresholdOptions {
   sendToRedo?: string
 }
 
+/**
+ * Placeholder for setting the matching function of a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @param matchingFunc - The matching function code, or null (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function setMatchingFunction(configJson: string, rtypeCode: string, matchingFunc?: string | undefined | null): string
 
+/**
+ * Updates an existing CFG_ERRULE row, matched by `options.code` (case-insensitive).
+ * Omitted fields keep their stored values; `fragment`, `disqualifier` and `tier` also accept
+ * null to clear. A newly set fragment/disqualifier must exist, and the merged row is validated
+ * as in `addRule` (RESOLVE=Yes forces RTYPE_ID 1). Throws NotFound if the rule does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - Rule code plus the fields to change.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setRule(configJson: string, options: SetRuleOptions): string
 
 export interface SetRuleOptions {
@@ -725,10 +2076,37 @@ export interface SetRuleOptions {
   tier?: number | null
 }
 
+/**
+ * Placeholder for setting the scoring function of a CFG_RTYPE entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param rtypeCode - The CFG_RTYPE code (currently unused).
+ * @param scoringFunc - The scoring function code, or null (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function setScoringFunction(configJson: string, rtypeCode: string, scoringFunc?: string | undefined | null): string
 
+/**
+ * Update a standardize call (CFG_SFCALL). Currently a no-op in sz_configtool_lib: the
+ * configuration is returned unchanged.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `sfcallId` (SFCALL_ID) and optional `execOrder`; both are
+ *   currently ignored.
+ * @returns The configuration JSON string, unchanged.
+ */
 export declare function setStandardizeCall(configJson: string, options: SetStandardizeCallOptions): string
 
+/**
+ * Update a standardize call element (CFG_SFCALL row). Currently a no-op in sz_configtool_lib: the
+ * configuration is returned unchanged (after `updates` is parsed as JSON, if present).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param options - `ftypeId`, `sfuncId`, optional `felemId`, and `updates` (JSON string);
+ *   all currently ignored.
+ * @returns The configuration JSON string, unchanged.
+ */
 export declare function setStandardizeCallElement(configJson: string, options: SetStandardizeCallElementOptions): string
 
 export interface SetStandardizeCallElementOptions {
@@ -743,6 +2121,17 @@ export interface SetStandardizeCallOptions {
   execOrder?: number
 }
 
+/**
+ * Updates an existing standardize function row in CFG_SFUNC by code.
+ * `connectStr`: undefined leaves it unchanged, `null` clears it, a string sets it. Other
+ * provided options overwrite their fields; omitted ones are left unchanged.
+ * Throws SzConfigError (errorType NotFound) if the code does not exist.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param sfuncCode - The function code (matched case-insensitively; stored uppercased).
+ * @param options - Optional `connectStr`, `description` (SFUNC_DESC) and `language`.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setStandardizeFunction(configJson: string, sfuncCode: string, options: SetStandardizeFunctionOptions): string
 
 export interface SetStandardizeFunctionOptions {
@@ -752,16 +2141,67 @@ export interface SetStandardizeFunctionOptions {
   language?: string
 }
 
+/**
+ * Sets a system parameter. Only `relationshipsBreakMatches` (case-insensitive, also
+ * `relationships_break_matches`) is supported; it writes BREAK_RES on the CFG_RTYPE row with
+ * RCLASS_ID 2. Throws InvalidConfig for an unknown name, NotFound if that row is missing.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param parameterName - The parameter name.
+ * @param parameterValue - The value as JSON text (e.g. `1`), written as-is.
+ * @returns The updated configuration JSON string.
+ */
 export declare function setSystemParameter(configJson: string, parameterName: string, parameterValue: string): string
 
+/**
+ * Not implemented: the underlying library is a placeholder and always throws `InvalidInput`
+ * ("set_threshold not yet implemented").
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param thresholdId - Threshold id (unused).
+ * @returns Never returns; always throws.
+ */
 export declare function setThreshold(configJson: string, thresholdId: number): string
 
+/**
+ * Placeholder for setting the validation function of a CFG_ATTR entry; not yet
+ * implemented. Always throws SzConfigError (errorType NotImplemented).
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param attrCode - The CFG_ATTR attribute code (currently unused).
+ * @param validationFunc - The validation function code, or null (currently unused).
+ * @returns Never returns; the call always throws.
+ */
 export declare function setValidationFunction(configJson: string, attrCode: string, validationFunc?: string | undefined | null): string
 
+/**
+ * Sets CONFIG_BASE_VERSION.COMPATIBILITY_VERSION.CONFIG_VERSION.
+ * Throws NotFound if CONFIG_BASE_VERSION or COMPATIBILITY_VERSION is missing.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param newVersion - The new CONFIG_VERSION string.
+ * @returns The updated configuration JSON string.
+ */
 export declare function updateCompatibilityVersion(configJson: string, newVersion: string): string
 
+/**
+ * Set FEATURE_VERSION under CONFIG_BASE_VERSION.COMPATIBILITY_VERSION.
+ * Throws `MissingSection` if COMPATIBILITY_VERSION is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param version - The new feature version string (stored as given).
+ * @returns The updated configuration JSON string.
+ */
 export declare function updateFeatureVersion(configJson: string, version: string): string
 
+/**
+ * Compares CONFIG_BASE_VERSION.COMPATIBILITY_VERSION.CONFIG_VERSION with an expected value
+ * (exact string match). Throws NotFound if CONFIG_VERSION is absent.
+ *
+ * @param configJson - The current Senzing configuration as a JSON string.
+ * @param expectedVersion - The expected CONFIG_VERSION string.
+ * @returns An object `{ currentVersion, matches }`.
+ */
 export declare function verifyCompatibilityVersion(configJson: string, expectedVersion: string): VerifyCompatibilityVersionResult
 
 export interface VerifyCompatibilityVersionResult {
