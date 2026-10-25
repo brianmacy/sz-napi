@@ -178,6 +178,14 @@ jobs:
         working-directory: sz-napi/packages/sdk
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
+      # Rust unit tests, incl. the flag! list vs sz_rust_sdk::flags::SzFlags
+      # drift check (#101). Needs libSz, hence this job rather than cargo-check.
+      - name: Cargo test SDK
+        working-directory: sz-napi
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: cargo test -p senzing-sdk-napi --locked
+
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -222,9 +230,11 @@ jobs:
           name: configtool-${{ matrix.target }}
           path: packages/configtool/
 
+      # stock-template.test.ts needs the Senzing g2config.json template, which
+      # only exists where the Senzing runtime is installed; it runs in test-sdk.
       - name: Run configtool tests
         working-directory: packages/configtool
-        run: npx vitest run
+        run: npx vitest run --exclude __tests__/stock-template.test.ts
 
       - name: Run configtool-usage example
         run: |
@@ -324,6 +334,12 @@ jobs:
       - name: Initialize Senzing SQLite database
         run: |
           sqlite3 /tmp/senzing-test.db < /opt/senzing/er/resources/schema/szcore-schema-sqlite-create.sql
+
+      - name: Run configtool stock-template tests
+        working-directory: packages/configtool
+        env:
+          SZ_G2CONFIG_TEMPLATE: /opt/senzing/er/resources/templates/g2config.json
+        run: npx vitest run __tests__/stock-template.test.ts
 
       - name: Run SDK tests
         working-directory: packages/sdk
