@@ -8,15 +8,16 @@
 // Type declaration for the preload bridge.
 // This file is a plain script (not a module) so it runs in the browser context.
 interface SenzingBridge {
-  getVersion: () => Promise<Record<string, string>>;
+  // JSON-returning methods resolve the raw JSON string.
+  getVersion: () => Promise<string>;
   addRecord: (
     dataSourceCode: string,
     recordId: string,
     recordDefinition: string
-  ) => Promise<Record<string, unknown> | null>;
+  ) => Promise<string | null>;
   searchByAttributes: (
     attributes: string
-  ) => Promise<Record<string, unknown>>;
+  ) => Promise<string>;
   loadTruthset: () => Promise<{ loaded: number; errors: number; elapsed: number }>;
   onLoadProgress: (
     callback: (progress: { loaded: number; total: number; errors: number }) => void
@@ -82,7 +83,10 @@ addRecordForm.addEventListener("submit", async (e: Event) => {
     addRecordStatus.textContent = `Record ${dataSourceCode}/${recordId} added successfully.`;
     addRecordStatus.classList.add("success");
     if (result) {
-      addRecordStatus.textContent += ` Entity ID: ${(result as any).ENTITY_ID ?? "N/A"}`;
+      const info: { AFFECTED_ENTITIES?: Array<{ ENTITY_ID: number }> } =
+        JSON.parse(result);
+      const ids = (info.AFFECTED_ENTITIES ?? []).map((e) => e.ENTITY_ID);
+      addRecordStatus.textContent += ` Affected entities: ${ids.join(", ") || "N/A"}`;
     }
   } catch (err) {
     addRecordStatus.textContent = `Error: ${err}`;

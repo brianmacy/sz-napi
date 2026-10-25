@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld("senzing", {
   /**
    * Get Senzing engine version and build info.
    */
-  getVersion: (): Promise<Record<string, string>> =>
+  getVersion: (): Promise<string> =>
     ipcRenderer.invoke("senzing:getVersion"),
 
   /**
@@ -21,13 +21,13 @@ contextBridge.exposeInMainWorld("senzing", {
    * @param dataSourceCode - Data source (e.g., "CUSTOMERS", "WATCHLIST")
    * @param recordId - Unique record identifier within the data source
    * @param recordDefinition - JSON string of record attributes
-   * @returns WITH_INFO result or null
+   * @returns WITH_INFO result as a JSON string, or null
    */
   addRecord: (
     dataSourceCode: string,
     recordId: string,
     recordDefinition: string
-  ): Promise<Record<string, unknown> | null> =>
+  ): Promise<string | null> =>
     ipcRenderer.invoke(
       "senzing:addRecord",
       dataSourceCode,
@@ -38,11 +38,11 @@ contextBridge.exposeInMainWorld("senzing", {
   /**
    * Search for entities matching a set of attributes.
    * @param attributes - JSON string of search attributes
-   * @returns Search results with resolved entities
+   * @returns Search results (JSON string) with resolved entities
    */
   searchByAttributes: (
     attributes: string
-  ): Promise<Record<string, unknown>> =>
+  ): Promise<string> =>
     ipcRenderer.invoke("senzing:searchByAttributes", attributes),
 
   /**
