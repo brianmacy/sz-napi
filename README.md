@@ -229,6 +229,8 @@ Full type definitions are in `packages/sdk/sdk.d.ts`.
 
 All functions are stateless: they accept a config JSON string and return a modified config JSON string (or query results as a JSON string).
 
+`set*` options that the library treats as tri-state (`setRule` `fragment`/`disqualifier`/`tier`, `set*Function` `connectStr`, and the `setFragment` JSON keys) follow one rule: **absent/`undefined` leaves the value unchanged, `null` clears it, a value sets it.** Other optional `set*` fields cannot be cleared; absent leaves them unchanged.
+
 | Category           | Functions                                                                                                                    |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
 | Data Sources       | `addDataSource`, `setDataSource`, `getDataSource`, `deleteDataSource`, `listDataSources`                                     |
@@ -240,6 +242,8 @@ All functions are stateless: they accept a config JSON string and return a modif
 | Functions          | Standardize, expression, comparison, distinct, matching, scoring, candidate, validation -- each with add/set/get/delete/list |
 | Calls              | Standardize, expression, comparison, distinct calls -- each with add/set/get/delete/list                                     |
 | Thresholds         | `addComparisonThreshold`, `setComparisonThreshold`, `deleteComparisonThreshold`, `listComparisonThresholds`                  |
+| Generic Thresholds | `addGenericThreshold`, `setGenericThreshold`, `deleteGenericThreshold`, `listGenericThresholds`                              |
+| Search Profiles    | `addSearchProfile`, `getSearchProfile`, `listSearchProfiles`, `deleteSearchProfile`                                          |
 | Behavior Overrides | `addBehaviorOverride`, `deleteBehaviorOverride`, `getBehaviorOverride`, `listBehaviorOverrides`                              |
 | Generic Plans      | `cloneGenericPlan`, `deleteGenericPlan`, `setGenericPlan`, `listGenericPlans`                                                |
 | System Params      | `listSystemParameters`, `setSystemParameter`                                                                                 |
@@ -258,7 +262,10 @@ builds it at runtime from the native binding, and `@senzing/types` exports a
 generated copy so consumers without the native module (a tRPC-only client, for
 instance) can still name their flags. The generated table is emitted from the
 binding by `npm run codegen:flags` and CI fails if it drifts, so the native
-`flag!` list stays the single source.
+`flag!` list stays the single source. That list is in turn checked against
+upstream `sz_rust_sdk::flags::SzFlags` by a Rust unit test
+(`cargo test -p senzing-sdk-napi`), which fails if upstream defines a flag the
+list is missing.
 
 ```typescript
 import { SzFlags } from "@senzing/sdk";
@@ -345,6 +352,8 @@ try {
 } catch (e) {
   if (e instanceof SzConfigError) {
     console.log(e.errorType); // 'AlreadyExists', 'NotFound', 'InvalidInput', etc.
+    // 'ValidationErrors' carries structured per-field failures:
+    // e.failures -> [{ field: 'sendToRedo', reasonCode: 'OUT_OF_DOMAIN', offendingValue: 'perhaps' }]
   }
 }
 ```
@@ -405,8 +414,10 @@ cd ../..
 # Run all tests (SDK tests require Senzing runtime)
 npm test
 
-# Run only configtool tests (no runtime needed)
-cd packages/configtool && npx vitest run
+# Run only configtool tests (no runtime needed; stock-template tests read
+# $SZ_ROOT/opt/senzing/er/resources/templates/g2config.json, default /opt/senzing/...,
+# or $SZ_G2CONFIG_TEMPLATE)
+cd packages/configtool && SZ_ROOT=/path/to/senzing npx vitest run
 ```
 
 ## Documentation

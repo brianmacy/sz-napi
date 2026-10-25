@@ -19,6 +19,8 @@ export interface AddAttributeOptions {
   defaultValue?: string
   internal?: string
   required?: string
+  /** Explicit ATTR_ID; absent or <= 0 auto-assigns (seeded at 1000). A taken id is rejected. */
+  id?: number
 }
 
 export declare function addBehaviorOverride(configJson: string, featureCode: string, usageType: string, behavior: string): string
@@ -33,16 +35,17 @@ export interface AddComparisonCallElementOptions {
   cfcallId: number
   ftypeId: number
   felemId: number
-  execOrder: number
+  /** Absent auto-allocates the next EXEC_ORDER on the call; a taken value is rejected. */
+  execOrder?: number
 }
 
 export interface AddComparisonCallOptions {
   ftypeCode: string
   cfuncCode: string
   elementList: Array<string>
+  /** Explicit CFCALL_ID; absent or <= 0 auto-assigns. A taken id is rejected. */
+  id?: number
 }
-
-export declare function addComparisonFuncReturnCode(configJson: string, cfuncCode: string, cfrtnCode: string, cfrtnDesc?: string | undefined | null): string
 
 export declare function addComparisonFunction(configJson: string, cfuncCode: string, options: AddComparisonFunctionOptions): string
 
@@ -76,8 +79,12 @@ export declare function addDataSource(configJson: string, options: AddDataSource
 export interface AddDataSourceOptions {
   code: string
   retentionLevel?: string
+  /** @deprecated Ignored since 0.10.0: no longer part of the Senzing data source schema; never written. */
   conversational?: string
+  /** @deprecated Ignored since 0.10.0: no longer part of the Senzing data source schema; never written. */
   reliability?: number
+  /** Explicit DSRC_ID; absent or <= 0 auto-assigns (seeded at 1000). A taken id is rejected. */
+  id?: number
 }
 
 export declare function addDistinctCall(configJson: string, options: AddDistinctCallOptions): string
@@ -88,7 +95,8 @@ export interface AddDistinctCallElementOptions {
   dfcallId: number
   ftypeId: number
   felemId: number
-  execOrder: number
+  /** Absent auto-allocates the next EXEC_ORDER on the call; a taken value is rejected. */
+  execOrder?: number
 }
 
 export interface AddDistinctCallOptions {
@@ -103,14 +111,19 @@ export interface AddDistinctFunctionOptions {
   connectStr: string
   description?: string
   language?: string
+  /** ANON_SUPPORT: `Yes` or `No` (default `No` on add) */
+  anonSupport?: string
 }
 
 export declare function addElement(configJson: string, options: AddElementOptions): string
 
 export interface AddElementOptions {
   code: string
+  /** Explicit FELEM_ID; absent or <= 0 auto-assigns. A taken id is rejected. */
+  id?: number
   description?: string
   dataType?: string
+  /** @deprecated Ignored since 0.10.0: TOKENIZED is not a CFG_FELEM column in Senzing v4; never written. */
   tokenized?: string
 }
 
@@ -122,7 +135,8 @@ export interface AddExpressionCallElementOptions {
   efcallId: number
   ftypeId: number
   felemId: number
-  execOrder: number
+  /** Absent auto-allocates the next EXEC_ORDER on the call; a taken value is rejected. */
+  execOrder?: number
   felemReq: string
 }
 
@@ -183,6 +197,8 @@ export interface AddFeatureOptions {
   comparison?: string
   version?: number
   rtypeId?: number
+  /** Explicit FTYPE_ID; absent or <= 0 auto-assigns. A taken id is rejected. */
+  id?: number
 }
 
 export declare function addFragment(configJson: string, fragmentConfig: string): string
@@ -203,6 +219,20 @@ export declare function addMatchingFunction(configJson: string, rtypeCode: strin
 export declare function addRule(configJson: string, id: number, ruleConfig: string): string
 
 export declare function addScoringFunction(configJson: string, rtypeCode: string, scoringFunc: string): string
+
+export declare function addSearchProfile(configJson: string, options: AddSearchProfileOptions): string
+
+export interface AddSearchProfileOptions {
+  /** SPROFILE_CODE (required) */
+  code: string
+  /** GPLAN_CODE of the generic plan the profile uses, e.g. `SEARCH` (required) */
+  plan: string
+  /** DEFAULT_USED_FOR_CAND: `Normal` (default) or `Off` */
+  candidates?: string
+  description?: string
+  /** Feature overrides; a feature may appear at most once */
+  elements?: Array<SearchProfileElement>
+}
 
 export declare function addStandardizeCall(configJson: string, options: AddStandardizeCallOptions): string
 
@@ -253,14 +283,29 @@ export declare function deleteComparisonCallElement(configJson: string, options:
 
 export interface DeleteComparisonCallElementOptions {
   cfcallId: number
-  ftypeId: number
-  felemId: number
-  execOrder: number
+  /** FELEM_CODE of the element to remove (preferred). */
+  element?: string
+  /** FTYPE_CODE that disambiguates an element appearing under several features on one call. */
+  elementFeature?: string
+  /** Legacy addressing: FELEM_ID, used when `element` is absent. */
+  felemId?: number
+  /** Legacy addressing: FTYPE_ID, used as `elementFeature` when that is absent and the id is > 0. */
+  ftypeId?: number
+  /** @deprecated Ignored since 0.10.0: the library derives the BOM row's EXEC_ORDER itself. */
+  execOrder?: number
 }
 
 export declare function deleteComparisonFunction(configJson: string, cfuncCode: string): string
 
-export declare function deleteComparisonThreshold(configJson: string, cfuncCode: string, ftypeCode: string): string
+/**
+ * Delete one comparison threshold (CFG_CFRTN) row, identified by
+ * `(cfuncCode, ftypeCode, cfuncRtnval)`; `ftypeCode` may be `all` (FTYPE_ID 0).
+ *
+ * `cfuncRtnval` is optional for backward compatibility: when omitted, the
+ * row is resolved from `(cfuncCode, ftypeCode)` alone and must be unique,
+ * otherwise an `InvalidInput` error asks for `cfuncRtnval`.
+ */
+export declare function deleteComparisonThreshold(configJson: string, cfuncCode: string, ftypeCode: string, cfuncRtnval?: string | undefined | null): string
 
 export declare function deleteDataSource(configJson: string, code: string): string
 
@@ -270,9 +315,16 @@ export declare function deleteDistinctCallElement(configJson: string, options: D
 
 export interface DeleteDistinctCallElementOptions {
   dfcallId: number
-  ftypeId: number
-  felemId: number
-  execOrder: number
+  /** FELEM_CODE of the element to remove (preferred). */
+  element?: string
+  /** FTYPE_CODE that disambiguates an element appearing under several features on one call. */
+  elementFeature?: string
+  /** Legacy addressing: FELEM_ID, used when `element` is absent. */
+  felemId?: number
+  /** Legacy addressing: FTYPE_ID, used as `elementFeature` when that is absent and the id is > 0. */
+  ftypeId?: number
+  /** @deprecated Ignored since 0.10.0: the library derives the BOM row's EXEC_ORDER itself. */
+  execOrder?: number
 }
 
 export declare function deleteDistinctFunction(configJson: string, dfuncCode: string): string
@@ -285,9 +337,16 @@ export declare function deleteExpressionCallElement(configJson: string, options:
 
 export interface DeleteExpressionCallElementOptions {
   efcallId: number
-  ftypeId: number
-  felemId: number
-  execOrder: number
+  /** FELEM_CODE of the element to remove (preferred). */
+  element?: string
+  /** FTYPE_CODE that disambiguates an element appearing under several features on one call. */
+  elementFeature?: string
+  /** Legacy addressing: FELEM_ID, used when `element` is absent. */
+  felemId?: number
+  /** Legacy addressing: FTYPE_ID, used as `elementFeature` when that is absent and the id is > 0. */
+  ftypeId?: number
+  /** @deprecated Ignored since 0.10.0: the library derives the BOM row's EXEC_ORDER itself. */
+  execOrder?: number
 }
 
 export declare function deleteExpressionFunction(configJson: string, efuncCode: string): string
@@ -320,6 +379,8 @@ export declare function deleteRule(configJson: string, ruleCode: string): string
 
 export declare function deleteScoringFunction(configJson: string, rtypeCode: string): string
 
+export declare function deleteSearchProfile(configJson: string, searchValue: string): string
+
 export declare function deleteStandardizeCall(configJson: string, sfcallId: number): string
 
 export declare function deleteStandardizeCallElement(configJson: string, options: DeleteStandardizeCallElementOptions): string
@@ -346,7 +407,8 @@ export declare function getBehaviorOverride(configJson: string, featureCode: str
 
 export declare function getCandidateFunction(configJson: string, rtypeCode: string): string
 
-export declare function getComparisonCall(configJson: string, cfcallId: number): string
+/** Get a comparison call by its numeric call id, or by the feature code it is bound to. */
+export declare function getComparisonCall(configJson: string, cfcallId: number | string): string
 
 export declare function getComparisonFunction(configJson: string, cfuncCode: string): string
 
@@ -356,13 +418,15 @@ export declare function getConfigSection(configJson: string, sectionName: string
 
 export declare function getDataSource(configJson: string, code: string): string
 
-export declare function getDistinctCall(configJson: string, dfcallId: number): string
+/** Get a distinct call by its numeric call id, or by the feature code it is bound to. */
+export declare function getDistinctCall(configJson: string, dfcallId: number | string): string
 
 export declare function getDistinctFunction(configJson: string, dfuncCode: string): string
 
 export declare function getElement(configJson: string, code: string): string
 
-export declare function getExpressionCall(configJson: string, efcallId: number): string
+/** Get an expression call by its numeric call id, or by the feature code it is bound to. */
+export declare function getExpressionCall(configJson: string, efcallId: number | string): string
 
 export declare function getExpressionFunction(configJson: string, efuncCode: string): string
 
@@ -385,7 +449,10 @@ export declare function getRule(configJson: string, codeOrId: string): string
 
 export declare function getScoringFunction(configJson: string, rtypeCode: string): string
 
-export declare function getStandardizeCall(configJson: string, sfcallId: number): string
+export declare function getSearchProfile(configJson: string, code: string): string
+
+/** Get a standardize call by its numeric call id, or by the feature code it is bound to. */
+export declare function getStandardizeCall(configJson: string, sfcallId: number | string): string
 
 export declare function getStandardizeFunction(configJson: string, sfuncCode: string): string
 
@@ -439,6 +506,8 @@ export declare function listRules(configJson: string): string
 
 export declare function listScoringFunctions(configJson: string): string
 
+export declare function listSearchProfiles(configJson: string, filter?: string | undefined | null): string
+
 export declare function listStandardizeCalls(configJson: string): string
 
 export declare function listStandardizeFunctions(configJson: string): string
@@ -462,6 +531,12 @@ export declare function removeMatchingFunction(configJson: string, rtypeCode: st
 export declare function removeScoringFunction(configJson: string, rtypeCode: string): string
 
 export declare function removeValidationFunction(configJson: string, attrCode: string): string
+
+/** One per-feature override of a search profile: `flag` is `Yes` (force the feature on as a candidate builder) or `No` (force it off). */
+export interface SearchProfileElement {
+  feature: string
+  flag: string
+}
 
 export declare function setAttribute(configJson: string, options: SetAttributeOptions): string
 
@@ -494,7 +569,8 @@ export interface SetComparisonCallOptions {
 export declare function setComparisonFunction(configJson: string, cfuncCode: string, options: SetComparisonFunctionOptions): string
 
 export interface SetComparisonFunctionOptions {
-  connectStr?: string
+  /** CONNECT_STR: undefined = leave unchanged, null = clear, string = set. */
+  connectStr?: string | null
   description?: string
   language?: string
   anonSupport?: string
@@ -518,7 +594,9 @@ export declare function setDataSource(configJson: string, code: string, options:
 
 export interface SetDataSourceOptions {
   retentionLevel?: string
+  /** @deprecated Ignored since 0.10.0: no longer part of the Senzing data source schema; never written. */
   conversational?: string
+  /** @deprecated Ignored since 0.10.0: no longer part of the Senzing data source schema; never written. */
   reliability?: number
 }
 
@@ -542,9 +620,12 @@ export interface SetDistinctCallOptions {
 export declare function setDistinctFunction(configJson: string, dfuncCode: string, options: SetDistinctFunctionOptions): string
 
 export interface SetDistinctFunctionOptions {
-  connectStr?: string
+  /** CONNECT_STR: undefined = leave unchanged, null = clear, string = set. */
+  connectStr?: string | null
   description?: string
   language?: string
+  /** ANON_SUPPORT: `Yes` or `No` (default `No` on add) */
+  anonSupport?: string
 }
 
 export declare function setElement(configJson: string, options: SetElementOptions): string
@@ -553,6 +634,7 @@ export interface SetElementOptions {
   code: string
   description?: string
   dataType?: string
+  /** @deprecated Ignored since 0.10.0: TOKENIZED is not a CFG_FELEM column in Senzing v4; never written. */
   tokenized?: string
 }
 
@@ -575,7 +657,8 @@ export interface SetExpressionCallOptions {
 export declare function setExpressionFunction(configJson: string, efuncCode: string, options: SetExpressionFunctionOptions): string
 
 export interface SetExpressionFunctionOptions {
-  connectStr?: string
+  /** CONNECT_STR: undefined = leave unchanged, null = clear, string = set. */
+  connectStr?: string | null
   description?: string
   language?: string
 }
@@ -634,9 +717,12 @@ export interface SetRuleOptions {
   resolve?: string
   relate?: string
   rtypeId?: number
-  fragment?: string
-  disqualifier?: string
-  tier?: number
+  /** QUAL_ERFRAG_CODE: undefined = leave unchanged, null = clear, string = set. */
+  fragment?: string | null
+  /** DISQ_ERFRAG_CODE: undefined = leave unchanged, null = clear, string = set. */
+  disqualifier?: string | null
+  /** ERRULE_TIER: undefined = leave unchanged, null = clear, number = set. */
+  tier?: number | null
 }
 
 export declare function setScoringFunction(configJson: string, rtypeCode: string, scoringFunc?: string | undefined | null): string
@@ -660,7 +746,8 @@ export interface SetStandardizeCallOptions {
 export declare function setStandardizeFunction(configJson: string, sfuncCode: string, options: SetStandardizeFunctionOptions): string
 
 export interface SetStandardizeFunctionOptions {
-  connectStr?: string
+  /** CONNECT_STR: undefined = leave unchanged, null = clear, string = set. */
+  connectStr?: string | null
   description?: string
   language?: string
 }

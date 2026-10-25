@@ -7,8 +7,11 @@ use crate::error::{config_error_to_napi, json_serialize_error};
 #[napi(object)]
 pub struct AddElementOptions {
     pub code: String,
+    /// Explicit FELEM_ID; absent or <= 0 auto-assigns. A taken id is rejected.
+    pub id: Option<i64>,
     pub description: Option<String>,
     pub data_type: Option<String>,
+    /// @deprecated Ignored since 0.10.0: TOKENIZED is not a CFG_FELEM column in Senzing v4; never written.
     pub tokenized: Option<String>,
 }
 
@@ -17,6 +20,7 @@ pub struct SetElementOptions {
     pub code: String,
     pub description: Option<String>,
     pub data_type: Option<String>,
+    /// @deprecated Ignored since 0.10.0: TOKENIZED is not a CFG_FELEM column in Senzing v4; never written.
     pub tokenized: Option<String>,
 }
 
@@ -36,7 +40,7 @@ pub fn add_element(config_json: String, options: AddElementOptions) -> Result<St
         code: &options.code,
         description: options.description.as_deref(),
         data_type: options.data_type.as_deref(),
-        tokenized: options.tokenized.as_deref(),
+        id: options.id,
     };
     elements::add_element(&config_json, params).map_err(config_error_to_napi)
 }
@@ -64,7 +68,6 @@ pub fn set_element(config_json: String, options: SetElementOptions) -> Result<St
         code: &options.code,
         description: options.description.as_deref(),
         data_type: options.data_type.as_deref(),
-        tokenized: options.tokenized.as_deref(),
     };
     elements::set_element(&config_json, params).map_err(config_error_to_napi)
 }

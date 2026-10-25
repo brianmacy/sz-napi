@@ -18,6 +18,8 @@ export const {
   addRule, deleteRule, getRule, listRules, setRule,
   // Fragments
   addFragment, deleteFragment, getFragment, listFragments, setFragment,
+  // Search Profiles
+  addSearchProfile, getSearchProfile, listSearchProfiles, deleteSearchProfile,
   // Thresholds
   addComparisonThreshold, deleteComparisonThreshold, setComparisonThreshold, listComparisonThresholds,
   addGenericThreshold, deleteGenericThreshold, setGenericThreshold, listGenericThresholds,
@@ -43,7 +45,7 @@ export const {
   listExpressionFunctions, setExpressionFunction,
   // Comparison Functions
   addComparisonFunction, deleteComparisonFunction, getComparisonFunction,
-  listComparisonFunctions, setComparisonFunction, addComparisonFuncReturnCode,
+  listComparisonFunctions, setComparisonFunction,
   // Distinct Functions
   addDistinctFunction, deleteDistinctFunction, getDistinctFunction,
   listDistinctFunctions, setDistinctFunction,

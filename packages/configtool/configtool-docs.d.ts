@@ -177,7 +177,9 @@ export declare function addAttribute(configJson: string, options: AddAttributeOp
  */
 export declare class SzConfigError extends Error {
   name: 'SzConfigError';
-  /** The category of configuration error. */
+  /** The category of configuration error (e.g., 'NotFound', 'NotOnCall', 'AlreadyExists', 'AlreadyPresent', 'ValidationErrors'). */
   errorType: string;
-  constructor(errorType: string, message: string);
+  /** Structured field failures; present only when `errorType === 'ValidationErrors'`. */
+  failures?: Array<{ field: string; reasonCode: string; offendingValue: string | null }>;
+  constructor(errorType: string, message: string, failures?: Array<{ field: string; reasonCode: string; offendingValue: string | null }>);
 }

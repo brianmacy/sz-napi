@@ -38,5 +38,8 @@ pub fn set_fragment(
 ) -> Result<String> {
     let value: serde_json::Value =
         serde_json::from_str(&fragment_config).map_err(json_serialize_error)?;
-    fragments::set_fragment(&config_json, &fragment_code, &value).map_err(config_error_to_napi)
+    // Tri-state per key: absent = leave, null = clear, string = set
+    // (ERFRAG_SOURCE / source, ERFRAG_DESC / description).
+    let params = fragments::SetFragmentParams::try_from(&value).map_err(config_error_to_napi)?;
+    fragments::set_fragment(&config_json, &fragment_code, params).map_err(config_error_to_napi)
 }

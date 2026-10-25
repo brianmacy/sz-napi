@@ -82,7 +82,6 @@ configJson = addDataSource(configJson, { code: "PUBLIC_RECORDS" });
 configJson = addDataSource(configJson, {
   code: "PARTNER_FEED",
   retentionLevel: "Remember",
-  reliability: 7,
 });
 
 // Verify the additions
@@ -97,8 +96,8 @@ const crmSource = getDataSource(configJson, "CRM_SYSTEM");
 console.log(`\nCRM_SYSTEM details: ${crmSource}`);
 
 // Modify a data source
-configJson = setDataSource(configJson, "PARTNER_FEED", { reliability: 9 });
-console.log("Updated PARTNER_FEED reliability to 9.");
+configJson = setDataSource(configJson, "PARTNER_FEED", { retentionLevel: "Forget" });
+console.log("Updated PARTNER_FEED retention level to Forget.");
 
 // Delete a data source
 configJson = deleteDataSource(configJson, "PUBLIC_RECORDS");

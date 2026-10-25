@@ -1,6 +1,7 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use sz_configtool_lib::thresholds;
+use sz_configtool_lib::error::SzConfigError;
+use sz_configtool_lib::{helpers, thresholds};
 
 use crate::error::{config_error_to_napi, json_serialize_error};
 
@@ -76,14 +77,63 @@ pub fn add_comparison_threshold(
     thresholds::add_comparison_threshold(&config_json, params).map_err(config_error_to_napi)
 }
 
+/// Delete one comparison threshold (CFG_CFRTN) row, identified by
+/// `(cfuncCode, ftypeCode, cfuncRtnval)`; `ftypeCode` may be `all` (FTYPE_ID 0).
+///
+/// `cfuncRtnval` is optional for backward compatibility: when omitted, the
+/// row is resolved from `(cfuncCode, ftypeCode)` alone and must be unique,
+/// otherwise an `InvalidInput` error asks for `cfuncRtnval`.
 #[napi]
 pub fn delete_comparison_threshold(
     config_json: String,
     cfunc_code: String,
     ftype_code: String,
+    cfunc_rtnval: Option<String>,
 ) -> Result<String> {
-    thresholds::delete_comparison_threshold(&config_json, &cfunc_code, &ftype_code)
+    let rtnval = match cfunc_rtnval {
+        Some(v) => v,
+        None => unique_cfrtn_value(&config_json, &cfunc_code, &ftype_code)
+            .map_err(config_error_to_napi)?,
+    };
+    thresholds::delete_comparison_threshold(&config_json, &cfunc_code, &ftype_code, &rtnval)
         .map_err(config_error_to_napi)
+}
+
+/// Resolve the single CFRTN_VALUE for `(cfunc, ftype)`, so the 3-arg JS call
+/// keeps working when it is unambiguous. The library still performs the delete.
+fn unique_cfrtn_value(
+    config_json: &str,
+    cfunc_code: &str,
+    ftype_code: &str,
+) -> std::result::Result<String, SzConfigError> {
+    let cfunc_id = helpers::lookup_cfunc_id(config_json, cfunc_code)?;
+    let ftype_id = if ftype_code.eq_ignore_ascii_case("all") {
+        0
+    } else {
+        helpers::lookup_feature_id(config_json, ftype_code)?
+    };
+    let config: serde_json::Value =
+        serde_json::from_str(config_json).map_err(|e| SzConfigError::JsonParse(e.to_string()))?;
+    let values: Vec<String> = config["G2_CONFIG"]["CFG_CFRTN"]
+        .as_array()
+        .ok_or_else(|| SzConfigError::MissingSection("CFG_CFRTN".to_string()))?
+        .iter()
+        .filter(|row| {
+            row["CFUNC_ID"].as_i64() == Some(cfunc_id) && row["FTYPE_ID"].as_i64() == Some(ftype_id)
+        })
+        .filter_map(|row| row["CFUNC_RTNVAL"].as_str().map(str::to_string))
+        .collect();
+    match values.as_slice() {
+        [] => Err(SzConfigError::NotFound(format!(
+            "Comparison threshold for cfunc='{cfunc_code}', ftype='{ftype_code}'"
+        ))),
+        [only] => Ok(only.clone()),
+        _ => Err(SzConfigError::InvalidInput(format!(
+            "{} comparison thresholds match cfunc='{cfunc_code}', ftype='{ftype_code}' ({}); pass cfuncRtnval",
+            values.len(),
+            values.join(", ")
+        ))),
+    }
 }
 
 #[napi]

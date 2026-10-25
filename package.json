@@ -14,10 +14,10 @@
     "codegen:flags:check": "node scripts/codegen-flags.mjs --check"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1",
-    "@vitest/coverage-v8": "^4",
+    "@types/node": "^26.6.2",
+    "@vitest/coverage-v8": "^5.0.1",
     "typedoc": "^0.28",
-    "vitest": "^4"
+    "vitest": "^5.0.1"
   },
   "overrides": {
     "esbuild": "0.28.2"

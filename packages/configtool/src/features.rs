@@ -20,6 +20,8 @@ pub struct AddFeatureOptions {
     pub comparison: Option<String>,
     pub version: Option<i64>,
     pub rtype_id: Option<i64>,
+    /// Explicit FTYPE_ID; absent or <= 0 auto-assigns. A taken id is rejected.
+    pub id: Option<i64>,
 }
 
 #[napi(object)]
@@ -79,6 +81,7 @@ pub fn add_feature(config_json: String, options: AddFeatureOptions) -> Result<St
         comparison: options.comparison.as_deref(),
         version: options.version,
         rtype_id: options.rtype_id,
+        id: options.id,
     };
     features::add_feature(&config_json, params).map_err(config_error_to_napi)
 }
