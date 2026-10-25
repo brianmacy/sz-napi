@@ -188,4 +188,15 @@ export class SzReplaceConflictError extends SzError {}
  */
 export class SzEnvironmentDestroyedError extends SzError {}
 
+/**
+ * Converts an error thrown by the native module into the matching typed
+ * {@link SzError} subclass. The native message is expected to start with a
+ * bracketed code such as `[SZ_NOT_FOUND]`; that code selects the class (for
+ * example {@link SzNotFoundError}) and is stored as `szCode`, and the prefix is
+ * stripped from the message. A missing or unrecognized code yields an
+ * {@link SzUnhandledError}. The original stack trace is preserved.
+ *
+ * @param nativeError - The error thrown by the native binding.
+ * @returns The typed `SzError` instance (not thrown).
+ */
 export function mapToSzError(nativeError: Error): SzError;

@@ -106,6 +106,13 @@ jobs:
         working-directory: sz-napi/packages/configtool
         run: npx napi build --platform --release --target ${{ matrix.target }}
 
+      # index.d.ts is generated from the Rust doc comments; the committed copy
+      # is what TypeDoc publishes, so it must match a fresh build (#120).
+      - name: Check generated index.d.ts is up to date
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: sz-napi
+        run: git diff --exit-code -- packages/configtool/index.d.ts
+
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -279,6 +286,11 @@ jobs:
         run: |
           (cd packages/types && npx tsc -p tsconfig.json --emitDeclarationOnly)
           npm run build:check --workspaces --if-present
+
+      # Every exported function in the TypeDoc entry points must have a
+      # description, so the API site never ships signature-only pages (#120).
+      - name: Docs coverage
+        run: npm run docs:check
 
       - name: Run tRPC unit tests
         working-directory: packages/trpc

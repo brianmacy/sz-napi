@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `@senzing/configtool`: every exported function now has a TSDoc description and per-parameter docs (154 were signature-only on the API site), generated from the Rust doc comments. CI now fails on any undocumented exported function (`npm run docs:check`) and on a committed `index.d.ts` that is stale against the Rust sources (#120).
 - `@senzing/configtool`: `addSearchProfile`, `getSearchProfile`, `listSearchProfiles`, `deleteSearchProfile` (CFG_SPROFILE; `INGEST`/`SEARCH` are protected from delete).
 - `@senzing/configtool`: optional `id` on `addDataSource`, `addAttribute`, `addElement`, `addFeature`, `addComparisonCall` options (absent auto-assigns; a taken id is rejected).
 - `@senzing/configtool`: `get{Standardize,Expression,Comparison,Distinct}Call` accept a feature code as well as a numeric call id.
