@@ -34,27 +34,34 @@ url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/
 [[exemptions.convert_case]]
 version = "0.12.0"
 criteria = "safe-to-deploy"
+notes = "Case conversion used by the napi-derive / napi-derive-backend proc macros (build-time code generation for the Node bindings). Publisher rutrum; publisher not in any imported [[trusted]] set and no imported audit covers this version."
 
 [[exemptions.ctor]]
 version = "1.0.13"
 criteria = "safe-to-deploy"
+notes = "Module-constructor runtime used by napi/napi-derive to register the Node addon at load time (shipped). Publisher mmastrac; publisher not in any imported [[trusted]] set and no imported audit covers this version."
 
 [[exemptions.napi]]
 version = "3.15.0"
 criteria = "safe-to-deploy"
+notes = "Core napi-rs Node-API binding crate used directly by both Node packages (shipped). Published via crates.io trusted publishing from github:napi-rs/napi-rs, which no imported audit set trusts or audits."
 
 [[exemptions.napi-build]]
 version = "2.6.0"
 criteria = "safe-to-deploy"
+notes = "napi-rs build-script helper (linker flags for the Node addon). Published via trusted publishing from github:napi-rs/napi-rs, not trusted or audited by any imported set."
 
 [[exemptions.napi-derive]]
 version = "3.6.13"
 criteria = "safe-to-deploy"
+notes = "napi-rs #[napi] proc macro used directly by both Node packages (generates shipped glue code). Published via trusted publishing from github:napi-rs/napi-rs, not trusted or audited by any imported set."
 
 [[exemptions.napi-derive-backend]]
 version = "6.1.6"
 criteria = "safe-to-deploy"
+notes = "Code-generation backend of napi-derive (generates shipped glue code). Published via trusted publishing from github:napi-rs/napi-rs, not trusted or audited by any imported set."
 
 [[exemptions.napi-sys]]
 version = "3.4.1"
 criteria = "safe-to-deploy"
+notes = "Raw Node-API FFI declarations used by napi (shipped). Published via trusted publishing from github:napi-rs/napi-rs, not trusted or audited by any imported set."
