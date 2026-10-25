@@ -2,3 +2,171 @@
 # cargo-vet audits file
 
 [audits]
+
+[[trusted.anyhow]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-10-05"
+end = "2027-10-25"
+notes = "David Tolnay (dtolnay, crates.io id 3618): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.bitflags]]
+criteria = "safe-to-deploy"
+user-id = 3204 # Ashley Mannix (KodrAus)
+start = "2019-05-02"
+end = "2027-10-25"
+notes = "Ashley Mannix (KodrAus, crates.io id 3204): former Rust library team member, maintainer of rust-lang/log and bitflags; recognized Rust-project maintainer per Brian's trust policy."
+
+[[trusted.futures]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2020-10-05"
+end = "2027-10-25"
+notes = "Taiki Endo (taiki-e, crates.io id 33035): maintainer of foundational crates (futures-rs, pin-project, crossbeam); listed as a recognized foundational-crate maintainer in Brian's trust policy."
+
+[[trusted.futures-channel]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2020-10-05"
+end = "2027-10-25"
+notes = "Taiki Endo (taiki-e, crates.io id 33035): maintainer of foundational crates (futures-rs, pin-project, crossbeam); listed as a recognized foundational-crate maintainer in Brian's trust policy."
+
+[[trusted.futures-executor]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2020-10-05"
+end = "2027-10-25"
+notes = "Taiki Endo (taiki-e, crates.io id 33035): maintainer of foundational crates (futures-rs, pin-project, crossbeam); listed as a recognized foundational-crate maintainer in Brian's trust policy."
+
+[[trusted.futures-io]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2020-10-05"
+end = "2027-10-25"
+notes = "Taiki Endo (taiki-e, crates.io id 33035): maintainer of foundational crates (futures-rs, pin-project, crossbeam); listed as a recognized foundational-crate maintainer in Brian's trust policy."
+
+[[trusted.futures-task]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2019-07-29"
+end = "2027-10-25"
+notes = "Taiki Endo (taiki-e, crates.io id 33035): maintainer of foundational crates (futures-rs, pin-project, crossbeam); listed as a recognized foundational-crate maintainer in Brian's trust policy."
+
+[[trusted.futures-util]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2020-10-05"
+end = "2027-10-25"
+notes = "Taiki Endo (taiki-e, crates.io id 33035): maintainer of foundational crates (futures-rs, pin-project, crossbeam); listed as a recognized foundational-crate maintainer in Brian's trust policy."
+
+[[trusted.hashbrown]]
+criteria = "safe-to-deploy"
+user-id = 2915 # Amanieu d'Antras (Amanieu)
+start = "2019-04-02"
+end = "2027-10-25"
+notes = "Amanieu d'Antras (Amanieu, crates.io id 2915): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.indexmap]]
+criteria = "safe-to-deploy"
+user-id = 539 # Josh Stone (cuviper)
+start = "2020-01-15"
+end = "2027-10-25"
+notes = "Josh Stone (cuviper, crates.io id 539): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.itoa]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-05-02"
+end = "2027-10-25"
+notes = "David Tolnay (dtolnay, crates.io id 3618): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.libc]]
+criteria = "safe-to-deploy"
+user-id = 2915 # Amanieu d'Antras (Amanieu)
+start = "2021-01-27"
+end = "2027-10-25"
+notes = "Amanieu d'Antras (Amanieu, crates.io id 2915): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.libc]]
+criteria = "safe-to-deploy"
+user-id = 55123 # rust-lang-owner
+start = "2024-08-15"
+end = "2027-10-25"
+notes = "rust-lang-owner (crates.io id 55123), the Rust project's publishing account: publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.memchr]]
+criteria = "safe-to-deploy"
+user-id = 189 # Andrew Gallant (BurntSushi)
+start = "2019-07-07"
+end = "2027-10-25"
+notes = "Andrew Gallant (BurntSushi, crates.io id 189): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.pin-project-lite]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2019-10-22"
+end = "2027-10-25"
+notes = "Taiki Endo (taiki-e, crates.io id 33035): maintainer of foundational crates (futures-rs, pin-project, crossbeam); listed as a recognized foundational-crate maintainer in Brian's trust policy."
+
+[[trusted.pin-project-lite]]
+criteria = "safe-to-deploy"
+user-id = 33035 # Taiki Endo (taiki-e)
+start = "2019-10-22"
+end = "2027-10-25"
+notes = "Taiki Endo (taiki-e, crates.io id 33035): maintainer of foundational crates (futures-rs, pin-project, crossbeam); listed as a recognized foundational-crate maintainer in Brian's trust policy."
+
+[[trusted.pin-project-lite]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:taiki-e/pin-project-lite"
+start = "2026-02-27"
+end = "2027-10-25"
+notes = "crates.io trusted publishing from taiki-e/pin-project-lite (Taiki Endo, taiki-e); taiki-e is a recognized foundational-crate maintainer per Brian's trust policy."
+
+[[trusted.semver]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2021-05-25"
+end = "2027-10-25"
+notes = "David Tolnay (dtolnay, crates.io id 3618): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.serde_json]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-02-28"
+end = "2027-10-25"
+notes = "David Tolnay (dtolnay, crates.io id 3618): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.slab]]
+criteria = "safe-to-deploy"
+user-id = 6741 # Alice Ryhl (Darksonn)
+start = "2021-10-13"
+end = "2027-10-25"
+notes = "Alice Ryhl (Darksonn, crates.io id 6741): publisher is in the [[trusted]] sets of the imported mozilla and bytecode-alliance audits (checked 2026-10-25)."
+
+[[trusted.syn]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-03-01"
+end = "2027-10-25"
+notes = "David Tolnay (dtolnay, crates.io id 3618): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.thiserror]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-10-09"
+end = "2027-10-25"
+notes = "David Tolnay (dtolnay, crates.io id 3618): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.thiserror-impl]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-10-09"
+end = "2027-10-25"
+notes = "David Tolnay (dtolnay, crates.io id 3618): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."
+
+[[trusted.unicode-ident]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2021-10-02"
+end = "2027-10-25"
+notes = "David Tolnay (dtolnay, crates.io id 3618): publisher is in the [[trusted]] sets of the imported mozilla, bytecode-alliance, isrg and ariel-os audit sets (checked 2026-10-25)."

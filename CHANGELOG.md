@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Supply chain (cargo-vet):** imports the Actix, Ariel OS, Bytecode Alliance, Embark, Fermyon, Google, ISRG, Mozilla and Zcash audit sets and trusts reputable publishers (evidence in each entry's notes); exemptions 46 -> 7, each with a notes line.
 - **`@senzing/configtool` now builds against `sz_configtool_lib` v0.10.0 (was 0.3.2).** The JS API is kept source-compatible wherever the library allows; the library's own behaviour changes (0.4.0–0.10.0) flow through. Tested against the stock Senzing 4.4.2 template.
 
 ### Added

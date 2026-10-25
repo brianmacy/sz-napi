@@ -4,186 +4,64 @@
 [cargo-vet]
 version = "0.10"
 
-[[exemptions.anyhow]]
-version = "1.0.102"
-criteria = "safe-to-deploy"
+[imports.actix]
+url = "https://raw.githubusercontent.com/actix/supply-chain/main/audits.toml"
 
-[[exemptions.bitflags]]
-version = "2.11.0"
-criteria = "safe-to-deploy"
+[imports.ariel-os]
+url = "https://raw.githubusercontent.com/ariel-os/ariel-os/main/supply-chain/audits.toml"
 
-[[exemptions.cfg-if]]
-version = "1.0.4"
-criteria = "safe-to-deploy"
+[imports.bytecode-alliance]
+url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-chain/audits.toml"
+
+[imports.embark-studios]
+url = "https://raw.githubusercontent.com/EmbarkStudios/rust-ecosystem/main/audits.toml"
+
+[imports.fermyon]
+url = "https://raw.githubusercontent.com/fermyon/spin/main/supply-chain/audits.toml"
+
+[imports.google]
+url = "https://raw.githubusercontent.com/google/supply-chain/main/audits.toml"
+
+[imports.isrg]
+url = "https://raw.githubusercontent.com/divviup/libprio-rs/main/supply-chain/audits.toml"
+
+[imports.mozilla]
+url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
+
+[imports.zcash]
+url = "https://raw.githubusercontent.com/zcash/rust-ecosystem/main/supply-chain/audits.toml"
 
 [[exemptions.convert_case]]
 version = "0.12.0"
 criteria = "safe-to-deploy"
+notes = "Case conversion used by the napi-derive / napi-derive-backend proc macros (build-time code generation for the Node bindings). Publisher rutrum; publisher not in any imported [[trusted]] set and no imported audit covers this version."
 
 [[exemptions.ctor]]
 version = "1.0.13"
 criteria = "safe-to-deploy"
-
-[[exemptions.equivalent]]
-version = "1.0.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-channel]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-core]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-executor]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-io]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-macro]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-sink]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-task]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-util]]
-version = "0.3.32"
-criteria = "safe-to-deploy"
-
-[[exemptions.hashbrown]]
-version = "0.16.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.hex]]
-version = "0.4.3"
-criteria = "safe-to-deploy"
-
-[[exemptions.indexmap]]
-version = "2.13.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.itoa]]
-version = "1.0.17"
-criteria = "safe-to-deploy"
-
-[[exemptions.libc]]
-version = "0.2.183"
-criteria = "safe-to-deploy"
-
-[[exemptions.libloading]]
-version = "0.9.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.memchr]]
-version = "2.8.0"
-criteria = "safe-to-deploy"
+notes = "Module-constructor runtime used by napi/napi-derive to register the Node addon at load time (shipped). Publisher mmastrac; publisher not in any imported [[trusted]] set and no imported audit covers this version."
 
 [[exemptions.napi]]
 version = "3.15.0"
 criteria = "safe-to-deploy"
+notes = "Core napi-rs Node-API binding crate used directly by both Node packages (shipped). Published via crates.io trusted publishing from github:napi-rs/napi-rs, which no imported audit set trusts or audits."
 
 [[exemptions.napi-build]]
 version = "2.6.0"
 criteria = "safe-to-deploy"
+notes = "napi-rs build-script helper (linker flags for the Node addon). Published via trusted publishing from github:napi-rs/napi-rs, not trusted or audited by any imported set."
 
 [[exemptions.napi-derive]]
 version = "3.6.13"
 criteria = "safe-to-deploy"
+notes = "napi-rs #[napi] proc macro used directly by both Node packages (generates shipped glue code). Published via trusted publishing from github:napi-rs/napi-rs, not trusted or audited by any imported set."
 
 [[exemptions.napi-derive-backend]]
 version = "6.1.6"
 criteria = "safe-to-deploy"
+notes = "Code-generation backend of napi-derive (generates shipped glue code). Published via trusted publishing from github:napi-rs/napi-rs, not trusted or audited by any imported set."
 
 [[exemptions.napi-sys]]
 version = "3.4.1"
 criteria = "safe-to-deploy"
-
-[[exemptions.nohash-hasher]]
-version = "0.2.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.pin-project-lite]]
-version = "0.2.17"
-criteria = "safe-to-deploy"
-
-[[exemptions.proc-macro2]]
-version = "1.0.106"
-criteria = "safe-to-deploy"
-
-[[exemptions.quote]]
-version = "1.0.45"
-criteria = "safe-to-deploy"
-
-[[exemptions.rustc-hash]]
-version = "2.1.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.semver]]
-version = "1.0.27"
-criteria = "safe-to-deploy"
-
-[[exemptions.serde]]
-version = "1.0.228"
-criteria = "safe-to-deploy"
-
-[[exemptions.serde_core]]
-version = "1.0.228"
-criteria = "safe-to-deploy"
-
-[[exemptions.serde_derive]]
-version = "1.0.228"
-criteria = "safe-to-deploy"
-
-[[exemptions.serde_json]]
-version = "1.0.151"
-criteria = "safe-to-deploy"
-
-[[exemptions.slab]]
-version = "0.4.12"
-criteria = "safe-to-deploy"
-
-[[exemptions.syn]]
-version = "2.0.117"
-criteria = "safe-to-deploy"
-
-[[exemptions.syn]]
-version = "3.0.9"
-criteria = "safe-to-deploy"
-
-[[exemptions.thiserror]]
-version = "2.0.18"
-criteria = "safe-to-deploy"
-
-[[exemptions.thiserror-impl]]
-version = "2.0.18"
-criteria = "safe-to-deploy"
-
-[[exemptions.unicode-ident]]
-version = "1.0.24"
-criteria = "safe-to-deploy"
-
-[[exemptions.unicode-segmentation]]
-version = "1.12.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.windows-link]]
-version = "0.2.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.zmij]]
-version = "1.0.21"
-criteria = "safe-to-deploy"
+notes = "Raw Node-API FFI declarations used by napi (shipped). Published via trusted publishing from github:napi-rs/napi-rs, not trusted or audited by any imported set."
