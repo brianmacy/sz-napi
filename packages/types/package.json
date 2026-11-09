@@ -19,7 +19,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "tsup": "^8",
+    "tsup": "^9",
     "typescript": "^7"
   },
   "files": [
