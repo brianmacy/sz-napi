@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `napi` 3.15.0, `napi-derive` 3.6.13, `napi-build` 2.6.0 (`napi-derive` 3.6.9 alone does not compile: its `syn` 2 conflicts with `napi-derive-backend` 6.1.6's `syn` 3); `vitest` / `@vitest/coverage-v8` 5, `@napi-rs/cli` 3.10.5, `@trpc/client` 11.19.0, `@types/node` 26.6.2; `npm audit fix` for electron, undici, zod, markdown-it, vite, source-map-js advisories.
 - Dependabot rollup (#124-#129): `serde_json` 1.0.154 (adds `foldhash`, Zlib -- now in the `deny.toml` allow-list), `tsup` 9, `electron` 45, `actions/setup-node` 7.1.0, `actions/upload-artifact` 7.0.2, `actions/download-artifact` 8.0.2. Dependabot now groups updates into one PR per ecosystem (npm, cargo, github-actions).
+- `napi` 3.16.2, `napi-derive` 3.7.1 (Dependabot #131; its 3.16.1 / 3.7.0 pair did not compile against `napi-derive-backend` 7.0.1, released with 3.16.2). `cargo vet` now trusts the napi-rs crates' crates.io trusted publisher `github:napi-rs/napi-rs` instead of per-version exemptions, so napi-rs bumps no longer fail vet.
 
 ### Breaking (`@senzing/configtool`)
 
