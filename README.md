@@ -34,7 +34,7 @@ Node.js 18 or later.
 
 ### Senzing Runtime (for @senzing/sdk only)
 
-The `@senzing/sdk` package requires the Senzing runtime to be installed separately. The package contains only the NAPI bridge code (a few MB); the runtime libraries and support data are installed via platform package managers.
+The `@senzing/sdk` package requires the Senzing runtime **4.5.0 or later** (the native logging API, libSzLogging, first shipped in 4.5.0) to be installed separately. The package contains only the NAPI bridge code (a few MB); the runtime libraries and support data are installed via platform package managers.
 
 **macOS (arm64):**
 
@@ -220,6 +220,8 @@ writeFileSync("config-modified.json", config);
 | `SzConfigManager`          | Configuration management: `createConfig`, `registerConfig`, `setDefaultConfig`, `replaceDefaultConfigId`, `getConfigRegistry`, and more.                                                                                   |
 | `SzDiagnostic`             | System diagnostics: `checkRepositoryPerformance`, `getRepositoryInfo`, `getFeature`, `purgeRepository`.                                                                                                                    |
 | `SzProduct`                | Product info: `getVersion`, `getLicense`.                                                                                                                                                                                  |
+| `SzLogging`                | Native logging (`env.getLogging()`, Senzing 4.5.0+): `registerCallback` (disposable `SzLogRegistration`), `setDefaultCallback`, `setDefaultOutput`, `setDefaultFormat`, `setDefaultLogLevel`, `getEffectiveLogLevel`. Records arrive asynchronously on the JS thread. See the [Logging guide](docs/guides/logging.md). |
+| `SzLogLevel`, `SzLogFormat` | Frozen log level / format constants (`SzLogLevel.Warn === "WARN"`).                                                                                                                                                       |
 | `SzFlags`                  | Frozen object containing all flag constants as `bigint` values.                                                                                                                                                            |
 | `SzError` (and subclasses) | Error hierarchy for structured error handling.                                                                                                                                                                             |
 
@@ -428,7 +430,8 @@ Full API reference and guides are published to GitHub Pages via TypeDoc.
 - [Config Management](docs/guides/config-management.md) — Configuration lifecycle tutorial
 - [Error Handling](docs/guides/error-handling.md) — Error hierarchy and patterns
 - [Deployment](docs/guides/deployment.md) — Docker, PostgreSQL, monitoring
-- [Code Snippets](docs/guides/code-snippets.md) — 27 runnable snippets covering every SDK operation
+- [Logging](docs/guides/logging.md) — Native log callbacks, default output, levels and formats (Senzing 4.5.0+)
+- [Code Snippets](docs/guides/code-snippets.md) — 28 runnable snippets covering every SDK operation
 
 ## Examples
 
@@ -446,6 +449,7 @@ npm start
 | [config-management](examples/config-management/) | Create, modify, register, and activate configs                |       Yes        |
 | [configtool-usage](examples/configtool-usage/)   | Offline config editing with pure JSON                         |        No        |
 | [worker-threads](examples/worker-threads/)       | Worker thread pattern for heavy workloads                     |       Yes        |
+| [logging](examples/logging/)                     | Log callbacks: module statistics, runtime verbosity toggle    |       Yes        |
 | [entity-graph](examples/entity-graph/)           | Interactive D3.js entity graph visualization                  |       Yes        |
 | [electron-app](examples/electron-app/)           | Electron desktop app with worker threads                      |       Yes        |
 | [trpc-server](examples/trpc-server/)             | Express server exposing SDK via tRPC, loads truthset from GitHub |    Yes        |
@@ -473,6 +477,7 @@ npx tsx information/get-version/index.ts
 | [Redo](code-snippets/redo/)                     | redo-continuous, redo-worker-pool, load-with-redo, redo-with-info          |       Yes        |
 | [Error Handling](code-snippets/error-handling/) | error-inspection, retry-with-backoff                                       |       Yes        |
 | [Stewardship](code-snippets/stewardship/)       | force-resolve, force-unresolve                                             |       Yes        |
+| [Logging](code-snippets/logging/)               | log-callback                                                               |       Yes        |
 | [ConfigTool](code-snippets/configtool/)         | basic-usage, process-script                                                |        No        |
 
 ## Repository Structure
@@ -530,6 +535,7 @@ sz-napi/
     config-management/          # Register data sources, manage configs
     configtool-usage/           # Edit config JSON offline
     worker-threads/             # Worker thread pattern for heavy workloads
+    logging/                    # Log callbacks, module stats, verbosity toggle
     entity-graph/               # Interactive D3.js entity graph visualization
     electron-app/               # Electron desktop app with worker threads
     trpc-server/                # Express + tRPC server with truthset loading
@@ -545,6 +551,7 @@ sz-napi/
     redo/                       # Redo processing patterns
     error-handling/             # Error hierarchy and retry
     stewardship/                # Force resolve/unresolve
+    logging/                    # Native log callbacks
     configtool/                 # Offline config editing (no runtime)
   docs/
     index.md                    # TypeDoc landing page
@@ -553,6 +560,7 @@ sz-napi/
       config-management.md      # Configuration lifecycle tutorial
       error-handling.md         # Error hierarchy and patterns
       deployment.md             # Docker, PostgreSQL, monitoring
+      logging.md                # Native logging (SzLogging)
       code-snippets.md          # Snippet reference and usage guide
 ```
 

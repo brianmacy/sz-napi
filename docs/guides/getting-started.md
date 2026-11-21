@@ -14,6 +14,7 @@ repository, loading records, and resolving your first entity using the
 
 The SDK is a thin NAPI-RS bridge. The entity resolution engine, support data,
 and configuration templates are distributed as a separate platform package.
+Senzing **4.5.0 or later** is required.
 
 **macOS (arm64):**
 

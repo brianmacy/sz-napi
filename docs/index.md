@@ -68,7 +68,8 @@ try {
 - **[Configuration Lifecycle](documents/Configuration_Lifecycle.html)** -- Create, edit, register, and activate configs
 - **[Error Handling](documents/Error_Handling.html)** -- Error hierarchy, instanceof patterns, retry logic
 - **[Deployment](documents/Deployment.html)** -- Docker, PostgreSQL, monitoring, worker threads
-- **[Code Snippets](documents/Code_Snippets.html)** -- 27 runnable examples covering every SDK operation
+- **[Logging](documents/Logging.html)** -- Native log callbacks, default output, levels and formats (Senzing 4.5.0+)
+- **[Code Snippets](documents/Code_Snippets.html)** -- 28 runnable examples covering every SDK operation
 
 ## API Reference
 
@@ -79,6 +80,7 @@ Browse the full API reference using the sidebar navigation:
 - **SzConfigManager** -- Configuration management
 - **SzDiagnostic** -- Performance benchmarks, repository management
 - **SzProduct** -- Version and license information
+- **SzLogging** -- Native logging: callbacks, default output, levels, formats
 - **SzFlags** -- Flag constants (bigint values)
 - **SzError** -- Structured error hierarchy
 
@@ -93,7 +95,7 @@ Browse the full API reference using the sidebar navigation:
 
 ## Examples and Code Snippets
 
-The repository includes [6 full examples](https://github.com/brianmacy/sz-napi/tree/main/examples) and [27 focused code snippets](https://github.com/brianmacy/sz-napi/tree/main/code-snippets) covering:
+The repository includes [10 full examples](https://github.com/brianmacy/sz-napi/tree/main/examples) and [28 focused code snippets](https://github.com/brianmacy/sz-napi/tree/main/code-snippets) covering:
 
 | Category       | Topics                                         |
 | -------------- | ---------------------------------------------- |
@@ -106,4 +108,5 @@ The repository includes [6 full examples](https://github.com/brianmacy/sz-napi/t
 | Redo           | Continuous processing, worker pools, with info |
 | Error Handling | Error inspection, retry with backoff           |
 | Stewardship    | Force resolve, force unresolve                 |
+| Logging        | Log callbacks, module statistics, verbosity    |
 | ConfigTool     | Offline editing, batch scripts                 |

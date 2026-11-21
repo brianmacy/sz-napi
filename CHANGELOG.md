@@ -7,13 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking (`@senzing/sdk`)
+
+- **Minimum Senzing version is now 4.5.0.** `@senzing/sdk` builds against `sz-rust-sdk` 4.5.0 (rev `11bf28f`), which binds the native logging library `libSzLogging` first shipped in Senzing 4.5.0; older runtimes fail to load the addon.
+
 ### Changed
 
+- `deny.toml`: allow the first-party `sz-rust-sdk-ffi` git source (pulled in, rev-pinned, by `sz-rust-sdk` 4.5.0).
 - **Supply chain (cargo-vet):** imports the Actix, Ariel OS, Bytecode Alliance, Embark, Fermyon, Google, ISRG, Mozilla and Zcash audit sets and trusts reputable publishers (evidence in each entry's notes); exemptions 46 -> 7, each with a notes line.
 - **`@senzing/configtool` now builds against `sz_configtool_lib` v0.10.0 (was 0.3.2).** The JS API is kept source-compatible wherever the library allows; the library's own behaviour changes (0.4.0–0.10.0) flow through. Tested against the stock Senzing 4.4.2 template.
 
 ### Added
 
+- **`@senzing/sdk`: native logging (`SzLogging`)**, a port of the `sz-rust-sdk` 4.5.0 API. All state stays in native libSzLogging: no SDK-side registry, dispatch or formatting.
+  - `env.getLogging()` (no native initialization; also works after `destroy()`), returning `SzLogging` with `registerCallback`, `setDefaultCallback`, `setDefaultOutput`, `setDefaultFormat`, `setDefaultLogLevel`, `getEffectiveLogLevel`.
+  - `registerCallback(options, callback)` returns an `SzLogRegistration` with `unregister()` (idempotent), `leak()` and `[Symbol.dispose]` (`using`). Options are a level or `{ minLevel, format? }`; the format defaults to `'BARE'`. Garbage collection never unregisters (it could run while engine threads log); an unreleased registration stays registered.
+  - Records are plain objects `{ level, module, threadHash?, message, timestampNs?, threadId? }` (`timestampNs` / `threadId` are `bigint`, `undefined` until Senzing 4.5.1 / 4.6.0).
+  - Delivery goes through a napi `ThreadsafeFunction` in non-blocking mode on an unbounded queue: logging threads never wait for the event loop, and callbacks run asynchronously on the registering JS thread. The functions are unref'd, so registrations and default callbacks never keep the process alive (records queued at exit are discarded).
+  - `setDefaultOutput({ type: 'STDERR' | 'STDOUT' | 'FILE' | 'NULL', path?, append? })`; a `'FILE'` path is opened first and an unopenable one throws `SzBadInputError` naming it.
+  - `SzLogLevel` / `SzLogFormat` frozen constants (with `ALL`) and string types; level and format arguments are case-insensitive (`'warning'`, `'json'` accepted), unknown names throw `SzBadInputError`.
+  - Need Senzing >= 4.5.1 / 4.6.0 and throw `SzConfigurationError` naming the native function until then (as in Rust): `registration.setLevel` / `level`, `getDefaultOutput` / `getDefaultFormat` / `getDefaultLogLevel`, `append: true`, `registerThreadLocalCallback` and `captureThreadLogs` (`SzLogCapture`).
+  - Documented, not enforced: the Senzing 4.5.0 usage rule (change registrations and the default output only before the first engine initialization or after `destroy()`; levels are safe any time) and file flushing (4.5.0 `destroy()` does not flush; replace the output first).
+  - Logging guide (`docs/guides/logging.md`), `code-snippets/logging/log-callback`, `examples/logging` (module statistics, runtime verbosity toggle), all run in CI; 23 vitest tests against the real engine (`packages/sdk/__tests__/logging.test.ts`), including delivery from worker-thread engine calls and a child process that must exit with registrations in place.
 - `@senzing/configtool`: every exported function now has a TSDoc description and per-parameter docs (154 were signature-only on the API site), generated from the Rust doc comments. CI now fails on any undocumented exported function (`npm run docs:check`) and on a committed `index.d.ts` that is stale against the Rust sources (#120).
 - `@senzing/configtool`: `addSearchProfile`, `getSearchProfile`, `listSearchProfiles`, `deleteSearchProfile` (CFG_SPROFILE; `INGEST`/`SEARCH` are protected from delete).
 - `@senzing/configtool`: optional `id` on `addDataSource`, `addAttribute`, `addElement`, `addFeature`, `addComparisonCall` options (absent auto-assigns; a taken id is rejected).

@@ -4,6 +4,7 @@ mod engine;
 mod environment;
 mod error;
 mod flags;
+mod logging;
 mod product;
 
 use napi_derive::napi;

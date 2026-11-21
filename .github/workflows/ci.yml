@@ -404,6 +404,14 @@ jobs:
           npm ci
           npm start
 
+      - name: Run logging example
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          cd examples/logging
+          npm ci
+          npm start
+
       - name: Run configtool-usage example
         run: |
           cd examples/configtool-usage
@@ -489,3 +497,9 @@ jobs:
         run: |
           npx tsx code-snippets/stewardship/force-resolve/index.ts
           npx tsx code-snippets/stewardship/force-unresolve/index.ts
+
+      - name: Run logging code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/logging/log-callback/index.ts

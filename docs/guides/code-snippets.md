@@ -121,6 +121,14 @@ Advanced entity manipulation and correction.
 | [force-resolve](https://github.com/brianmacy/sz-napi/tree/main/code-snippets/stewardship/force-resolve/)     | Force two entities to merge via a linking record      | `addRecord()`, `getEntityByRecord()`, `whyEntities()` |
 | [force-unresolve](https://github.com/brianmacy/sz-napi/tree/main/code-snippets/stewardship/force-unresolve/) | Separate a merged entity by removing a linking record | `deleteRecord()`, `getEntityByRecord()`               |
 
+### Logging
+
+Native Senzing logging (Senzing 4.5.0+).
+
+| Snippet                                                                                                  | Description                                                    | Key APIs                                                    |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------- |
+| [log-callback](https://github.com/brianmacy/sz-napi/tree/main/code-snippets/logging/log-callback/) | Receive log records in a callback; register before init, unregister after destroy | `getLogging()`, `registerCallback()`, `setDefaultOutput()` |
+
 ### ConfigTool (No Runtime Required)
 
 Offline configuration editing with `@senzing/configtool`.
