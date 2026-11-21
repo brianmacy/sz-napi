@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- CI and release: macOS arm64 jobs run on `macos-15`; GitHub retired the `macos-14` runner image (jobs were cancelled with "configuration not supported", which also skipped the dependent test jobs).
+
 - `deny.toml`: allow the first-party `sz-rust-sdk-ffi` git source (pulled in, rev-pinned, by `sz-rust-sdk` 4.5.0).
 - **Supply chain (cargo-vet):** imports the Actix, Ariel OS, Bytecode Alliance, Embark, Fermyon, Google, ISRG, Mozilla and Zcash audit sets and trusts reputable publishers (evidence in each entry's notes); exemptions 46 -> 7, each with a notes line.
 - **`@senzing/configtool` now builds against `sz_configtool_lib` v0.10.0 (was 0.3.2).** The JS API is kept source-compatible wherever the library allows; the library's own behaviour changes (0.4.0–0.10.0) flow through. Tested against the stock Senzing 4.4.2 template.
