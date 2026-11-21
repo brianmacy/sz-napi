@@ -114,7 +114,7 @@ Download `senzing-types-<version>.tgz` and `senzing-trpc-<version>.tgz` from the
 install both together:
 
 ```bash
-npm install ./senzing-types-0.9.0.tgz ./senzing-trpc-0.9.0.tgz
+npm install ./senzing-types-0.10.0.tgz ./senzing-trpc-0.10.0.tgz
 ```
 
 `@senzing/sdk` is an *optional* peer dependency of `@senzing/trpc`, so the
