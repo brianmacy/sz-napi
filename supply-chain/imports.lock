@@ -91,6 +91,31 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.napi]]
+version = "3.16.2"
+when = "2026-11-11"
+trusted-publisher = "github:napi-rs/napi-rs"
+
+[[publisher.napi-build]]
+version = "2.6.0"
+when = "2026-10-01"
+trusted-publisher = "github:napi-rs/napi-rs"
+
+[[publisher.napi-derive]]
+version = "3.7.1"
+when = "2026-11-11"
+trusted-publisher = "github:napi-rs/napi-rs"
+
+[[publisher.napi-derive-backend]]
+version = "7.0.1"
+when = "2026-11-11"
+trusted-publisher = "github:napi-rs/napi-rs"
+
+[[publisher.napi-sys]]
+version = "3.4.1"
+when = "2026-10-22"
+trusted-publisher = "github:napi-rs/napi-rs"
+
 [[publisher.pin-project-lite]]
 version = "0.2.17"
 when = "2026-02-27"
