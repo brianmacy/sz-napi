@@ -17,10 +17,12 @@
 #   ISC                 libloading, reached only via napi-sys -> napi. ISC is
 #                       OSI-approved and functionally equivalent to MIT; it is
 #                       unavoidable without dropping the NAPI runtime itself.
+#   Zlib                foldhash, reached via serde_json >= 1.0.154. OSI-approved,
+#                       permissive, no copyleft; sz-rust-sdk allows it too.
 #
 # memchr is "Unlicense OR MIT", so allowing MIT covers it and Unlicense does not
 # need to be listed.
-allow = ["Apache-2.0", "MIT", "Unicode-3.0", "ISC"]
+allow = ["Apache-2.0", "MIT", "Unicode-3.0", "ISC", "Zlib"]
 confidence-threshold = 0.9
 
 [bans]
