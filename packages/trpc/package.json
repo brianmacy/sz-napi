@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@senzing/types": "*",
-    "@trpc/server": "^11",
+    "@trpc/server": "^11.19.0",
     "superjson": "^2",
     "zod": "^4"
   },
@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@senzing/sdk": "*",
-    "@trpc/client": "^11.19.0",
+    "@trpc/client": "^11.22.1",
     "tsup": "^9",
     "typescript": "^7"
   },
