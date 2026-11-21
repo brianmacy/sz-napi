@@ -4,17 +4,20 @@ use std::sync::Arc;
 
 use napi_derive::napi;
 use sz_rust_sdk::core::environment::SzEnvironmentCore;
-use sz_rust_sdk::traits::SzEnvironment;
+use sz_rust_sdk::traits::{SzEnvironment, SzLogging};
 
 use crate::config_manager::SzConfigManagerWrapper;
 use crate::diagnostic::SzDiagnosticWrapper;
 use crate::engine::SzEngineWrapper;
 use crate::error::sz_error_to_napi;
+use crate::logging::SzLoggingWrapper;
 use crate::product::SzProductWrapper;
 
 #[napi(js_name = "SzEnvironment")]
 pub struct SzEnvironmentWrapper {
     inner: Option<Arc<SzEnvironmentCore>>,
+    /// Kept apart from `inner`: logging is process-global native state, available after destroy.
+    logging: Arc<dyn SzLogging>,
 }
 
 #[napi]
@@ -31,7 +34,11 @@ impl SzEnvironmentWrapper {
         let verbose = verbose_logging.unwrap_or(false);
         let inner = SzEnvironmentCore::get_instance(&module_name, &settings, verbose)
             .map_err(sz_error_to_napi)?;
-        Ok(Self { inner: Some(inner) })
+        let logging = Arc::from(inner.get_logging().map_err(sz_error_to_napi)?);
+        Ok(Self {
+            inner: Some(inner),
+            logging,
+        })
     }
 
     /// Checks if the environment has been destroyed.
@@ -98,6 +105,16 @@ impl SzEnvironmentWrapper {
         let env = self.get_inner()?;
         let product = env.get_product().map_err(sz_error_to_napi)?;
         Ok(SzProductWrapper::from_inner(product))
+    }
+
+    /// Gets the logging interface: native callbacks, levels, formats and the default output.
+    ///
+    /// Logging is process-global native state. This call performs no native initialization, so
+    /// register callbacks before the first `getEngine()` to capture initialization messages. Unlike
+    /// the other getters it also works after `destroy()`.
+    #[napi]
+    pub fn get_logging(&self) -> SzLoggingWrapper {
+        SzLoggingWrapper::from_inner(Arc::clone(&self.logging))
     }
 }
 

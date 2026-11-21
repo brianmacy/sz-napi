@@ -16,6 +16,7 @@
     "docs/guides/config-management.md",
     "docs/guides/error-handling.md",
     "docs/guides/deployment.md",
+    "docs/guides/logging.md",
     "docs/guides/code-snippets.md"
   ],
   "navigationLinks": {

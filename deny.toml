@@ -17,10 +17,12 @@
 #   ISC                 libloading, reached only via napi-sys -> napi. ISC is
 #                       OSI-approved and functionally equivalent to MIT; it is
 #                       unavoidable without dropping the NAPI runtime itself.
+#   Zlib                foldhash, reached via serde_json >= 1.0.154. OSI-approved,
+#                       permissive, no copyleft; sz-rust-sdk allows it too.
 #
 # memchr is "Unlicense OR MIT", so allowing MIT covers it and Unlicense does not
 # need to be listed.
-allow = ["Apache-2.0", "MIT", "Unicode-3.0", "ISC"]
+allow = ["Apache-2.0", "MIT", "Unicode-3.0", "ISC", "Zlib"]
 confidence-threshold = 0.9
 
 [bans]
@@ -43,11 +45,13 @@ yanked = "deny"
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
-# First-party Senzing crates. Both are pinned by explicit `rev` in the consuming
-# Cargo.toml, so a moved branch or tag upstream cannot change what we build.
+# First-party Senzing crates, each pinned by explicit `rev` in the consuming
+# Cargo.toml (sz-rust-sdk-ffi by sz-rust-sdk's own Cargo.toml), so a moved
+# branch or tag upstream cannot change what we build.
 # Adding a repo here is a deliberate supply-chain decision -- any other git
 # source fails the check.
 allow-git = [
   "https://github.com/brianmacy/sz-rust-sdk",
   "https://github.com/brianmacy/sz-rust-sdk-configtool",
+  "https://github.com/brianmacy/sz-rust-sdk-ffi",
 ]

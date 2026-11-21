@@ -62,7 +62,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
+          - os: macos-15
             target: aarch64-apple-darwin
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -89,7 +89,7 @@ jobs:
           path: sz-rust-sdk-configtool
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 20
 
@@ -114,7 +114,7 @@ jobs:
         run: git diff --exit-code -- packages/configtool/index.d.ts
 
       - name: Upload artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: configtool-${{ matrix.target }}
           path: sz-napi/packages/configtool/*.node
@@ -168,7 +168,7 @@ jobs:
           yum install -y senzingsdk-runtime
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 20
 
@@ -194,7 +194,7 @@ jobs:
         run: cargo test -p senzing-sdk-napi --locked
 
       - name: Upload artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: sdk-${{ matrix.target }}
           path: sz-napi/packages/sdk/*.node
@@ -211,7 +211,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
+          - os: macos-15
             target: aarch64-apple-darwin
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
@@ -224,7 +224,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 20
 
@@ -232,7 +232,7 @@ jobs:
         run: npm ci
 
       - name: Download configtool artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: configtool-${{ matrix.target }}
           path: packages/configtool/
@@ -270,7 +270,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 20
 
@@ -317,7 +317,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 20
 
@@ -325,13 +325,13 @@ jobs:
         run: npm ci
 
       - name: Download SDK artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: sdk-x86_64-unknown-linux-gnu
           path: packages/sdk/
 
       - name: Download configtool artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: configtool-x86_64-unknown-linux-gnu
           path: packages/configtool/
@@ -401,6 +401,14 @@ jobs:
           LD_LIBRARY_PATH: /opt/senzing/er/lib
         run: |
           cd examples/config-management
+          npm ci
+          npm start
+
+      - name: Run logging example
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          cd examples/logging
           npm ci
           npm start
 
@@ -489,3 +497,9 @@ jobs:
         run: |
           npx tsx code-snippets/stewardship/force-resolve/index.ts
           npx tsx code-snippets/stewardship/force-unresolve/index.ts
+
+      - name: Run logging code snippets
+        env:
+          LD_LIBRARY_PATH: /opt/senzing/er/lib
+        run: |
+          npx tsx code-snippets/logging/log-callback/index.ts

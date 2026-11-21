@@ -5,6 +5,12 @@ export {
   SzProduct,
   FlagEntry,
   RecordKey,
+  SzLogging,
+  SzLogRegistration,
+  SzLogCapture,
+  SzLogRecord,
+  SzLogCallbackOptions,
+  SzLogOutput,
 } from './index';
 
 export { SzEngine } from './index';
@@ -33,6 +39,58 @@ export {
 } from './js/errors';
 
 export declare const SzFlags: Readonly<Record<string, bigint>>;
+
+/**
+ * A Senzing log level name, most verbose first. `'OFF'` is a filter value only, never a record's
+ * level. Level arguments are case-insensitive and also accept `'warning'`.
+ *
+ * Native writes its own spellings in formatted messages (JSONL `severity` is lower case with
+ * `warning`; LEGACY tags are `TRCE`, `DBUG`, `INFO`, `WARN`, `ERR`, `CRIT`).
+ */
+export type SzLogLevel = 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF';
+
+/**
+ * The log level names as constants (`SzLogLevel.Warn === 'WARN'`); `ALL` lists them most verbose
+ * first. Built from the native binding.
+ *
+ * @example Compare levels by rank
+ * ```typescript
+ * import { SzLogLevel } from "@senzing/sdk";
+ *
+ * const rank = (level: SzLogLevel) => SzLogLevel.ALL.indexOf(level);
+ * const isWarnOrWorse = (level: SzLogLevel) => rank(level) >= rank(SzLogLevel.Warn);
+ * ```
+ */
+export declare const SzLogLevel: Readonly<{
+  Trace: 'TRACE';
+  Debug: 'DEBUG';
+  Info: 'INFO';
+  Warn: 'WARN';
+  Error: 'ERROR';
+  Critical: 'CRITICAL';
+  Off: 'OFF';
+  ALL: readonly SzLogLevel[];
+}>;
+
+/**
+ * A Senzing log message format, applied by native. Format arguments are case-insensitive and also
+ * accept `'json'`.
+ *
+ * - `'LEGACY'`: `YYYY-MM-DD HH:MM:SS.mmm [module:hash] SEV: msg`, local time.
+ * - `'JSONL'`: one JSON object per line (`timestamp`, `module`, `severity`, `message`).
+ * - `'BARE'`: the message text only (the default for callbacks).
+ * - `'DEFAULT'`: spdlog's default pattern for the default output; the message only for a callback.
+ */
+export type SzLogFormat = 'LEGACY' | 'JSONL' | 'BARE' | 'DEFAULT';
+
+/** The log format names as constants (`SzLogFormat.Jsonl === 'JSONL'`). Built from the native binding. */
+export declare const SzLogFormat: Readonly<{
+  Legacy: 'LEGACY';
+  Jsonl: 'JSONL';
+  Bare: 'BARE';
+  Default: 'DEFAULT';
+  ALL: readonly SzLogFormat[];
+}>;
 
 /** Iterator for streaming entity export results. */
 export declare class SzExportIterator {
@@ -174,6 +232,232 @@ declare module './index' {
      * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/information/get-version | get-version snippet}
      */
     getProduct(): SzProductWrapper;
+
+    /**
+     * Gets the logging interface (Senzing native libSzLogging): callbacks, levels, formats and
+     * the default output.
+     *
+     * Logging is process-global native state, so every `SzLogging` controls the same logger. This
+     * call performs no native initialization, so register callbacks **before** the first
+     * `getEngine()` / `getDiagnostic()` / `reinitialize()` to capture initialization messages
+     * (on Senzing 4.5.0 that is also required, see {@link SzLogging}). Unlike the other getters
+     * it also works **after** `destroy()`.
+     *
+     * @example Register before the engine starts, unregister after destroy
+     * ```typescript
+     * const env = new SzEnvironment("myApp", settings);
+     * const logging = env.getLogging();
+     * const registration = logging.registerCallback("INFO", (record) => {
+     *   console.log(`[${record.level}] ${record.module}: ${record.message}`);
+     * });
+     * const engine = env.getEngine(); // initialization messages reach the callback
+     * // ... use the engine ...
+     * env.destroy();
+     * registration.unregister(); // after destroy: nothing else is logging
+     * ```
+     *
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/logging/log-callback | log-callback snippet}
+     */
+    getLogging(): SzLogging;
+  }
+
+  /**
+   * Senzing native logging (libSzLogging, Senzing 4.5.0).
+   *
+   * All state lives in native: each method is one native call, each registration its own native
+   * registration. Methods that need Senzing >= 4.5.1 / 4.6.0 throw `SzConfigurationError` until
+   * then.
+   *
+   * **Senzing 4.5.0 usage rule** (documented, not enforced): change registrations, the default
+   * callback, the default output or the default format only while no engine threads run: before
+   * the first engine initialization (`getEngine()`, `getDiagnostic()`, `reinitialize()`) or after
+   * `destroy()`. `setDefaultLogLevel` and `getEffectiveLogLevel` are safe at any time.
+   *
+   * **Delivery:** native calls a callback on the thread that logs (often an engine thread). The
+   * SDK queues the record without blocking that thread and the JS callback runs later,
+   * asynchronously, on the JS thread that registered it, so a record logged during a synchronous
+   * engine call arrives after that call returns. The queue is unbounded. An exception thrown by a
+   * callback is reported as an uncaught exception, as for any event callback.
+   *
+   * **Process lifetime:** registrations and default callbacks never keep the Node.js process
+   * alive; records still queued when the process exits are discarded.
+   */
+  interface SzLogging {
+    /**
+     * Registers a callback for log records from every thread.
+     *
+     * `options` is a level (`"INFO"`) or `{ minLevel, format? }`; the format defaults to
+     * `'BARE'` (the record already carries level and module). While the registration lives,
+     * native lowers the effective level to `minLevel` if needed.
+     *
+     * The registration is removed by `unregister()` or by disposal (`using registration = ...`).
+     * Garbage collection never unregisters (it could run while engine threads log): a
+     * registration dropped without `unregister()` stays registered for the rest of the process.
+     *
+     * @example
+     * ```typescript
+     * const logging = env.getLogging();
+     * logging.setDefaultOutput({ type: "NULL" }); // the callback is the only sink
+     * const registration = logging.registerCallback(
+     *   { minLevel: "WARN", format: "JSONL" },
+     *   (record) => console.log(record.message),
+     * );
+     * ```
+     *
+     * @throws {SzBadInputError} an unknown level or format
+     * @throws {SzUnrecoverableError} native refused the registration (process exit in progress)
+     * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/logging/log-callback | log-callback snippet}
+     */
+    registerCallback(options: SzLogLevel | SzLogCallbackOptions, callback: (record: SzLogRecord) => void): SzLogRegistration;
+
+    /**
+     * Registers a callback for records logged on the calling OS thread only.
+     *
+     * **Requires Senzing >= 4.5.1 / 4.6.0.** Senzing 4.5.0 accepts a thread-local registration
+     * but never delivers to it (GDEV-4960), so on 4.5.0 this throws `SzConfigurationError`.
+     * Until then, register a process-wide callback and group records by `threadHash`.
+     *
+     * @throws {SzConfigurationError} on Senzing 4.5.0
+     */
+    registerThreadLocalCallback(options: SzLogLevel | SzLogCallbackOptions, callback: (record: SzLogRecord) => void): SzLogRegistration;
+
+    /**
+     * Captures the records logged on the calling thread until `finish()`, synchronously (no
+     * event-loop delivery). **Requires Senzing >= 4.5.1 / 4.6.0**.
+     *
+     * @throws {SzConfigurationError} on Senzing 4.5.0
+     */
+    captureThreadLogs(options: SzLogLevel | SzLogCallbackOptions): SzLogCapture;
+
+    /**
+     * Makes `callback` the default output, at `minLevel` and in `format` (default `'BARE'`).
+     *
+     * There is no handle: the callback stays until `setDefaultOutput` or another
+     * `setDefaultCallback` replaces it. On Senzing 4.5.0 a replaced callback is leaked (no
+     * release hook), so set it once. `setDefaultLogLevel` changes its level later.
+     *
+     * @example
+     * ```typescript
+     * logging.setDefaultCallback("WARN", (record) => console.warn(record.message));
+     * logging.setDefaultOutput({ type: "STDERR" }); // replaces the callback
+     * ```
+     */
+    setDefaultCallback(options: SzLogLevel | SzLogCallbackOptions, callback: (record: SzLogRecord) => void): void;
+
+    /**
+     * Sets the default output. The default level is kept; on Senzing 4.5.0 the default format
+     * resets to `'LEGACY'`, so call `setDefaultFormat` **after** this.
+     *
+     * A `'FILE'` output is first opened for append (creating missing parent directories, as
+     * native does) and throws `SzBadInputError` naming the path if it cannot be opened; the
+     * previous output is kept. A file output is flushed when the output is replaced or at process
+     * exit; on Senzing 4.5.0 `destroy()` does not flush it, so call `setDefaultOutput(...)` after
+     * `destroy()` before reading the file.
+     *
+     * @example Write JSONL to a file
+     * ```typescript
+     * logging.setDefaultOutput({ type: "FILE", path: "/var/log/senzing/sz.jsonl" });
+     * logging.setDefaultFormat("JSONL");
+     * ```
+     *
+     * @throws {SzBadInputError} `'CALLBACK'` (get-only), a missing or empty path, or an unopenable file
+     * @throws {SzConfigurationError} `append: true` (needs Senzing >= 4.5.1 / 4.6.0)
+     */
+    setDefaultOutput(output: SzLogOutput): void;
+
+    /**
+     * The current default output. **Requires Senzing >= 4.5.1 / 4.6.0.**
+     *
+     * @throws {SzConfigurationError} on Senzing 4.5.0
+     */
+    getDefaultOutput(): SzLogOutput;
+
+    /**
+     * Sets the default output's format; registered callbacks keep their own. Marks native
+     * logging as user-configured: an init's `verboseLogging` no longer changes the default level
+     * or format.
+     *
+     * @throws {SzBadInputError} an unknown format
+     */
+    setDefaultFormat(format: SzLogFormat): void;
+
+    /**
+     * The default output's format. **Requires Senzing >= 4.5.1 / 4.6.0.**
+     *
+     * @throws {SzConfigurationError} on Senzing 4.5.0
+     */
+    getDefaultFormat(): SzLogFormat;
+
+    /**
+     * Sets the default output's level; registered callbacks keep their own. Safe at any time.
+     * Marks native logging as user-configured, like `setDefaultFormat`.
+     *
+     * @example Toggle verbose logging while the engine runs
+     * ```typescript
+     * logging.setDefaultLogLevel(SzLogLevel.Debug);
+     * // ...
+     * logging.setDefaultLogLevel(SzLogLevel.Error);
+     * ```
+     *
+     * @throws {SzBadInputError} an unknown level
+     */
+    setDefaultLogLevel(level: SzLogLevel): void;
+
+    /**
+     * The default output's level. **Requires Senzing >= 4.5.1 / 4.6.0.**
+     *
+     * @throws {SzConfigurationError} on Senzing 4.5.0
+     */
+    getDefaultLogLevel(): SzLogLevel;
+
+    /**
+     * The effective level: the minimum over the default output and every registered callback. A
+     * message below it is not even formatted. Safe at any time.
+     *
+     * @example
+     * ```typescript
+     * logging.setDefaultLogLevel("ERROR");
+     * const registration = logging.registerCallback("DEBUG", () => {});
+     * logging.getEffectiveLogLevel(); // "DEBUG"
+     * ```
+     */
+    getEffectiveLogLevel(): SzLogLevel;
+  }
+
+  /**
+   * A live native log callback registration, returned by `SzLogging.registerCallback`.
+   * Disposable: `using registration = logging.registerCallback(...)` unregisters at scope exit.
+   */
+  interface SzLogRegistration {
+    /**
+     * Unregisters the callback; calling it again does nothing. Records already queued are still
+     * delivered. On Senzing 4.5.0 call it only while no engine threads run (before the first
+     * engine initialization or after `destroy()`).
+     */
+    unregister(): void;
+
+    /** Keeps the callback registered for the rest of the process, with no way to remove it. */
+    leak(): void;
+
+    /**
+     * Changes this callback's minimum level. **Requires Senzing >= 4.5.1 / 4.6.0.** Until then,
+     * `SzLogging.setDefaultLogLevel` changes the default output's level at any time.
+     *
+     * @throws {SzConfigurationError} on Senzing 4.5.0
+     * @throws {SzBadInputError} an unknown level, or the registration was unregistered or leaked
+     */
+    setLevel(minLevel: SzLogLevel): void;
+
+    /**
+     * This callback's current minimum level. **Requires Senzing >= 4.5.1 / 4.6.0.**
+     *
+     * @throws {SzConfigurationError} on Senzing 4.5.0
+     * @throws {SzBadInputError} the registration was unregistered or leaked
+     */
+    level(): SzLogLevel;
+
+    /** Same as `unregister()`. */
+    [Symbol.dispose](): void;
   }
 
   interface SzEngine {

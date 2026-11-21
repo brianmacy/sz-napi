@@ -15,6 +15,7 @@ wrapClass(native.SzEnvironment, [
   'getConfigManager',
   'getDiagnostic',
   'getProduct',
+  'getLogging',
 ]);
 
 wrapClass(native.SzEngine, [
@@ -71,6 +72,46 @@ wrapClass(native.SzProduct, [
   'getLicense',
   'getVersion',
 ]);
+
+wrapClass(native.SzLogging, [
+  'registerCallback',
+  'registerThreadLocalCallback',
+  'captureThreadLogs',
+  'setDefaultCallback',
+  'setDefaultOutput',
+  'getDefaultOutput',
+  'setDefaultFormat',
+  'getDefaultFormat',
+  'setDefaultLogLevel',
+  'getDefaultLogLevel',
+  'getEffectiveLogLevel',
+]);
+
+wrapClass(native.SzLogRegistration, [
+  'unregister',
+  'leak',
+  'setLevel',
+  'level',
+]);
+
+wrapClass(native.SzLogCapture, ['finish']);
+
+// `using registration = logging.registerCallback(...)` unregisters at scope exit.
+if (typeof Symbol.dispose === 'symbol') {
+  native.SzLogRegistration.prototype[Symbol.dispose] = function dispose() {
+    this.unregister();
+  };
+}
+
+// Frozen log constants built from the native lists (sz-rust-sdk is the single source):
+// `SzLogLevel.Warn === 'WARN'`, `SzLogLevel.ALL` most verbose first.
+function logConstants(entries) {
+  const constants = Object.fromEntries(entries.map(e => [e.name, e.value]));
+  constants.ALL = Object.freeze(entries.map(e => e.value));
+  return Object.freeze(constants);
+}
+const SzLogLevel = logConstants(native.getLogLevels());
+const SzLogFormat = logConstants(native.getLogFormats());
 
 // SzExportIterator — wraps export handle with iterator protocol
 class SzExportIterator {
@@ -142,6 +183,13 @@ module.exports = {
   SzConfigManager: native.SzConfigManager,
   SzDiagnostic: native.SzDiagnostic,
   SzProduct: native.SzProduct,
+  SzLogging: native.SzLogging,
+  SzLogRegistration: native.SzLogRegistration,
+  SzLogCapture: native.SzLogCapture,
+
+  // Logging constants
+  SzLogLevel,
+  SzLogFormat,
 
   // Iterator
   SzExportIterator,

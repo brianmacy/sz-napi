@@ -41,6 +41,7 @@ ConfigTool snippets work without any runtime.
 |                    | [retry-with-backoff](error-handling/retry-with-backoff/)                | Exponential backoff for retryable errors      |   Yes    |
 | **Stewardship**    | [force-resolve](stewardship/force-resolve/)                             | Force-merge entities via linking record       |   Yes    |
 |                    | [force-unresolve](stewardship/force-unresolve/)                         | Separate entities by removing link            |   Yes    |
+| **Logging**        | [log-callback](logging/log-callback/)                                   | Receive Senzing log records in a callback     |   Yes    |
 | **ConfigTool**     | [basic-usage](configtool/basic-usage/)                                  | Add/get/list/delete data sources              |    No    |
 |                    | [process-script](configtool/process-script/)                            | Batch commands via processScript()            |    No    |
 
