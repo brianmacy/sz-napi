@@ -24,10 +24,10 @@ const {
 } = sdk;
 
 function getTestConfig() {
-  const senzingBase = process.platform === 'darwin'
-    ? '/opt/homebrew/opt/senzing/er' : '/opt/senzing/er';
-  const supportPath = process.platform === 'darwin'
-    ? '/opt/homebrew/opt/senzing/data' : '/opt/senzing/data';
+  // SENZING_DIR (the `er` directory, as for the sz-rust-sdk build) overrides the platform default.
+  const senzingBase = process.env.SENZING_DIR
+    || (process.platform === 'darwin' ? '/opt/homebrew/opt/senzing/er' : '/opt/senzing/er');
+  const supportPath = path.join(senzingBase, '..', 'data');
   const dbPath = '/tmp/sz-adapter-test.db';
   return {
     settings: JSON.stringify({

@@ -20,8 +20,10 @@ try {
 }
 
 function detectSenzingBase() {
-  if (process.platform !== 'darwin') return { base: '/opt/senzing/er', data: '/opt/senzing/data' };
-  return { base: '/opt/homebrew/opt/senzing/er', data: '/opt/homebrew/opt/senzing/data' };
+  // SENZING_DIR (the `er` directory, as for the sz-rust-sdk build) overrides the platform default.
+  const base = process.env.SENZING_DIR
+    || (process.platform === 'darwin' ? '/opt/homebrew/opt/senzing/er' : '/opt/senzing/er');
+  return { base, data: path.join(base, '..', 'data') };
 }
 
 const canRun = (() => {

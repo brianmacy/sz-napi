@@ -48,8 +48,9 @@ const LEVELS = ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL', 'OFF'];
 const FORMATS = ['LEGACY', 'JSONL', 'BARE', 'DEFAULT'];
 
 const isMac = process.platform === 'darwin';
-const senzingBase = isMac ? '/opt/homebrew/opt/senzing/er' : '/opt/senzing/er';
-const supportPath = isMac ? '/opt/homebrew/opt/senzing/data' : '/opt/senzing/data';
+// SENZING_DIR (the `er` directory, as for the sz-rust-sdk build) overrides the platform default.
+const senzingBase = process.env.SENZING_DIR || (isMac ? '/opt/homebrew/opt/senzing/er' : '/opt/senzing/er');
+const supportPath = path.join(senzingBase, '..', 'data');
 const schemaPath = path.join(senzingBase, 'resources/schema/szcore-schema-sqlite-create.sql');
 const dbPath = path.join(os.tmpdir(), `sz-logging-test-${process.pid}.db`);
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'sz-logging-test-'));
