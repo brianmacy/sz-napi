@@ -56,7 +56,6 @@ let defaultDelivered = 0;
 logging.setDefaultCallback(SzLogLevel.Error, () => {
   defaultDelivered += 1;
 });
-logging.setDefaultLogLevel(SzLogLevel.Error);
 
 /** Lets the records queued so far reach the callbacks. */
 async function drain(): Promise<void> {

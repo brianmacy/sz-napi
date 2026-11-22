@@ -7,9 +7,10 @@ category: Reference
 # Logging
 
 `@senzing/sdk` exposes Senzing's native logging library (libSzLogging, first shipped in Senzing
-4.5.0, the minimum version this SDK supports) through `env.getLogging()`. You can receive log
-records in JavaScript, route the default output to stderr, stdout, a file or nowhere, choose the
-message format, and change the level at runtime.
+4.5.0, the minimum version this SDK supports) through `getLogging()` (a module-level function
+that needs no environment) or `env.getLogging()`. You can receive log records in JavaScript,
+route the default output to stderr, stdout, a file or nowhere, choose the message format, and
+change the level at runtime.
 
 All logging state lives in native libSzLogging. The SDK keeps no registry, dispatcher, cache or
 formatter of its own: every call is one native call, and every registration is its own native
@@ -18,10 +19,10 @@ registration. The API mirrors the Rust SDK (`sz-rust-sdk` 4.5.0) in camelCase.
 ## Quick start
 
 ```typescript
-import { SzEnvironment, SzLogLevel } from "@senzing/sdk";
+import { SzEnvironment, SzLogLevel, getLogging } from "@senzing/sdk";
 
 const env = new SzEnvironment("my-app", settings);
-const logging = env.getLogging();          // no native initialization happens here
+const logging = getLogging();              // no environment or native initialization needed
 
 logging.setDefaultOutput({ type: "NULL" }); // the callback is the only sink
 const registration = logging.registerCallback(SzLogLevel.Info, (record) => {
@@ -48,8 +49,10 @@ no engine threads are running: before the first engine initialization or after `
   synchronizing with threads that are logging; the full concurrency guarantees need a newer
   Senzing (GDEV-4960).
 
-`getLogging()` works before the engine is initialized and also after `destroy()`, which is when
-the rule allows these changes.
+`getLogging()` and `env.getLogging()` work before the engine is initialized and also after
+`destroy()`, which is when the rule allows these changes. Prefer the module-level `getLogging()`:
+it creates no `SzEnvironment` handle, so holding it never makes `destroy()` fail with "other
+references still exist".
 
 ## Delivery: asynchronous, non-blocking
 
@@ -60,8 +63,21 @@ thread-safe function, so a logging thread never waits for the event loop:
 - The JavaScript callback runs **later**, on the registering thread's event loop. A record logged
   during a synchronous engine call (for example `engine.addRecord(...)`) arrives after that call
   returns.
-- The queue is unbounded: records are not dropped while the process runs, but a JavaScript thread
-  that stays busy for a long time while Senzing logs at `TRACE` accumulates them in memory.
+- The queue is unbounded by default: records are not dropped while the process runs, but a
+  JavaScript thread that stays busy for a long time while Senzing logs at `TRACE` accumulates them
+  in memory (a few hundred bytes each: a million-record load at `TRACE` can reach gigabytes). Set
+  `maxQueued` in the callback options to cap the records waiting for the callback; records logged
+  while the cap is reached are dropped and counted by `registration.getDropped()`:
+
+  ```typescript
+  const registration = logging.registerCallback({ minLevel: "DEBUG", maxQueued: 10_000 }, onRecord);
+  // ...
+  console.log(`dropped ${registration.getDropped()} records`);
+  ```
+
+  `setDefaultCallback` accepts `maxQueued` too (its dropped count is not observable: there is no
+  handle). **For `TRACE` during bulk loads, prefer a `'FILE'` default output to a JavaScript
+  callback:** native writes the file on the logging thread with no queue at all.
 - A record is a plain object:
 
   | Field         | Type                  | Notes                                                                              |
@@ -73,10 +89,29 @@ thread-safe function, so a logging thread never waits for the event loop:
   | `timestampNs` | `bigint \| undefined` | UTC nanoseconds since the epoch; `undefined` until Senzing 4.5.1 / 4.6.0             |
   | `threadId`    | `bigint \| undefined` | OS thread id; `undefined` until Senzing 4.5.1 / 4.6.0                               |
 
-- An exception thrown by a callback is reported as an uncaught exception, as for any event
-  callback. Catch inside the callback if that is not what you want.
-- In a worker thread, a registration delivers to that worker. When the worker exits, its pending
-  records are discarded and later records are ignored.
+- An exception thrown by a callback is reported as an uncaught exception
+  (`process.on('uncaughtException')`), as for any event callback, and delivery continues. Catch
+  inside the callback if that is not what you want.
+- In a worker thread, a registration delivers to that worker. **Unregister it before the worker
+  exits.** When the worker exits, its pending records are discarded and later records are skipped
+  before they are copied, but the native registration cannot be removed once its JavaScript
+  environment is gone: it stays registered for the rest of the process and keeps the effective
+  level at or below its `minLevel` (the SDK never unregisters from an environment-teardown hook,
+  since that could race engine threads, which is unsafe on Senzing 4.5.0).
+
+## Re-entrancy
+
+A JavaScript callback runs on the event loop, not on native's logging stack (unlike a Rust
+callback, which runs inside native). So inside a callback you may:
+
+- unregister the callback's own registration (records already queued are still delivered),
+- call `registerCallback`, `setDefaultCallback`, `setDefaultOutput`, `setDefaultFormat`,
+  `setDefaultLogLevel`,
+- call the engine.
+
+The Senzing 4.5.0 usage rule still applies to these calls: change registrations and the default
+output only while no engine threads run. A record logged during a synchronous engine call is
+delivered after that call returns, so a callback that runs after `destroy()` is within the rule.
 
 ## Process lifetime
 
@@ -105,7 +140,16 @@ Records already queued when you unregister are still delivered.
 
 **Garbage collection never unregisters.** It runs at arbitrary times, possibly while engine threads
 log, which the 4.5.0 usage rule forbids. A registration that becomes unreachable without
-`unregister()` stays registered for the rest of the process, like `leak()`.
+`unregister()` stays registered for the rest of the process, like `leak()`: its callback keeps
+running and the effective level stays at or below its `minLevel`. The SDK emits a process warning
+(code `SZ_LOG_REGISTRATION_COLLECTED`) when such a registration is collected, so the leak is
+visible. Call `leak()` to keep a registration on purpose without the warning.
+
+`registration.getLevel()` / `setLevel()` need Senzing 4.5.1 / 4.6.0 (see below);
+`registration.getDropped()` counts records dropped by `maxQueued`.
+
+Arguments of the wrong shape (`registerCallback({}, fn)`, a non-function callback, a non-string
+level) throw `SzBadInputError` naming the field and the value received.
 
 ## Default output
 
@@ -156,7 +200,7 @@ These are part of the final API but throw `SzConfigurationError` (naming the nat
 
 | API                                                        | Native feature                                       |
 | ---------------------------------------------------------- | ---------------------------------------------------- |
-| `registration.setLevel(level)`, `registration.level()`     | Per-callback levels                                  |
+| `registration.setLevel(level)`, `registration.getLevel()`  | Per-callback levels                                  |
 | `getDefaultOutput()`, `getDefaultFormat()`, `getDefaultLogLevel()` | Default-state getters                        |
 | `setDefaultOutput({ type: "FILE", path, append: true })`   | Append mode                                          |
 | `registerThreadLocalCallback(...)`, `captureThreadLogs(...)` | Thread-local delivery (4.5.0 never delivers, GDEV-4960) |
