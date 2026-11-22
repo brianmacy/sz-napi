@@ -1,8 +1,11 @@
 {
   "mcpServers": {
     "sz-napi-faq": {
-      "command": "uv",
-      "args": ["run", "--script", ".claude/faq_server.py"]
+      "command": "sh",
+      "args": [
+        "-c",
+        "ROOT=$(git rev-parse --show-toplevel) && VENV=\"$ROOT/.claude/.faq-venv/bin/python\" && VENV_WIN=\"$ROOT/.claude/.faq-venv/Scripts/python.exe\" && if [ -x \"$VENV\" ]; then exec \"$VENV\" \"$ROOT/.claude/faq_server.py\"; elif [ -x \"$VENV_WIN\" ]; then exec \"$VENV_WIN\" \"$ROOT/.claude/faq_server.py\"; elif command -v uv >/dev/null 2>&1; then exec uv run --script \"$ROOT/.claude/faq_server.py\"; else exec python \"$ROOT/.claude/faq_server.py\"; fi"
+      ]
     }
   }
 }
