@@ -14,7 +14,7 @@ used an independent 0.x line.
 
 ## [Unreleased]
 
-## [4.5.0-1] - 2026-11-21
+## [4.5.0-1] - 2026-11-22
 
 ### Changed (versioning)
 
