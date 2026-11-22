@@ -1,6 +1,6 @@
 {
   "name": "@senzing/electron",
-  "version": "4.5.0-1",
+  "version": "4.5.0-2",
   "license": "Apache-2.0",
   "description": "Electron IPC bridge for @senzing/sdk \u2014 runs SDK in a worker thread, exposes via contextBridge",
   "main": "dist/main/index.js",

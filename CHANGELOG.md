@@ -14,6 +14,8 @@ used an independent 0.x line.
 
 ## [Unreleased]
 
+## [4.5.0-2] - 2026-11-22
+
 ### Added
 
 - `@senzing/sdk`: module-level `getLogging()` returns `SzLogging` without an `SzEnvironment`. It neither creates nor touches the environment singleton, so holding it never makes `destroy()` fail with "other references still exist" (an extra `SzEnvironment` created only to reach `env.getLogging()` did). `env.getLogging()` is unchanged.
@@ -234,7 +236,8 @@ used an independent 0.x line.
 - Config versioning support
 - Script processing support
 
-[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v4.5.0-1...HEAD
+[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v4.5.0-2...HEAD
+[4.5.0-2]: https://github.com/brianmacy/sz-napi/compare/v4.5.0-1...v4.5.0-2
 [4.5.0-1]: https://github.com/brianmacy/sz-napi/compare/v0.9.0...v4.5.0-1
 [0.9.0]: https://github.com/brianmacy/sz-napi/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/brianmacy/sz-napi/compare/v0.8.0...v0.8.1
