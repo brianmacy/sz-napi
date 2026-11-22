@@ -5,9 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+From 4.5.0-1 on, versions follow `X.Y.Z-N`: `X.Y.Z` is the **minimum Senzing
+version** the packages require (as in sz-rust-sdk and sz-cpp-sdk) and `-N` is
+this SDK's release revision against that minimum. In npm semver `-N` is a
+pre-release tag, so the internal `@senzing/*` ranges are written `>=4.5.0-0`
+(a range like `*` or `>=0.1.0` does not match `4.5.0-1`). Releases up to 0.9.0
+used an independent 0.x line.
+
 ## [Unreleased]
 
-## [0.10.0] - 2026-11-21
+## [4.5.0-1] - 2026-11-21
+
+### Changed (versioning)
+
+- All five packages 0.9.0 -> 4.5.0-1: the version now tracks the minimum Senzing
+  version (see the note at the top). Internal `@senzing/*` dependency and peer
+  ranges are `>=4.5.0-0`. Replaces the briefly published 0.10.0.
 
 ### Breaking (`@senzing/sdk`)
 
@@ -196,8 +209,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config versioning support
 - Script processing support
 
-[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.10.0...HEAD
-[0.10.0]: https://github.com/brianmacy/sz-napi/compare/v0.9.0...v0.10.0
+[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v4.5.0-1...HEAD
+[4.5.0-1]: https://github.com/brianmacy/sz-napi/compare/v0.9.0...v4.5.0-1
 [0.9.0]: https://github.com/brianmacy/sz-napi/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/brianmacy/sz-napi/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/brianmacy/sz-napi/compare/v0.1.0...v0.8.0
