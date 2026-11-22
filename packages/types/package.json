@@ -1,6 +1,6 @@
 {
   "name": "@senzing/types",
-  "version": "4.5.0-1",
+  "version": "4.5.0-2",
   "license": "Apache-2.0",
   "description": "Shared TypeScript interfaces for Senzing SDK transports",
   "main": "dist/index.js",

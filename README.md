@@ -114,7 +114,7 @@ Download `senzing-types-<version>.tgz` and `senzing-trpc-<version>.tgz` from the
 install both together:
 
 ```bash
-npm install ./senzing-types-4.5.0-1.tgz ./senzing-trpc-4.5.0-1.tgz
+npm install ./senzing-types-4.5.0-2.tgz ./senzing-trpc-4.5.0-2.tgz
 ```
 
 `@senzing/sdk` is an *optional* peer dependency of `@senzing/trpc`, so the
@@ -220,7 +220,7 @@ writeFileSync("config-modified.json", config);
 | `SzConfigManager`          | Configuration management: `createConfig`, `registerConfig`, `setDefaultConfig`, `replaceDefaultConfigId`, `getConfigRegistry`, and more.                                                                                   |
 | `SzDiagnostic`             | System diagnostics: `checkRepositoryPerformance`, `getRepositoryInfo`, `getFeature`, `purgeRepository`.                                                                                                                    |
 | `SzProduct`                | Product info: `getVersion`, `getLicense`.                                                                                                                                                                                  |
-| `SzLogging`                | Native logging (`env.getLogging()`, Senzing 4.5.0+): `registerCallback` (disposable `SzLogRegistration`), `setDefaultCallback`, `setDefaultOutput`, `setDefaultFormat`, `setDefaultLogLevel`, `getEffectiveLogLevel`. Records arrive asynchronously on the JS thread. See the [Logging guide](docs/guides/logging.md). |
+| `SzLogging`                | Native logging (`getLogging()` or `env.getLogging()`, Senzing 4.5.0+): `registerCallback` (disposable `SzLogRegistration`, optional `maxQueued` cap), `setDefaultCallback`, `setDefaultOutput`, `setDefaultFormat`, `setDefaultLogLevel`, `getEffectiveLogLevel`. Records arrive asynchronously on the JS thread. See the [Logging guide](docs/guides/logging.md). |
 | `SzLogLevel`, `SzLogFormat` | Frozen log level / format constants (`SzLogLevel.Warn === "WARN"`).                                                                                                                                                       |
 | `SzFlags`                  | Frozen object containing all flag constants as `bigint` values.                                                                                                                                                            |
 | `SzError` (and subclasses) | Error hierarchy for structured error handling.                                                                                                                                                                             |

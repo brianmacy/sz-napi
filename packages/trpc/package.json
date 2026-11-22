@@ -1,6 +1,6 @@
 {
   "name": "@senzing/trpc",
-  "version": "4.5.0-1",
+  "version": "4.5.0-2",
   "license": "Apache-2.0",
   "description": "tRPC routers and client types for remote access to Senzing NAPI bindings",
   "main": "dist/index.js",

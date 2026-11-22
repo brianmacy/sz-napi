@@ -185,11 +185,11 @@ export declare class SzLogging {
   /**
    * Registers a callback for log records from every thread.
    *
-   * `options` is a level name or `{ minLevel, format? }` (default format `'BARE'`). Records are
-   * delivered asynchronously on this JS thread. The returned registration does not keep the
-   * process alive; call `unregister()` (or dispose it) to remove the callback. A registration
-   * that is garbage-collected without being unregistered stays registered for the rest of the
-   * process.
+   * `options` is a level name or `{ minLevel, format?, maxQueued? }` (default format `'BARE'`,
+   * unbounded queue). Records are delivered asynchronously on this JS thread. The returned
+   * registration does not keep the process alive; call `unregister()` (or dispose it) to remove
+   * the callback. A registration that is garbage-collected without being unregistered stays
+   * registered for the rest of the process.
    */
   registerCallback(options: 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF' | SzLogCallbackOptions, callback: (record: SzLogRecord) => void): SzLogRegistrationWrapper
   /**
@@ -211,7 +211,8 @@ export declare class SzLogging {
    *
    * There is no handle: the callback stays until `setDefaultOutput` or another
    * `setDefaultCallback` replaces it. On Senzing 4.5.0 a replaced callback is leaked (there is
-   * no release hook), so set it once. It does not keep the process alive.
+   * no release hook), so set it once. It does not keep the process alive. `options.maxQueued`
+   * caps its queue; the dropped count is not observable (there is no handle).
    */
   setDefaultCallback(options: 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF' | SzLogCallbackOptions, callback: (record: SzLogRecord) => void): void
   /**
@@ -270,7 +271,12 @@ export declare class SzLogRegistration {
    * This callback's current minimum level. Requires Senzing >= 4.5.1 / 4.6.0 (throws
    * `SzConfigurationError` on 4.5.0).
    */
-  level(): 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF'
+  getLevel(): 'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF'
+  /**
+   * How many records were dropped because `maxQueued` records were already waiting for the
+   * callback. Always 0 without `maxQueued`. Still readable after `unregister()` / `leak()`.
+   */
+  getDropped(): number
 }
 export type SzLogRegistrationWrapper = SzLogRegistration
 
@@ -307,6 +313,23 @@ export declare function getAllFlags(): Array<FlagEntry>
 export declare function getLogFormats(): Array<LogConstantEntry>
 
 /**
+ * Gets the logging interface without an `SzEnvironment`.
+ *
+ * Logging is process-global native state that needs no engine initialization, so this neither
+ * creates nor touches the environment singleton: it works before any environment exists and
+ * after `destroy()`, and holding the result never makes `destroy()` fail. Equivalent to
+ * `env.getLogging()`.
+ *
+ * ```typescript
+ * import { getLogging } from "@senzing/sdk";
+ *
+ * const logging = getLogging(); // before any SzEnvironment exists
+ * logging.setDefaultOutput({ type: "FILE", path: "/var/log/senzing/sz.log" });
+ * ```
+ */
+export declare function getLogging(): SzLogging
+
+/**
  * Returns every log level, most verbose first, as `{ name, value }` (`{ name: 'Warn', value:
  * 'WARN' }`). The JS wrapper builds the frozen `SzLogLevel` object from it.
  */
@@ -328,9 +351,10 @@ export interface RecordKey {
 }
 
 /**
- * Registration parameters: the callback's minimum level and the format native applies to the
- * record's message. `format` defaults to `'BARE'`: the record already carries the level and
- * module, so `'LEGACY'` would stamp them a second time when the record is forwarded.
+ * Registration parameters: the callback's minimum level, the format native applies to the
+ * record's message, and an optional cap on undelivered records. `format` defaults to `'BARE'`:
+ * the record already carries the level and module, so `'LEGACY'` would stamp them a second time
+ * when the record is forwarded.
  */
 export interface SzLogCallbackOptions {
   /** Minimum level delivered to the callback (case-insensitive; `'warning'` is accepted). */
@@ -340,6 +364,12 @@ export interface SzLogCallbackOptions {
    * `'BARE'`.
    */
   format?: 'LEGACY' | 'JSONL' | 'BARE' | 'DEFAULT'
+  /**
+   * The most records queued for the callback but not yet delivered (an integer >= 1). Records
+   * logged while that many are waiting are dropped and counted (`SzLogRegistration.getDropped`).
+   * Default: unbounded. Ignored by `captureThreadLogs` (no queue).
+   */
+  maxQueued?: number
 }
 
 /**

@@ -26,8 +26,9 @@ function getTestConfig() {
     };
   }
 
-  const senzingBase = '/opt/homebrew/opt/senzing/er';
-  const supportPath = '/opt/homebrew/opt/senzing/data';
+  // SENZING_DIR (the `er` directory, as for the sz-rust-sdk build) overrides the default.
+  const senzingBase = process.env.SENZING_DIR || '/opt/homebrew/opt/senzing/er';
+  const supportPath = path.join(senzingBase, '..', 'data');
   const dbPath = '/tmp/sz-napi-test.db';
   return {
     settings: JSON.stringify({

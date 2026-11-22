@@ -1,9 +1,10 @@
 'use strict';
 
 const native = require('./index.js');
-const { wrapClass } = require('./js/wrapper');
+const { wrapClass, wrapFunction } = require('./js/wrapper');
 const errors = require('./js/errors');
 const adapters = require('./js/adapter');
+const { installLogging } = require('./js/logging');
 
 // Wrap all class methods with error mapping
 
@@ -91,17 +92,14 @@ wrapClass(native.SzLogRegistration, [
   'unregister',
   'leak',
   'setLevel',
-  'level',
+  'getLevel',
+  'getDropped',
 ]);
 
 wrapClass(native.SzLogCapture, ['finish']);
 
-// `using registration = logging.registerCallback(...)` unregisters at scope exit.
-if (typeof Symbol.dispose === 'symbol') {
-  native.SzLogRegistration.prototype[Symbol.dispose] = function dispose() {
-    this.unregister();
-  };
-}
+// Argument validation, the collected-registration warning and `Symbol.dispose`.
+installLogging(native);
 
 // Frozen log constants built from the native lists (sz-rust-sdk is the single source):
 // `SzLogLevel.Warn === 'WARN'`, `SzLogLevel.ALL` most verbose first.
@@ -187,7 +185,8 @@ module.exports = {
   SzLogRegistration: native.SzLogRegistration,
   SzLogCapture: native.SzLogCapture,
 
-  // Logging constants
+  // Logging: the interface without an environment, and the constants
+  getLogging: wrapFunction(native.getLogging),
   SzLogLevel,
   SzLogFormat,
 

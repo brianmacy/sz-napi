@@ -5,31 +5,91 @@
 //! closure forwards records to a JS function through a napi `ThreadsafeFunction`:
 //!
 //! - **Non-blocking:** the closure runs on whichever thread logs (often an engine thread) and
-//!   queues the record with `ThreadsafeFunctionCallMode::NonBlocking` on an unbounded queue, so a
-//!   logging thread never waits for the JS event loop.
+//!   queues the record with `ThreadsafeFunctionCallMode::NonBlocking`, so a logging thread never
+//!   waits for the JS event loop. The queue is unbounded unless the registration sets
+//!   `maxQueued` ([`QueueLimit`]): then records over the cap are dropped and counted.
 //! - **Asynchronous delivery:** the JS callback runs later, on the JS thread that registered it.
 //! - **Weak:** the function is unref'd, so a registration never keeps the process alive; records
 //!   still queued when the process exits are discarded.
+//! - **Environment gone:** once the registering JS environment is torn down (a worker exited), the
+//!   closure returns before copying the record. The native registration itself stays: removing it
+//!   from an environment-teardown hook could race engine threads, which is unsafe on 4.5.0.
 
+use std::num::NonZeroU32;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::UNIX_EPOCH;
 
 use napi::Status;
-use napi::bindgen_prelude::{BigInt, Either, Unknown};
+use napi::bindgen_prelude::{BigInt, Either, Function, Unknown};
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
+use sz_rust_sdk::core::environment::SzEnvironmentCore;
 use sz_rust_sdk::error::SzError;
 use sz_rust_sdk::logging::{
     SzLogCallback, SzLogCallbackOptions, SzLogEntry, SzLogFormat, SzLogLevel, SzLogOutput,
     SzLogRecord, SzLogRegistration,
 };
-use sz_rust_sdk::traits::SzLogging;
+use sz_rust_sdk::traits::{SzEnvironment, SzLogging};
 
 use crate::error::sz_error_to_napi;
 
-/// JS callback for log records: weak (unref'd), callee-unhandled, unbounded queue.
+/// JS callback for log records: weak (unref'd), callee-unhandled, unbounded napi queue (the
+/// optional cap is [`QueueLimit`]).
 type LogFunction =
-    ThreadsafeFunction<JsLogRecord, Unknown<'static>, JsLogRecord, Status, false, true, 0>;
+    ThreadsafeFunction<Queued, Unknown<'static>, JsLogRecord, Status, false, true, 0>;
+
+/// The JS function a callback registration receives.
+type JsLogFunction<'a> = Function<'a, JsLogRecord, Unknown<'static>>;
+
+/// The `maxQueued` cap of one callback: records queued for JS but not yet delivered.
+#[derive(Debug)]
+struct QueueLimit {
+    max: usize,
+    in_flight: AtomicUsize,
+    dropped: AtomicU64,
+}
+
+impl QueueLimit {
+    fn new(max: NonZeroU32) -> Arc<Self> {
+        Arc::new(Self {
+            max: usize::try_from(max.get()).unwrap_or(usize::MAX),
+            in_flight: AtomicUsize::new(0),
+            dropped: AtomicU64::new(0),
+        })
+    }
+
+    /// A slot for one more queued record, or `None` (counted as dropped) at the cap.
+    fn acquire(self: &Arc<Self>) -> Option<InFlight> {
+        if self.in_flight.fetch_add(1, Ordering::AcqRel) >= self.max {
+            self.in_flight.fetch_sub(1, Ordering::AcqRel);
+            self.dropped.fetch_add(1, Ordering::Relaxed);
+            return None;
+        }
+        Some(InFlight(Arc::clone(self)))
+    }
+
+    fn dropped(&self) -> u64 {
+        self.dropped.load(Ordering::Relaxed)
+    }
+}
+
+/// One queued record's slot in a [`QueueLimit`], released when the record reaches the JS callback
+/// or is discarded.
+#[derive(Debug)]
+struct InFlight(Arc<QueueLimit>);
+
+impl Drop for InFlight {
+    fn drop(&mut self) {
+        self.0.in_flight.fetch_sub(1, Ordering::AcqRel);
+    }
+}
+
+/// What the logging thread queues: the record and, with `maxQueued`, its slot.
+struct Queued {
+    record: JsLogRecord,
+    _slot: Option<InFlight>,
+}
 
 /// One log record as delivered to JS.
 #[napi(object, js_name = "SzLogRecord")]
@@ -84,9 +144,10 @@ impl JsLogRecord {
     }
 }
 
-/// Registration parameters: the callback's minimum level and the format native applies to the
-/// record's message. `format` defaults to `'BARE'`: the record already carries the level and
-/// module, so `'LEGACY'` would stamp them a second time when the record is forwarded.
+/// Registration parameters: the callback's minimum level, the format native applies to the
+/// record's message, and an optional cap on undelivered records. `format` defaults to `'BARE'`:
+/// the record already carries the level and module, so `'LEGACY'` would stamp them a second time
+/// when the record is forwarded.
 #[napi(object, js_name = "SzLogCallbackOptions")]
 pub struct JsLogCallbackOptions {
     /// Minimum level delivered to the callback (case-insensitive; `'warning'` is accepted).
@@ -96,6 +157,10 @@ pub struct JsLogCallbackOptions {
     /// `'BARE'`.
     #[napi(ts_type = "'LEGACY' | 'JSONL' | 'BARE' | 'DEFAULT'")]
     pub format: Option<String>,
+    /// The most records queued for the callback but not yet delivered (an integer >= 1). Records
+    /// logged while that many are waiting are dropped and counted (`SzLogRegistration.getDropped`).
+    /// Default: unbounded. Ignored by `captureThreadLogs` (no queue).
+    pub max_queued: Option<u32>,
 }
 
 /// Destination of native's default output.
@@ -142,8 +207,9 @@ impl JsLogOutput {
         }
     }
 
-    fn from_output(output: SzLogOutput) -> Self {
+    fn from_output(output: SzLogOutput) -> Result<Self, SzError> {
         let (kind, path, append) = match output {
+            SzLogOutput::Stderr => ("STDERR", None, None),
             SzLogOutput::Stdout => ("STDOUT", None, None),
             SzLogOutput::File { path, append } => (
                 "FILE",
@@ -152,14 +218,18 @@ impl JsLogOutput {
             ),
             SzLogOutput::Null => ("NULL", None, None),
             SzLogOutput::Callback => ("CALLBACK", None, None),
-            // SzLogOutput is #[non_exhaustive]; Stderr and any future variant report as stderr.
-            _ => ("STDERR", None, None),
+            // SzLogOutput is #[non_exhaustive]: a future variant must not be misreported.
+            other => {
+                return Err(SzError::unhandled(format!(
+                    "unsupported log output {other:?}: update @senzing/sdk"
+                )));
+            }
         };
-        Self {
+        Ok(Self {
             kind: kind.to_owned(),
             path,
             append,
-        }
+        })
     }
 }
 
@@ -173,32 +243,78 @@ fn parse_format(format: &str) -> napi::Result<SzLogFormat> {
     format.parse().map_err(sz_error_to_napi)
 }
 
-/// A level name, or `{ minLevel, format? }`, as `SzLogCallbackOptions` (default format Bare).
-fn parse_options(
-    options: Either<String, JsLogCallbackOptions>,
-) -> napi::Result<SzLogCallbackOptions> {
+/// Parsed callback options: native's options and the optional `maxQueued` cap.
+#[derive(Debug, PartialEq)]
+struct ParsedOptions {
+    native: SzLogCallbackOptions,
+    max_queued: Option<NonZeroU32>,
+}
+
+/// A level name, or `{ minLevel, format?, maxQueued? }`, as [`ParsedOptions`] (default format
+/// Bare, unbounded queue).
+fn parse_options(options: Either<String, JsLogCallbackOptions>) -> napi::Result<ParsedOptions> {
     match options {
-        Either::A(level) => Ok(SzLogCallbackOptions::new(parse_level(&level)?)),
+        Either::A(level) => Ok(ParsedOptions {
+            native: SzLogCallbackOptions::new(parse_level(&level)?),
+            max_queued: None,
+        }),
         Either::B(options) => {
             let base = SzLogCallbackOptions::new(parse_level(&options.min_level)?);
-            match options.format.as_deref() {
-                Some(format) => Ok(base.format(parse_format(format)?)),
-                None => Ok(base),
-            }
+            let native = match options.format.as_deref() {
+                Some(format) => base.format(parse_format(format)?),
+                None => base,
+            };
+            let max_queued = options
+                .max_queued
+                .map(|max| {
+                    NonZeroU32::new(max).ok_or_else(|| {
+                        sz_error_to_napi(SzError::bad_input("maxQueued must be at least 1"))
+                    })
+                })
+                .transpose()?;
+            Ok(ParsedOptions { native, max_queued })
         }
     }
 }
 
-/// A boxed native callback that queues each record for `function` without blocking.
-fn forward_to(function: LogFunction) -> SzLogCallback {
-    Box::new(move |record: &SzLogRecord<'_>| {
-        // Closing (the JS environment is shutting down) and every other status are ignored: a
-        // logging thread can do nothing useful with them.
+/// A boxed native callback that queues each record for `callback` without blocking, and the
+/// queue limit when `max_queued` is set.
+fn forward_to(
+    callback: &JsLogFunction<'_>,
+    max_queued: Option<NonZeroU32>,
+) -> napi::Result<(SzLogCallback, Option<Arc<QueueLimit>>)> {
+    let function: LogFunction = callback
+        .build_threadsafe_function::<Queued>()
+        .weak::<true>()
+        .callee_handled::<false>()
+        // Runs on the JS thread; the slot is released here, as the record reaches JS.
+        .build_callback(|ctx| Ok(ctx.value.record))?;
+    let limit = max_queued.map(QueueLimit::new);
+    let queue = limit.clone();
+    let forward: SzLogCallback = Box::new(move |record: &SzLogRecord<'_>| {
+        // The JS environment is gone (a worker exited, or the process is exiting): skip the copy
+        // napi would only discard.
+        if function.aborted() {
+            return;
+        }
+        let slot = match &queue {
+            Some(queue) => match queue.acquire() {
+                Some(slot) => Some(slot),
+                None => return,
+            },
+            None => None,
+        };
+        // Closing and every other status are ignored (napi drops the record, releasing its slot):
+        // a logging thread can do nothing useful with them.
         let _ = function.call(
-            JsLogRecord::from_record(record),
+            Queued {
+                record: JsLogRecord::from_record(record),
+                _slot: slot,
+            },
             ThreadsafeFunctionCallMode::NonBlocking,
         );
-    })
+    });
+    Ok((forward, limit))
 }
 
 /// The error for a registration used after `unregister()` or `leak()`.
@@ -224,11 +340,11 @@ impl SzLoggingWrapper {
 impl SzLoggingWrapper {
     /// Registers a callback for log records from every thread.
     ///
-    /// `options` is a level name or `{ minLevel, format? }` (default format `'BARE'`). Records are
-    /// delivered asynchronously on this JS thread. The returned registration does not keep the
-    /// process alive; call `unregister()` (or dispose it) to remove the callback. A registration
-    /// that is garbage-collected without being unregistered stays registered for the rest of the
-    /// process.
+    /// `options` is a level name or `{ minLevel, format?, maxQueued? }` (default format `'BARE'`,
+    /// unbounded queue). Records are delivered asynchronously on this JS thread. The returned
+    /// registration does not keep the process alive; call `unregister()` (or dispose it) to remove
+    /// the callback. A registration that is garbage-collected without being unregistered stays
+    /// registered for the rest of the process.
     #[napi(strict)]
     pub fn register_callback(
         &self,
@@ -236,12 +352,13 @@ impl SzLoggingWrapper {
             ts_arg_type = "'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF' | SzLogCallbackOptions"
         )]
         options: Either<String, JsLogCallbackOptions>,
-        #[napi(ts_arg_type = "(record: SzLogRecord) => void")] callback: LogFunction,
+        #[napi(ts_arg_type = "(record: SzLogRecord) => void")] callback: JsLogFunction<'_>,
     ) -> napi::Result<SzLogRegistrationWrapper> {
         let options = parse_options(options)?;
+        let (forward, queue) = forward_to(&callback, options.max_queued)?;
         self.inner
-            .register_callback(options, forward_to(callback))
-            .map(SzLogRegistrationWrapper::new)
+            .register_callback(options.native, forward)
+            .map(|registration| SzLogRegistrationWrapper::new(registration, queue))
             .map_err(sz_error_to_napi)
     }
 
@@ -256,12 +373,13 @@ impl SzLoggingWrapper {
             ts_arg_type = "'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF' | SzLogCallbackOptions"
         )]
         options: Either<String, JsLogCallbackOptions>,
-        #[napi(ts_arg_type = "(record: SzLogRecord) => void")] callback: LogFunction,
+        #[napi(ts_arg_type = "(record: SzLogRecord) => void")] callback: JsLogFunction<'_>,
     ) -> napi::Result<SzLogRegistrationWrapper> {
         let options = parse_options(options)?;
+        let (forward, queue) = forward_to(&callback, options.max_queued)?;
         self.inner
-            .register_thread_local_callback(options, forward_to(callback))
-            .map(SzLogRegistrationWrapper::new)
+            .register_thread_local_callback(options.native, forward)
+            .map(|registration| SzLogRegistrationWrapper::new(registration, queue))
             .map_err(sz_error_to_napi)
     }
 
@@ -283,7 +401,7 @@ impl SzLoggingWrapper {
         let registration = self
             .inner
             .register_thread_local_callback(
-                options,
+                options.native,
                 Box::new(move |record: &SzLogRecord<'_>| {
                     sink.lock()
                         .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -301,7 +419,8 @@ impl SzLoggingWrapper {
     ///
     /// There is no handle: the callback stays until `setDefaultOutput` or another
     /// `setDefaultCallback` replaces it. On Senzing 4.5.0 a replaced callback is leaked (there is
-    /// no release hook), so set it once. It does not keep the process alive.
+    /// no release hook), so set it once. It does not keep the process alive. `options.maxQueued`
+    /// caps its queue; the dropped count is not observable (there is no handle).
     #[napi(strict)]
     pub fn set_default_callback(
         &self,
@@ -309,11 +428,12 @@ impl SzLoggingWrapper {
             ts_arg_type = "'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF' | SzLogCallbackOptions"
         )]
         options: Either<String, JsLogCallbackOptions>,
-        #[napi(ts_arg_type = "(record: SzLogRecord) => void")] callback: LogFunction,
+        #[napi(ts_arg_type = "(record: SzLogRecord) => void")] callback: JsLogFunction<'_>,
     ) -> napi::Result<()> {
         let options = parse_options(options)?;
+        let (forward, _queue) = forward_to(&callback, options.max_queued)?;
         self.inner
-            .set_default_callback(options, forward_to(callback))
+            .set_default_callback(options.native, forward)
             .map_err(sz_error_to_napi)
     }
 
@@ -334,7 +454,7 @@ impl SzLoggingWrapper {
     pub fn get_default_output(&self) -> napi::Result<JsLogOutput> {
         self.inner
             .get_default_output()
-            .map(JsLogOutput::from_output)
+            .and_then(JsLogOutput::from_output)
             .map_err(sz_error_to_napi)
     }
 
@@ -399,11 +519,16 @@ impl SzLoggingWrapper {
 #[napi(js_name = "SzLogRegistration")]
 pub struct SzLogRegistrationWrapper {
     inner: Option<SzLogRegistration>,
+    /// The `maxQueued` limit; kept after `unregister()` / `leak()` so `getDropped` still works.
+    queue: Option<Arc<QueueLimit>>,
 }
 
 impl SzLogRegistrationWrapper {
-    fn new(inner: SzLogRegistration) -> Self {
-        Self { inner: Some(inner) }
+    fn new(inner: SzLogRegistration, queue: Option<Arc<QueueLimit>>) -> Self {
+        Self {
+            inner: Some(inner),
+            queue,
+        }
     }
 }
 
@@ -452,12 +577,22 @@ impl SzLogRegistrationWrapper {
     /// This callback's current minimum level. Requires Senzing >= 4.5.1 / 4.6.0 (throws
     /// `SzConfigurationError` on 4.5.0).
     #[napi(ts_return_type = "'TRACE' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' | 'OFF'")]
-    pub fn level(&self) -> napi::Result<String> {
+    pub fn get_level(&self) -> napi::Result<String> {
         let registration = self.inner.as_ref().ok_or_else(released)?;
         registration
             .level()
             .map(|l| l.as_str().to_owned())
             .map_err(sz_error_to_napi)
+    }
+
+    /// How many records were dropped because `maxQueued` records were already waiting for the
+    /// callback. Always 0 without `maxQueued`. Still readable after `unregister()` / `leak()`.
+    #[napi]
+    pub fn get_dropped(&self) -> f64 {
+        // An f64 is exact up to 2^53 records.
+        self.queue
+            .as_ref()
+            .map_or(0.0, |queue| queue.dropped() as f64)
     }
 }
 
@@ -492,6 +627,28 @@ impl SzLogCaptureWrapper {
         );
         entries.into_iter().map(JsLogRecord::from_entry).collect()
     }
+}
+
+/// Gets the logging interface without an `SzEnvironment`.
+///
+/// Logging is process-global native state that needs no engine initialization, so this neither
+/// creates nor touches the environment singleton: it works before any environment exists and
+/// after `destroy()`, and holding the result never makes `destroy()` fail. Equivalent to
+/// `env.getLogging()`.
+///
+/// ```typescript
+/// import { getLogging } from "@senzing/sdk";
+///
+/// const logging = getLogging(); // before any SzEnvironment exists
+/// logging.setDefaultOutput({ type: "FILE", path: "/var/log/senzing/sz.log" });
+/// ```
+#[napi(js_name = "getLogging")]
+pub fn get_logging() -> napi::Result<SzLoggingWrapper> {
+    // A plain `SzEnvironmentCore` value (not `get_instance`): no singleton, no native call. Its
+    // `get_logging` returns sz-rust-sdk's stateless `SzLoggingCore`.
+    let env = SzEnvironmentCore::new("sz-napi-logging", "{}", false).map_err(sz_error_to_napi)?;
+    let logging = env.get_logging().map_err(sz_error_to_napi)?;
+    Ok(SzLoggingWrapper::from_inner(Arc::from(logging)))
 }
 
 /// A named log constant (`name` is the Rust variant name, `value` the canonical string).
@@ -557,19 +714,56 @@ mod tests {
     #[test]
     fn test_options_default_to_bare() {
         let from_level = parse_options(Either::A("warning".to_owned())).unwrap();
-        assert_eq!(from_level, SzLogCallbackOptions::new(SzLogLevel::Warn));
-        assert_eq!(from_level.format, SzLogFormat::Bare);
+        assert_eq!(
+            from_level.native,
+            SzLogCallbackOptions::new(SzLogLevel::Warn)
+        );
+        assert_eq!(from_level.native.format, SzLogFormat::Bare);
+        assert_eq!(from_level.max_queued, None);
 
-        let object = |format: Option<&str>| {
+        let object = |format: Option<&str>, max_queued: Option<u32>| {
             parse_options(Either::B(JsLogCallbackOptions {
                 min_level: "debug".to_owned(),
                 format: format.map(str::to_owned),
+                max_queued,
             }))
         };
-        assert_eq!(object(None).unwrap().format, SzLogFormat::Bare);
-        assert_eq!(object(Some("json")).unwrap().format, SzLogFormat::Jsonl);
-        assert!(object(Some("xml")).is_err());
+        assert_eq!(object(None, None).unwrap().native.format, SzLogFormat::Bare);
+        assert_eq!(
+            object(Some("json"), None).unwrap().native.format,
+            SzLogFormat::Jsonl
+        );
+        assert!(object(Some("xml"), None).is_err());
         assert!(parse_options(Either::A("loud".to_owned())).is_err());
+        assert_eq!(
+            object(None, Some(5)).unwrap().max_queued,
+            NonZeroU32::new(5)
+        );
+        assert!(object(None, Some(0)).is_err());
+    }
+
+    #[test]
+    fn test_module_get_logging_needs_no_environment() {
+        // No native call: the effective-level query below is the first one, and it needs no init.
+        let logging = get_logging().unwrap();
+        assert!(SzEnvironmentCore::try_get_instance().is_none());
+        assert!(logging.get_effective_log_level().is_ok());
+    }
+
+    #[test]
+    fn test_queue_limit_caps_and_counts() {
+        let limit = QueueLimit::new(NonZeroU32::new(2).unwrap());
+        let first = limit.acquire().unwrap();
+        let second = limit.acquire().unwrap();
+        assert!(limit.acquire().is_none());
+        assert!(limit.acquire().is_none());
+        assert_eq!(limit.dropped(), 2);
+        drop(first);
+        let third = limit.acquire().unwrap();
+        assert_eq!(limit.in_flight.load(Ordering::Relaxed), 2);
+        drop((second, third));
+        assert_eq!(limit.in_flight.load(Ordering::Relaxed), 0);
+        assert_eq!(limit.dropped(), 2);
     }
 
     #[test]
@@ -591,7 +785,10 @@ mod tests {
         for (js, expected) in cases {
             let converted = js.into_output().unwrap();
             assert_eq!(converted, expected);
-            let back = JsLogOutput::from_output(converted).into_output().unwrap();
+            let back = JsLogOutput::from_output(converted)
+                .unwrap()
+                .into_output()
+                .unwrap();
             assert_eq!(back, expected);
         }
         assert!(output("FILE", None, None).into_output().is_err());

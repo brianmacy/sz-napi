@@ -14,6 +14,29 @@ used an independent 0.x line.
 
 ## [Unreleased]
 
+## [4.5.0-2] - 2026-11-22
+
+### Added
+
+- `@senzing/sdk`: module-level `getLogging()` returns `SzLogging` without an `SzEnvironment`. It neither creates nor touches the environment singleton, so holding it never makes `destroy()` fail with "other references still exist" (an extra `SzEnvironment` created only to reach `env.getLogging()` did). `env.getLogging()` is unchanged.
+- `@senzing/sdk`: optional `maxQueued` in the logging callback options (`registerCallback`, `registerThreadLocalCallback`, `setDefaultCallback`) caps the records queued for a JS callback but not yet delivered; records logged at the cap are dropped and counted by the new `SzLogRegistration.getDropped()`. Default unbounded, as before. Enforced with a Rust-side in-flight counter (incremented on enqueue, released when the record reaches JS or is discarded).
+- `@senzing/sdk`: a registration garbage-collected without `unregister()` / `leak()` now emits a process warning (code `SZ_LOG_REGISTRATION_COLLECTED`). Diagnostic only: GC still never unregisters (Senzing 4.5.0 rule).
+- Logging tests (real engine, child processes where native state must be fresh): `maxQueued` drops/counts and frees slots on delivery; self-unregister and SzLogging calls inside a callback, with queued records still delivered; a throwing callback reaches `uncaughtException` and delivery continues; a worker that exits without unregistering (no crash, level pinned, main keeps working); GC warns once and does not unregister (`--expose-gc`); `verboseLogging` vs. `setDefaultLogLevel` / `setDefaultFormat` / `setDefaultCallback`; process exit with a live, undestroyed engine; `setDefaultCallback` with `'JSONL'`; module-level `getLogging()` with `destroy()`.
+- Tests: `SENZING_DIR` (the `er` directory) overrides the Senzing install the sdk, adapter, logging and tRPC tests and `npm test` use (defaults unchanged).
+- Logging guide: re-entrancy (JS callbacks run on the event loop, so self-unregister, `registerCallback`, `setDefault*` and engine calls are allowed inside them; the 4.5.0 usage rule still applies), worker threads (unregister before the worker exits; afterwards the registration cannot be removed and pins the level), `maxQueued`, and a `'FILE'` default output instead of a JS callback for `TRACE` bulk loads. The same notes are in the `SzLogging` typings.
+
+### Changed
+
+- `@senzing/sdk` (breaking, stub API): `SzLogRegistration.level()` is renamed `getLevel()`, matching the `getX` naming of the JS surface. It still throws `SzConfigurationError` until Senzing 4.5.1 / 4.6.0. `setLevel` is unchanged.
+- `@senzing/sdk`: logging arguments of the wrong shape (e.g. `registerCallback({}, fn)`, a non-function callback, a non-string level, `setDefaultOutput('STDERR')`) throw `SzBadInputError` naming the field and value, instead of `SzUnhandledError` with napi's conversion text ("Value is none of these types ...").
+
+### Fixed
+
+- `@senzing/sdk`: once a registration's JS environment is gone (a worker exited without unregistering), its native callback returns before copying each record, instead of building a record napi then discards.
+- `@senzing/sdk`: `getDefaultOutput()` reports an unknown future output kind as an error instead of silently as `'STDERR'`.
+- Logging test assumed `setDefaultOutput` resets the format to `'LEGACY'` (Senzing 4.5.0 only); it now sets the format, and every test resets it. The suite passes on Senzing 4.5.0 and 4.6.0.
+- `examples/logging`: removed a redundant `setDefaultLogLevel` right after `setDefaultCallback`.
+
 ### Security
 
 - `minimatch` 11.0.9 for `typedoc` (docs build only), clearing GHSA-g3hv-75wg-m249. typedoc 0.28.20 still requires minimatch 10 and calls `matchOne()`, which minimatch 11 made internal; `scripts/patch-typedoc.mjs` (postinstall) switches that call to minimatch's documented `partial` + `flipNegate` options, and fails the install if typedoc's code changes. Generated docs are byte-identical. Remove once typedoc supports minimatch 11 (TypeStrong/typedoc#3150, #3151). The docs workflow now uses the locked typedoc instead of installing the latest.
@@ -213,7 +236,8 @@ used an independent 0.x line.
 - Config versioning support
 - Script processing support
 
-[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v4.5.0-1...HEAD
+[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v4.5.0-2...HEAD
+[4.5.0-2]: https://github.com/brianmacy/sz-napi/compare/v4.5.0-1...v4.5.0-2
 [4.5.0-1]: https://github.com/brianmacy/sz-napi/compare/v0.9.0...v4.5.0-1
 [0.9.0]: https://github.com/brianmacy/sz-napi/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/brianmacy/sz-napi/compare/v0.8.0...v0.8.1
