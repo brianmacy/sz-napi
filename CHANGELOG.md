@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-21
+
 ### Breaking (`@senzing/sdk`)
 
 - **Minimum Senzing version is now 4.5.0.** `@senzing/sdk` builds against `sz-rust-sdk` 4.5.0 (rev `11bf28f`), which binds the native logging library `libSzLogging` first shipped in Senzing 4.5.0; older runtimes fail to load the addon.
@@ -48,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `napi` 3.15.0, `napi-derive` 3.6.13, `napi-build` 2.6.0 (`napi-derive` 3.6.9 alone does not compile: its `syn` 2 conflicts with `napi-derive-backend` 6.1.6's `syn` 3); `vitest` / `@vitest/coverage-v8` 5, `@napi-rs/cli` 3.10.5, `@trpc/client` 11.19.0, `@types/node` 26.6.2; `npm audit fix` for electron, undici, zod, markdown-it, vite, source-map-js advisories.
 - Dependabot rollup (#124-#129): `serde_json` 1.0.154 (adds `foldhash`, Zlib -- now in the `deny.toml` allow-list), `tsup` 9, `electron` 45, `actions/setup-node` 7.1.0, `actions/upload-artifact` 7.0.2, `actions/download-artifact` 8.0.2. Dependabot now groups updates into one PR per ecosystem (npm, cargo, github-actions).
 - `napi` 3.16.2, `napi-derive` 3.7.1 (Dependabot #131; its 3.16.1 / 3.7.0 pair did not compile against `napi-derive-backend` 7.0.1, released with 3.16.2). `cargo vet` now trusts the napi-rs crates' crates.io trusted publisher `github:napi-rs/napi-rs` instead of per-version exemptions, so napi-rs bumps no longer fail vet.
+- Known, not fixable yet: `minimatch` 10.2.6 (via `typedoc`, docs build only, not shipped) has GHSA-g3hv-75wg-m249. The only patched release, 11.0.1, breaks `typedoc` 0.28.20 (`mini.matchOne is not a function`); waiting on [TypeStrong/typedoc#3150](https://github.com/TypeStrong/typedoc/issues/3150).
 
 ### Breaking (`@senzing/configtool`)
 
@@ -193,7 +196,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config versioning support
 - Script processing support
 
-[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/brianmacy/sz-napi/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/brianmacy/sz-napi/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/brianmacy/sz-napi/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/brianmacy/sz-napi/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/brianmacy/sz-napi/compare/v0.1.0...v0.8.0
