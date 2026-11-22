@@ -12,7 +12,8 @@
     "docs": "typedoc",
     "docs:check": "node scripts/check-doc-coverage.mjs",
     "codegen:flags": "node scripts/codegen-flags.mjs",
-    "codegen:flags:check": "node scripts/codegen-flags.mjs --check"
+    "codegen:flags:check": "node scripts/codegen-flags.mjs --check",
+    "postinstall": "node scripts/patch-typedoc.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
@@ -21,7 +22,10 @@
     "vitest": "^5.0.1"
   },
   "overrides": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "typedoc": {
+      "minimatch": "11.0.9"
+    }
   },
   "license": "Apache-2.0"
 }

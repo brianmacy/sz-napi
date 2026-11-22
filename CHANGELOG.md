@@ -14,6 +14,10 @@ used an independent 0.x line.
 
 ## [Unreleased]
 
+### Security
+
+- `minimatch` 11.0.9 for `typedoc` (docs build only), clearing GHSA-g3hv-75wg-m249. typedoc 0.28.20 still requires minimatch 10 and calls `matchOne()`, which minimatch 11 made internal; `scripts/patch-typedoc.mjs` (postinstall) switches that call to minimatch's documented `partial` + `flipNegate` options, and fails the install if typedoc's code changes. Generated docs are byte-identical. Remove once typedoc supports minimatch 11 (TypeStrong/typedoc#3150, #3151). The docs workflow now uses the locked typedoc instead of installing the latest.
+
 ## [4.5.0-1] - 2026-11-22
 
 ### Changed (versioning)
