@@ -2,8 +2,10 @@
  * SzLogging integration tests against the real native libSzLogging (Senzing 4.5.0, no mocks).
  *
  * Logging is process-global native state. vitest runs each test file in its own process, and the
- * tests in this file run sequentially; each test silences the default output first and the file
- * restores STDERR / LEGACY / ERROR at the end.
+ * tests in this file run sequentially; each test resets the default output, format and level
+ * (NULL / LEGACY / ERROR) first and the file restores STDERR / LEGACY / ERROR at the end. Tests
+ * that need fresh native state, or that leave a registration in place for good, run in a child
+ * process (`child`).
  *
  * The 4.5.0 usage rule is followed throughout: registrations and default-output changes happen
  * only while no engine is initialized. Log traffic comes from a real engine lifecycle
@@ -25,13 +27,13 @@ const sdk = require('../sdk.js');
 
 const {
   SzEnvironment,
+  getLogging,
   SzLogging,
   SzLogRegistration,
   SzLogLevel,
   SzLogFormat,
   SzBadInputError,
   SzConfigurationError,
-  SzUnhandledError,
 } = sdk;
 
 type LogRecord = {
@@ -68,15 +70,9 @@ const describeIfRuntime = canRun ? describe : describe.skip;
 
 let lifecycles = 0;
 
-/**
- * A logging interface. The environment is destroyed at once (getLogging works after destroy), so
- * no lingering handle to the singleton keeps a later `destroy()` from succeeding.
- */
+/** A logging interface: the module-level getter needs no environment. */
 function logging() {
-  const env = new SzEnvironment('sz-logging-test', settings);
-  const log = env.getLogging();
-  env.destroy();
-  return log;
+  return getLogging();
 }
 
 /**
@@ -115,6 +111,52 @@ function initRecord(records: LogRecord[], name: string): LogRecord | undefined {
   return records.find((r) => r.message.includes(`SzConfigMgr_init([${name}]`));
 }
 
+const sdkPath = path.join(__dirname, '..', 'sdk.js');
+
+/**
+ * Runs `body` in a fresh Node.js process (fresh native logging state) and returns the JSON the
+ * body prints on its last stdout line as `result`. The preamble defines `sdk`, `log` (default
+ * output NULL), `settings`, `runEngine(name)` and `settle(count)`.
+ */
+function child(body: string, nodeArgs: string[] = []) {
+  const script = `
+    const sdk = require(${JSON.stringify(sdkPath)});
+    const settings = process.env.SZ_LOGGING_TEST_SETTINGS;
+    const log = sdk.getLogging();
+    log.setDefaultOutput({ type: 'NULL' });
+    function runEngine(name, verbose) {
+      const env = new sdk.SzEnvironment(name, settings, verbose);
+      try {
+        env.getEngine().addRecord('TEST', name, '{"NAME_FULL": "Robert Smith"}');
+      } finally {
+        env.destroy();
+      }
+    }
+    async function settle(count) {
+      let last = -1;
+      for (let stable = 0, i = 0; i < 200 && stable < 5; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        stable = count() === last ? stable + 1 : 0;
+        last = count();
+      }
+    }
+    ${body}
+  `;
+  const run = spawnSync(process.execPath, [...nodeArgs, '-e', script], {
+    encoding: 'utf8',
+    timeout: 30000,
+    env: { ...process.env, SZ_LOGGING_TEST_SETTINGS: settings },
+  });
+  const lines = run.stdout.trim().split('\n');
+  let result: any;
+  try {
+    result = JSON.parse(lines[lines.length - 1]);
+  } catch {
+    result = undefined;
+  }
+  return { ...run, result };
+}
+
 /** Asserts the "requires a newer Senzing" stub error naming `fn`. */
 function expectRequiresNewer(call: () => unknown, fn: string) {
   let error: any;
@@ -145,6 +187,8 @@ describeIfRuntime('SzLogging (native libSzLogging)', () => {
   beforeEach(() => {
     const log = logging();
     log.setDefaultOutput({ type: 'NULL' });
+    // Senzing 4.5.0 resets the format on setDefaultOutput; 4.5.1 / 4.6.0 keep it. Reset it here.
+    log.setDefaultFormat('LEGACY');
     log.setDefaultLogLevel('ERROR');
   });
 
@@ -187,6 +231,21 @@ describeIfRuntime('SzLogging (native libSzLogging)', () => {
     expect(after.getEffectiveLogLevel()).toBe('ERROR');
   });
 
+  test('module-level getLogging needs no environment and never blocks destroy()', () => {
+    const log = getLogging();
+    expect(log).toBeInstanceOf(SzLogging);
+    const env = new SzEnvironment('sz-logging-module', settings);
+    const fromEnv = env.getLogging();
+    env.getEngine();
+    env.destroy(); // `log` is no environment handle, so nothing else holds the singleton
+    expect(env.isDestroyed()).toBe(true);
+
+    log.setDefaultLogLevel('CRITICAL');
+    expect(fromEnv.getEffectiveLogLevel()).toBe('CRITICAL');
+    fromEnv.setDefaultLogLevel('ERROR');
+    expect(log.getEffectiveLogLevel()).toBe('ERROR');
+  });
+
   // -- Levels ------------------------------------------------------------------
 
   test('setDefaultLogLevel / getEffectiveLogLevel: min over sinks, case-insensitive', () => {
@@ -219,13 +278,41 @@ describeIfRuntime('SzLogging (native libSzLogging)', () => {
     expect(log.getEffectiveLogLevel()).toBe('ERROR');
   });
 
-  test('wrong argument types are rejected before anything is registered', () => {
+  test('wrong argument shapes are SzBadInputError naming the field, before anything is registered', () => {
     const log = logging();
-    expect(() => log.registerCallback('INFO', 42)).toThrow(SzUnhandledError);
-    expect(() => log.registerCallback('INFO', 42)).toThrow(/Function/);
-    expect(() => log.registerCallback(7, () => {})).toThrow(SzUnhandledError);
-    expect(() => log.setDefaultCallback('INFO', 'not a function')).toThrow(SzUnhandledError);
+    const registration = log.registerCallback('ERROR', () => {});
+    const fn = () => {};
+    const cases: [() => unknown, RegExp][] = [
+      [() => log.registerCallback({}, fn), /options\.minLevel must be a log level name \(string\), got undefined/],
+      [() => log.registerCallback('INFO', 42), /callback must be a function, got 42/],
+      [() => log.registerCallback(7, fn), /options must be a log level name or \{ minLevel, format\?, maxQueued\? \}, got 7/],
+      [() => log.registerCallback(null, fn), /options must be .*got null/],
+      [() => log.registerCallback(['INFO'], fn), /options must be/],
+      [() => log.registerCallback({ minLevel: 'INFO', format: 3 }, fn), /options\.format must be a log format name/],
+      [() => log.registerCallback({ minLevel: 'INFO', maxQueued: 0 }, fn), /options\.maxQueued must be an integer from 1 to 4294967295, got 0/],
+      [() => log.registerCallback({ minLevel: 'INFO', maxQueued: 1.5 }, fn), /options\.maxQueued/],
+      [() => log.registerCallback({ minLevel: 'INFO', maxQueued: '10' }, fn), /options\.maxQueued/],
+      [() => log.registerThreadLocalCallback('INFO', undefined), /callback must be a function/],
+      [() => log.setDefaultCallback('INFO', 'not a function'), /callback must be a function, got 'not a function'/],
+      [() => log.captureThreadLogs({ format: 'JSONL' }), /options\.minLevel/],
+      [() => log.setDefaultOutput('STDERR'), /output must be \{ type, path\?, append\? \}/],
+      [() => log.setDefaultOutput({ type: 1 }), /output\.type must be a string, got 1/],
+      [() => log.setDefaultOutput({ type: 'FILE', path: 5 }), /output\.path must be a string/],
+      [() => log.setDefaultOutput({ type: 'FILE', path: 'x.log', append: 'yes' }), /output\.append must be a boolean/],
+      [() => log.setDefaultLogLevel(3), /level must be a log level name \(string\), got 3/],
+      [() => log.setDefaultFormat(undefined), /format must be a log format name/],
+      [() => registration.setLevel(null), /level must be a log level name/],
+    ];
+    try {
+      for (const [call, message] of cases) {
+        expect(call).toThrow(SzBadInputError);
+        expect(call).toThrow(message);
+      }
+    } finally {
+      registration.unregister();
+    }
     expect(log.getEffectiveLogLevel()).toBe('ERROR');
+    expect(fs.existsSync('x.log')).toBe(false);
   });
 
   // -- Delivery ------------------------------------------------------------------
@@ -390,21 +477,23 @@ describeIfRuntime('SzLogging (native libSzLogging)', () => {
     registration.leak();
     registration.unregister(); // no-op: already released
     expect(log.getEffectiveLogLevel()).toBe('ERROR');
-    expect(() => registration.level()).toThrow(SzBadInputError);
+    expect(registration.getDropped()).toBe(0);
+    expect(() => registration.getLevel()).toThrow(SzBadInputError);
     expect(() => registration.setLevel('INFO')).toThrow(/already unregistered or leaked/);
   });
 
-  test('setLevel / level are stubbed until Senzing 4.5.1 / 4.6.0', () => {
+  test('setLevel / getLevel are stubbed until Senzing 4.5.1 / 4.6.0', () => {
     const log = logging();
     const registration = log.registerCallback('ERROR', () => {});
     try {
       expectRequiresNewer(() => registration.setLevel('TRACE'), 'SzLogging_setCallbackLevel');
-      expectRequiresNewer(() => registration.level(), 'SzLogging_getCallbackLevel');
+      expectRequiresNewer(() => registration.getLevel(), 'SzLogging_getCallbackLevel');
       expect(() => registration.setLevel('LOUD')).toThrow(SzBadInputError);
     } finally {
       registration.unregister();
     }
-    expect(() => registration.level()).toThrow(SzBadInputError);
+    expect(() => registration.getLevel()).toThrow(SzBadInputError);
+    expect(registration.level).toBeUndefined();
   });
 
   // -- Stubs -------------------------------------------------------------------
@@ -483,6 +572,7 @@ describeIfRuntime('SzLogging (native libSzLogging)', () => {
     expect(fs.existsSync(file)).toBe(true);
     fs.writeFileSync(file, 'PREEXISTING\n');
     log.setDefaultOutput({ type: 'FILE', path: file }); // native truncates when it opens
+    log.setDefaultFormat(SzLogFormat.Legacy); // after the output: 4.5.0 resets it, 4.5.1+ keeps it
     log.setDefaultLogLevel('TRACE');
     const name = runEngine();
     log.setDefaultOutput({ type: 'NULL' }); // 4.5.0: destroy() does not flush; replacing does
@@ -567,5 +657,199 @@ describeIfRuntime('SzLogging (native libSzLogging)', () => {
     expect(result.signal).toBeNull();
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('registered');
+  });
+
+  test('process exit with a live, undestroyed engine and a live registration is clean', () => {
+    for (const exit of ['', 'process.exit(0);']) {
+      const run = child(`
+        log.registerCallback('TRACE', () => {});
+        const env = new sdk.SzEnvironment('sz-logging-live-exit', settings);
+        env.getEngine().addRecord('TEST', 'LIVE_EXIT', '{"NAME_FULL": "Robert Smith"}');
+        console.log(JSON.stringify({ done: true }));
+        ${exit}
+      `);
+      expect(run.error).toBeUndefined();
+      expect(run.signal).toBeNull();
+      expect(run.status).toBe(0);
+      expect(run.result).toEqual({ done: true });
+    }
+  });
+
+  // -- Queue cap -----------------------------------------------------------------
+
+  test('maxQueued caps undelivered records, drops and counts the rest, and frees slots on delivery', async () => {
+    const log = logging();
+    const all: LogRecord[] = [];
+    const capped: LogRecord[] = [];
+    const unbounded = log.registerCallback('TRACE', (r: LogRecord) => all.push(r));
+    const registration = log.registerCallback({ minLevel: 'TRACE', maxQueued: 5 }, (r: LogRecord) =>
+      capped.push(r),
+    );
+    expect(unbounded.getDropped()).toBe(0);
+
+    // The JS thread is busy for the whole synchronous lifecycle, so nothing is delivered during it:
+    // the first 5 records are queued and every later one is dropped.
+    runEngine();
+    await settle(all, capped);
+    expect(capped).toHaveLength(5);
+    const droppedFirst = registration.getDropped();
+    expect(droppedFirst).toBeGreaterThan(0);
+    expect(all).toHaveLength(capped.length + droppedFirst);
+    expect(capped.map((r) => r.message)).toEqual(all.slice(0, 5).map((r) => r.message));
+
+    // Delivered records released their slots: the next lifecycle queues 5 more.
+    runEngine();
+    unbounded.unregister();
+    registration.unregister();
+    await settle(all, capped);
+    expect(capped).toHaveLength(10);
+    expect(all).toHaveLength(capped.length + registration.getDropped()); // still readable
+    expect(unbounded.getDropped()).toBe(0);
+  });
+
+  // -- Re-entrancy ---------------------------------------------------------------
+
+  test('a callback may unregister itself and call SzLogging; queued records are still delivered', async () => {
+    const log = logging();
+    const records: LogRecord[] = [];
+    const inside: string[] = [];
+    let nested: any;
+    const registration = log.registerCallback('TRACE', (r: LogRecord) => {
+      records.push(r);
+      if (records.length === 1) {
+        // Runs on the event loop after runEngine() returned (destroy() done): the 4.5.0 usage
+        // rule holds, and none of this runs on native's logging stack.
+        registration.unregister();
+        nested = log.registerCallback('DEBUG', () => {});
+        inside.push(log.getEffectiveLogLevel());
+        nested.unregister();
+        log.setDefaultLogLevel('ERROR');
+        inside.push(log.getEffectiveLogLevel());
+      }
+    });
+    const name = runEngine();
+    await settle(records);
+
+    expect(inside).toEqual(['DEBUG', 'ERROR']);
+    expect(records.length).toBeGreaterThan(1); // queued before the unregister: still delivered
+    expect(initRecord(records, name)).toBeDefined();
+
+    const count = records.length;
+    runEngine();
+    await settle(records);
+    expect(records).toHaveLength(count);
+  });
+
+  // -- Default callback format ---------------------------------------------------
+
+  test('setDefaultCallback with format JSONL delivers JSON lines', async () => {
+    const log = logging();
+    const records: LogRecord[] = [];
+    log.setDefaultCallback({ minLevel: 'TRACE', format: 'JSONL' }, (r: LogRecord) => records.push(r));
+    const name = runEngine();
+    log.setDefaultOutput({ type: 'NULL' });
+    await settle(records);
+
+    const init = initRecord(records, name);
+    expect(init?.level).toBe('TRACE');
+    const json = JSON.parse(init!.message);
+    expect(json.severity).toBe('trace');
+    expect(json.module).toMatch(/^szstatic:/);
+    expect(typeof json.timestamp).toBe('string');
+    expect(json.message.startsWith(`SzConfigMgr_init([${name}]`)).toBe(true);
+  });
+
+  // -- Child processes: uncaught exceptions, workers, GC, verboseLogging ----------
+
+  test('a throwing callback is an uncaughtException and delivery continues', () => {
+    const run = child(`
+      let calls = 0;
+      const errors = [];
+      process.on('uncaughtException', (e) => errors.push(e.message));
+      const registration = log.registerCallback('TRACE', () => {
+        calls += 1;
+        if (calls === 1) throw new Error('callback failed');
+      });
+      runEngine('sz-logging-throw');
+      settle(() => calls).then(() => {
+        registration.unregister();
+        console.log(JSON.stringify({ calls, errors }));
+      });
+    `);
+    expect(run.status).toBe(0);
+    expect(run.result.errors).toEqual(['callback failed']);
+    expect(run.result.calls).toBeGreaterThan(1);
+  });
+
+  test('a worker that exits without unregistering: no crash, level stays pinned, main keeps working', () => {
+    const run = child(`
+      const { Worker } = require('worker_threads');
+      const worker = new Worker(
+        "require(require('worker_threads').workerData).getLogging().registerCallback('TRACE', () => {});",
+        { eval: true, workerData: ${JSON.stringify(sdkPath)} },
+      );
+      worker.on('exit', (code) => {
+        const pinned = log.getEffectiveLogLevel();
+        const records = [];
+        const registration = log.registerCallback('INFO', (r) => records.push(r));
+        runEngine('sz-logging-worker-gone'); // records also reach the dead worker's registration
+        registration.unregister();
+        settle(() => records.length).then(() => {
+          console.log(JSON.stringify({ code, pinned, records: records.length }));
+        });
+      });
+    `);
+    expect(run.signal).toBeNull();
+    expect(run.status).toBe(0);
+    expect(run.result).toMatchObject({ code: 0, pinned: 'TRACE' });
+    expect(run.result.records).toBeGreaterThan(0);
+  });
+
+  test('GC never unregisters; a collected registration warns once', () => {
+    const run = child(
+      `
+      const warnings = [];
+      process.on('warning', (w) => warnings.push({ code: w.code, message: w.message }));
+      const records = [];
+      (() => { log.registerCallback('trace', (r) => records.push(r)); })();
+      (() => { log.registerCallback('DEBUG', () => {}).unregister(); })();
+      (() => { log.registerCallback({ minLevel: 'CRITICAL' }, () => {}).leak(); })();
+      (async () => {
+        for (let i = 0; i < 20 && warnings.length === 0; i += 1) {
+          global.gc();
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const effective = log.getEffectiveLogLevel();
+        runEngine('sz-logging-gc');
+        await settle(() => records.length);
+        console.log(JSON.stringify({ warnings, effective, records: records.length }));
+      })();
+    `,
+      ['--expose-gc'],
+    );
+    expect(run.status).toBe(0);
+    expect(run.result.warnings).toHaveLength(1);
+    expect(run.result.warnings[0].code).toBe('SZ_LOG_REGISTRATION_COLLECTED');
+    expect(run.result.warnings[0].message).toContain('minLevel TRACE');
+    expect(run.result.effective).toBe('TRACE'); // still registered
+    expect(run.result.records).toBeGreaterThan(0); // and still delivering
+  });
+
+  test('verboseLogging raises the default level only until the application configures logging', () => {
+    const levelAfterVerboseInit = (configure: string) => {
+      const run = child(`
+        ${configure}
+        runEngine('sz-logging-verbose', true);
+        console.log(JSON.stringify({ level: log.getEffectiveLogLevel() }));
+      `);
+      expect(run.status).toBe(0);
+      return run.result.level;
+    };
+    const verbose = levelAfterVerboseInit('');
+    expect(LEVELS.indexOf(verbose)).toBeLessThan(LEVELS.indexOf('ERROR'));
+    expect(levelAfterVerboseInit("log.setDefaultLogLevel('ERROR');")).toBe('ERROR');
+    expect(levelAfterVerboseInit("log.setDefaultFormat('LEGACY');")).toBe('ERROR');
+    expect(levelAfterVerboseInit("log.setDefaultCallback('ERROR', () => {});")).toBe('ERROR');
   });
 });

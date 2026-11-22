@@ -797,4 +797,5 @@ module.exports.SzProductWrapper = nativeBinding.SzProductWrapper
 module.exports.bridgeVersion = nativeBinding.bridgeVersion
 module.exports.getAllFlags = nativeBinding.getAllFlags
 module.exports.getLogFormats = nativeBinding.getLogFormats
+module.exports.getLogging = nativeBinding.getLogging
 module.exports.getLogLevels = nativeBinding.getLogLevels

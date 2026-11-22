@@ -10,6 +10,7 @@ export const {
   SzLogging,
   SzLogRegistration,
   SzLogCapture,
+  getLogging,
   SzLogLevel,
   SzLogFormat,
   SzExportIterator,

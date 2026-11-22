@@ -11,6 +11,7 @@ export {
   SzLogRecord,
   SzLogCallbackOptions,
   SzLogOutput,
+  getLogging,
 } from './index';
 
 export { SzEngine } from './index';
@@ -241,7 +242,8 @@ declare module './index' {
      * call performs no native initialization, so register callbacks **before** the first
      * `getEngine()` / `getDiagnostic()` / `reinitialize()` to capture initialization messages
      * (on Senzing 4.5.0 that is also required, see {@link SzLogging}). Unlike the other getters
-     * it also works **after** `destroy()`.
+     * it also works **after** `destroy()`. The module-level `getLogging()` returns the same
+     * interface without needing an environment.
      *
      * @example Register before the engine starts, unregister after destroy
      * ```typescript
@@ -276,8 +278,22 @@ declare module './index' {
    * **Delivery:** native calls a callback on the thread that logs (often an engine thread). The
    * SDK queues the record without blocking that thread and the JS callback runs later,
    * asynchronously, on the JS thread that registered it, so a record logged during a synchronous
-   * engine call arrives after that call returns. The queue is unbounded. An exception thrown by a
-   * callback is reported as an uncaught exception, as for any event callback.
+   * engine call arrives after that call returns. The queue is unbounded unless the callback's
+   * options set `maxQueued` (records over the cap are dropped and counted, see
+   * `SzLogRegistration.getDropped`). For `TRACE` during bulk loads prefer a `'FILE'` default
+   * output to a JS callback. An exception thrown by a callback is reported as an uncaught
+   * exception (`process.on('uncaughtException')`), and delivery continues.
+   *
+   * **Re-entrancy:** a JS callback runs on the event loop, not on native's logging stack, so
+   * unlike in Rust it may unregister its own registration, call `registerCallback`, the
+   * `setDefault*` methods or the engine. Records already queued when a registration is
+   * unregistered (even from inside its own callback) are still delivered. On Senzing 4.5.0 the
+   * usage rule above still applies to these calls while engine threads run.
+   *
+   * **Worker threads:** a registration delivers to the worker that made it. Unregister it before
+   * the worker exits: once the worker's JS environment is gone the registration can no longer be
+   * removed, stays registered for the rest of the process (records for it are skipped) and keeps
+   * the effective level at or below its `minLevel`.
    *
    * **Process lifetime:** registrations and default callbacks never keep the Node.js process
    * alive; records still queued when the process exits are discarded.
@@ -286,13 +302,16 @@ declare module './index' {
     /**
      * Registers a callback for log records from every thread.
      *
-     * `options` is a level (`"INFO"`) or `{ minLevel, format? }`; the format defaults to
-     * `'BARE'` (the record already carries level and module). While the registration lives,
-     * native lowers the effective level to `minLevel` if needed.
+     * `options` is a level (`"INFO"`) or `{ minLevel, format?, maxQueued? }`; the format
+     * defaults to `'BARE'` (the record already carries level and module) and the queue is
+     * unbounded unless `maxQueued` is set. While the registration lives, native lowers the
+     * effective level to `minLevel` if needed.
      *
      * The registration is removed by `unregister()` or by disposal (`using registration = ...`).
      * Garbage collection never unregisters (it could run while engine threads log): a
-     * registration dropped without `unregister()` stays registered for the rest of the process.
+     * registration dropped without `unregister()` stays registered for the rest of the process,
+     * and the SDK emits a process warning (code `SZ_LOG_REGISTRATION_COLLECTED`) when it is
+     * collected. Call `leak()` to keep a registration on purpose without the warning.
      *
      * @example
      * ```typescript
@@ -304,7 +323,8 @@ declare module './index' {
      * );
      * ```
      *
-     * @throws {SzBadInputError} an unknown level or format
+     * @throws {SzBadInputError} an unknown level or format, or a wrong argument shape (the
+     * message names the field)
      * @throws {SzUnrecoverableError} native refused the registration (process exit in progress)
      * @see {@link https://github.com/brianmacy/sz-napi/tree/main/code-snippets/logging/log-callback | log-callback snippet}
      */
@@ -335,6 +355,8 @@ declare module './index' {
      * There is no handle: the callback stays until `setDefaultOutput` or another
      * `setDefaultCallback` replaces it. On Senzing 4.5.0 a replaced callback is leaked (no
      * release hook), so set it once. `setDefaultLogLevel` changes its level later.
+     * `maxQueued` caps its queue as for `registerCallback`; with no handle, the dropped count is
+     * not observable.
      *
      * @example
      * ```typescript
@@ -427,17 +449,39 @@ declare module './index' {
   /**
    * A live native log callback registration, returned by `SzLogging.registerCallback`.
    * Disposable: `using registration = logging.registerCallback(...)` unregisters at scope exit.
+   * Collected without `unregister()` / `leak()`, it stays registered and the SDK emits a
+   * process warning (`SZ_LOG_REGISTRATION_COLLECTED`).
    */
   interface SzLogRegistration {
     /**
      * Unregisters the callback; calling it again does nothing. Records already queued are still
-     * delivered. On Senzing 4.5.0 call it only while no engine threads run (before the first
-     * engine initialization or after `destroy()`).
+     * delivered. Allowed from inside the registration's own callback. On Senzing 4.5.0 call it
+     * only while no engine threads run (before the first engine initialization or after
+     * `destroy()`).
      */
     unregister(): void;
 
-    /** Keeps the callback registered for the rest of the process, with no way to remove it. */
+    /**
+     * Keeps the callback registered for the rest of the process, with no way to remove it (and
+     * no collection warning).
+     */
     leak(): void;
+
+    /**
+     * How many records were dropped because `maxQueued` records were already waiting for the
+     * callback. Always 0 without `maxQueued`. Still readable after `unregister()` / `leak()`.
+     *
+     * @example Bound memory while the JS thread is busy
+     * ```typescript
+     * const registration = logging.registerCallback(
+     *   { minLevel: "DEBUG", maxQueued: 10_000 },
+     *   (record) => sink.write(record.message),
+     * );
+     * // ...
+     * console.log(`dropped ${registration.getDropped()} records`);
+     * ```
+     */
+    getDropped(): number;
 
     /**
      * Changes this callback's minimum level. **Requires Senzing >= 4.5.1 / 4.6.0.** Until then,
@@ -454,7 +498,7 @@ declare module './index' {
      * @throws {SzConfigurationError} on Senzing 4.5.0
      * @throws {SzBadInputError} the registration was unregistered or leaked
      */
-    level(): SzLogLevel;
+    getLevel(): SzLogLevel;
 
     /** Same as `unregister()`. */
     [Symbol.dispose](): void;
