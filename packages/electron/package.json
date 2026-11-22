@@ -1,6 +1,6 @@
 {
   "name": "@senzing/electron",
-  "version": "0.10.0",
+  "version": "4.5.0-1",
   "license": "Apache-2.0",
   "description": "Electron IPC bridge for @senzing/sdk \u2014 runs SDK in a worker thread, exposes via contextBridge",
   "main": "dist/main/index.js",
@@ -27,8 +27,8 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@senzing/sdk": ">=0.1.0",
-    "@senzing/trpc": ">=0.1.0",
+    "@senzing/sdk": ">=4.5.0-0",
+    "@senzing/trpc": ">=4.5.0-0",
     "electron": ">=39.8.5"
   },
   "peerDependenciesMeta": {

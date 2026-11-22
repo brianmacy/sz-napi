@@ -1,6 +1,6 @@
 {
   "name": "@senzing/sdk",
-  "version": "0.10.0",
+  "version": "4.5.0-1",
   "license": "Apache-2.0",
   "main": "sdk.js",
   "types": "sdk.d.ts",
@@ -27,7 +27,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@senzing/types": "*"
+    "@senzing/types": ">=4.5.0-0"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.10.5"
