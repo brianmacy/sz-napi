@@ -14,6 +14,12 @@ used an independent 0.x line.
 
 ## [Unreleased]
 
+### Changed
+
+- FAQ MCP server synced to the-faq-mcp reference: `mcp<2` pinned in the PEP 723 header (mcp 2.x removed `mcp.server.fastmcp`, so the unpinned server failed to start), background re-index so edited FAQs are served without a restart, and the reference `.mcp.json` launcher (repo-root resolution; `.claude/.faq-venv` → `uv run --script` → `python` fallback).
+- FAQ reminder hooks vendored at `.claude/hooks/faq-reminder.sh` and wired in `.claude/settings.json`: `PreCompact` asks to write down what was learned; `UserPromptSubmit` (at most hourly) asks to consult, then write.
+- FAQ entries: `architecture/szlogging.md` (SzLogging design, version = minimum Senzing) and `building/typedoc-minimatch-patch.md`.
+
 ## [4.5.0-2] - 2026-11-22
 
 ### Added
